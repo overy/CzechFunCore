@@ -71,23 +71,26 @@ public:
 
     struct boss_anomalusAI : public ScriptedAI
     {
-        boss_anomalusAI(Creature *c) : ScriptedAI(c)
+        boss_anomalusAI(Creature *c) : ScriptedAI(c),summons(me)
         {
             pInstance = c->GetInstanceScript();
         }
 
         InstanceScript* pInstance;
 
-        uint8 Phase;
         uint32 uiSparkTimer;
         uint32 uiCreateRiftTimer;
+        uint32 uiHealthAmountModifier;
         uint64 uiChaoticRiftGUID;
+
+        SummonList summons;
 
         bool bDeadChaoticRift; // needed for achievement: Chaos Theory(2037)
 
         void Reset()
         {
-            Phase = 0;
+            summons.DespawnAll();
+            uiHealthAmountModifier = 1;
             uiSparkTimer = 5*IN_MILLISECONDS;
             uiChaoticRiftGUID = 0;
 
@@ -96,6 +99,24 @@ public:
             if (pInstance)
                 pInstance->SetData(DATA_ANOMALUS_EVENT, NOT_STARTED);
         }
+
+    void EnterEvadeMode()
+    {
+        summons.DespawnAll();
+        _EnterEvadeMode();
+        me->GetMotionMaster()->MoveTargetedHome();
+        Reset();
+    }
+
+    void SummonedCreatureDespawn(Creature *summon)
+    {
+        summons.Despawn(summon);
+    }
+
+    void JustSummoned(Creature *summon)
+    {
+        summons.Summon(summon);
+    }
 
         void EnterCombat(Unit* /*who*/)
         {
@@ -108,6 +129,7 @@ public:
         void JustDied(Unit* /*killer*/)
         {
             DoScriptText(SAY_DEATH, me);
+            summons.DespawnAll();
 
             if (pInstance)
             {
@@ -144,15 +166,15 @@ public:
             } else
                 uiChaoticRiftGUID = 0;
 
-            if ((Phase == 0) && HealthBelowPct(50))
+            if (me->HealthBelowPct(100 - 25 * uiHealthAmountModifier))
             {
-                Phase = 1;
+                ++uiHealthAmountModifier;
                 DoScriptText(SAY_SHIELD, me);
                 DoCast(me, SPELL_RIFT_SHIELD);
                 Creature* Rift = me->SummonCreature(MOB_CHAOTIC_RIFT, RiftLocation[urand(0, 5)], TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 1*IN_MILLISECONDS);
                 if (Rift)
                 {
-                    //DoCast(Rift, SPELL_CHARGE_RIFT);
+                    me->AddAura(SPELL_CHARGE_RIFT,Rift);
                     if (Unit *pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0))
                         Rift->AI()->AttackStart(pTarget);
                     uiChaoticRiftGUID = Rift->GetGUID();
@@ -163,7 +185,7 @@ public:
             if (uiSparkTimer <= diff)
             {
                 if (Unit *pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0))
-                    DoCast(pTarget, SPELL_SPARK);
+                DoCast(pTarget, DUNGEON_MODE(SPELL_SPARK,H_SPELL_SPARK));
                 uiSparkTimer = 5*IN_MILLISECONDS;
             } else uiSparkTimer -= diff;
 
@@ -212,10 +234,12 @@ public:
             DoCast(me, SPELL_ARCANEFORM, false);
         }
 
+
         void JustDied(Unit * /*killer*/)
         {
             if (Creature* pAnomalus = Unit::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_ANOMALUS) : 0))
-                CAST_AI(boss_anomalus::boss_anomalusAI, pAnomalus->AI())->bDeadChaoticRift = true;
+                if (pInstance && pInstance->GetData(DATA_ANOMALUS_EVENT) == IN_PROGRESS)
+                    CAST_AI(boss_anomalus::boss_anomalusAI,pAnomalus->AI())->bDeadChaoticRift = true;
         }
 
         void UpdateAI(const uint32 diff)
@@ -228,10 +252,10 @@ public:
                 Unit* pAnomalus = Unit::GetUnit(*me, pInstance ? pInstance->GetData64(DATA_ANOMALUS) : 0);
                 if (Unit *pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0))
                 {
+                    int dmg=244+rand()%162;
                     if (pAnomalus && pAnomalus->HasAura(SPELL_RIFT_SHIELD))
-                        DoCast(pTarget, SPELL_CHARGED_CHAOTIC_ENERGY_BURST);
-                    else
-                        DoCast(pTarget, SPELL_CHAOTIC_ENERGY_BURST);
+                        dmg*= 2;
+                    me->CastCustomSpell(pTarget,SPELL_CHAOTIC_ENERGY_BURST,&dmg,0,0,false);
                 }
                 uiChaoticEnergyBurstTimer = 1*IN_MILLISECONDS;
             } else uiChaoticEnergyBurstTimer -= diff;
