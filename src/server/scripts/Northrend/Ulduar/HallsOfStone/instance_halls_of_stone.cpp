@@ -1,20 +1,21 @@
-/*
- * Copyright (C) 2008-2011 TrinityCore <http://www.trinitycore.org/>
+/* 
+ * Copyright (C) 2008 - 2010 Trinity <http://www.trinitycore.org/>
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Script Author: LordVanMartin
  */
-
+ 
 #include "ScriptPCH.h"
 #include "halls_of_stone.h"
 
@@ -91,7 +92,7 @@ public:
 
         void OnCreatureCreate(Creature* creature)
         {
-            switch (creature->GetEntry())
+            switch(creature->GetEntry())
             {
                 case CREATURE_MAIDEN: uiMaidenOfGrief = creature->GetGUID(); break;
                 case CREATURE_KRYSTALLUS: uiKrystallus = creature->GetGUID(); break;
@@ -105,7 +106,7 @@ public:
 
         void OnGameObjectCreate(GameObject* go)
         {
-            switch (go->GetEntry())
+            switch(go->GetEntry())
             {
                 case GO_ABEDNEUM:
                     uiAbedneumGo = go->GetGUID();
@@ -146,7 +147,7 @@ public:
                     if (m_auiEncounter[2] == DONE)
                         go->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_INTERACT_COND);
                     break;
-                case GO_TRIBUNAL_SKYROOM_FLOOR:
+                case 191527:
                     uiTribunalSkyFloor = go->GetGUID();
                     break;
             }
@@ -154,17 +155,20 @@ public:
 
         void SetData(uint32 type, uint32 data)
         {
-            switch (type)
+            switch(type)
             {
+                case DATA_MAIDEN_OF_GRIEF_EVENT:
+                    m_auiEncounter[1] = data;
+                    if (m_auiEncounter[1] == DONE)
+                        HandleGameObject(uiBrannDoor, true);
+                    break;
                 case DATA_KRYSTALLUS_EVENT:
                     m_auiEncounter[0] = data;
                     if (m_auiEncounter[0] == DONE)
                         HandleGameObject(uiMaidenOfGriefDoor, true);
                     break;
-                case DATA_MAIDEN_OF_GRIEF_EVENT:
-                    m_auiEncounter[1] = data;
-                    if (m_auiEncounter[1] == DONE)
-                        HandleGameObject(uiBrannDoor, true);
+                case DATA_SJONNIR_EVENT:
+                    m_auiEncounter[3] = data;
                     break;
                 case DATA_BRANN_EVENT:
                     m_auiEncounter[2] = data;
@@ -176,9 +180,6 @@ public:
                             go->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_INTERACT_COND);
                     }
                     break;
-                case DATA_SJONNIR_EVENT:
-                    m_auiEncounter[3] = data;
-                    break;
             }
 
             if (data == DONE)
@@ -187,12 +188,12 @@ public:
 
         uint32 GetData(uint32 type)
         {
-            switch (type)
+            switch(type)
             {
                 case DATA_KRYSTALLUS_EVENT:                return m_auiEncounter[0];
                 case DATA_MAIDEN_OF_GRIEF_EVENT:           return m_auiEncounter[1];
-                case DATA_BRANN_EVENT:                     return m_auiEncounter[2];
-                case DATA_SJONNIR_EVENT:                   return m_auiEncounter[3];
+                case DATA_SJONNIR_EVENT:                   return m_auiEncounter[2];
+                case DATA_BRANN_EVENT:                     return m_auiEncounter[3];
             }
 
             return 0;
@@ -200,7 +201,7 @@ public:
 
         uint64 GetData64(uint32 identifier)
         {
-            switch (identifier)
+            switch(identifier)
             {
                 case DATA_MAIDEN_OF_GRIEF:                 return uiMaidenOfGrief;
                 case DATA_KRYSTALLUS:                      return uiKrystallus;

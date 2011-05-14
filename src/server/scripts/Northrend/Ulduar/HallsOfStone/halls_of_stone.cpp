@@ -1,18 +1,19 @@
-/*
- * Copyright (C) 2008-2011 TrinityCore <http://www.trinitycore.org/>
+/* 
+ * Copyright (C) 2008 - 2010 Trinity <http://www.trinitycore.org/>
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Script Author: LordVanMartin
  */
 
 #include "ScriptPCH.h"
@@ -209,10 +210,10 @@ public:
 
             if (pInstance)
             {
-                pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_KADDRAK), false);
-                pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_MARNAK), false);
-                pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_ABEDNEUM), false);
-                pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_SKY_FLOOR), false);
+                pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_KADDRAK),false);
+                pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_MARNAK),false);
+                pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_ABEDNEUM),false);
+                pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_SKY_FLOOR),false);
             }
 
             KaddrakGUIDList.clear();
@@ -385,27 +386,21 @@ public:
 
         void DespawnSummon()
         {
-            if (lSummonGUIDList.empty() || !pInstance)
+            if (lSummonGUIDList.empty())
                 return;
 
             for (std::list<uint64>::const_iterator itr = lSummonGUIDList.begin(); itr != lSummonGUIDList.end(); ++itr)
             {
-                Creature* pTemp = Unit::GetCreature(*me, *itr);
+                Creature* pTemp = Unit::GetCreature(*me, pInstance ? (*itr) : 0);
                 if (pTemp && pTemp->isAlive())
-                {
-                    if (pInstance->GetData(DATA_BRANN_EVENT) == DONE && (pTemp->GetEntry() == CREATURE_KADDRAK || pTemp->GetEntry() == CREATURE_MARNAK
-                        || pTemp->GetEntry() == CREATURE_ABEDNEUM))
-                        continue;
-
                     pTemp->DespawnOrUnsummon();
-                }
             }
             lSummonGUIDList.clear();
         }
 
         void WaypointReached(uint32 uiPointId)
         {
-            switch (uiPointId)
+            switch(uiPointId)
             {
                 case 7:
                     SpawnSummon(4);
@@ -418,7 +413,7 @@ public:
                 case 17:
                     DoScriptText(SAY_EVENT_INTRO_2, me);
                     if (pInstance)
-                        pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_TRIBUNAL_CONSOLE), true);
+                        pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_TRIBUNAL_CONSOLE),true);
                     me->SetStandState(UNIT_STAND_STATE_KNEEL);
                     SetEscortPaused(true);
                     JumpToNextStep(8500);
@@ -433,7 +428,7 @@ public:
         {
             uint32 rnd = urand(0, 1);
 
-            switch (uiType)
+            switch(uiType)
             {
                 case 1:
                 {
@@ -539,7 +534,7 @@ public:
         {
             lSummonGUIDList.push_back(pSummoned->GetGUID());
 
-            switch (pSummoned->GetEntry())
+            switch(pSummoned->GetEntry())
             {
                 case CREATURE_DARK_RUNE_PROTECTOR:
                 case CREATURE_DARK_RUNE_STORMCALLER:
@@ -552,8 +547,8 @@ public:
 
         void JumpToNextStep(uint32 uiTimer)
         {
-            uiPhaseTimer = uiTimer;
-            ++uiStep;
+          uiPhaseTimer = uiTimer;
+          ++uiStep;
         }
 
         void JustDied(Unit* /*victim*/)
@@ -579,15 +574,15 @@ public:
         {
             if (uiPhaseTimer <= uiDiff)
             {
-                if (!pInstance)
-                    return;
-
-                switch (uiStep)
+                switch(uiStep)
                 {
                     case 1:
-                        if (pInstance->GetData(DATA_BRANN_EVENT) != NOT_STARTED)
-                            return;
-                        pInstance->SetData(DATA_BRANN_EVENT, IN_PROGRESS);
+                        if (pInstance)
+                        {
+                            if (pInstance->GetData(DATA_BRANN_EVENT) != NOT_STARTED)
+                                return;
+                            pInstance->SetData(DATA_BRANN_EVENT, IN_PROGRESS);
+                        }
                         bIsBattle = false;
                         DoScriptText(SAY_ESCORT_START, me);
                         SetRun(true);
@@ -598,8 +593,9 @@ public:
                         JumpToNextStep(0);
                         break;
                     case 5:
-                        if (Creature* pTemp = (Unit::GetCreature(*me, pInstance->GetData64(DATA_ABEDNEUM))))
-                            DoScriptText(SAY_EVENT_INTRO_3_ABED, pTemp);
+                        if (pInstance)
+                            if (Creature* pTemp = (Unit::GetCreature(*me, pInstance->GetData64(DATA_ABEDNEUM))))
+                                DoScriptText(SAY_EVENT_INTRO_3_ABED, pTemp);
                         JumpToNextStep(8500);
                         break;
                     case 6:
@@ -607,8 +603,9 @@ public:
                         JumpToNextStep(6500);
                         break;
                     case 7:
-                        if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_KADDRAK)))
-                            DoScriptText(SAY_EVENT_A_2_KADD, pTemp);
+                        if (pInstance)
+                            if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_KADDRAK)))
+                                DoScriptText(SAY_EVENT_A_2_KADD, pTemp);
                         JumpToNextStep(12500);
                         break;
                     case 8:
@@ -626,8 +623,9 @@ public:
                         JumpToNextStep(6000);
                         break;
                     case 11:
-                        if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_MARNAK)))
-                            DoScriptText(SAY_EVENT_B_2_MARN, pTemp);
+                        if (pInstance)
+                            if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_MARNAK)))
+                                DoScriptText(SAY_EVENT_B_2_MARN, pTemp);
                         SpawnSummon(1);
                         JumpToNextStep(20000);
                         break;
@@ -654,8 +652,9 @@ public:
                         JumpToNextStep(20000);
                         break;
                     case 17:
-                        if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_ABEDNEUM)))
-                            DoScriptText(SAY_EVENT_C_2_ABED, pTemp);
+                        if (pInstance)
+                            if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_ABEDNEUM)))
+                                DoScriptText(SAY_EVENT_C_2_ABED, pTemp);
                         SpawnSummon(1);
                         JumpToNextStep(20000);
                         break;
@@ -678,8 +677,9 @@ public:
                         JumpToNextStep(20000);
                         break;
                     case 22:
-                        if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_ABEDNEUM)))
-                            DoScriptText(SAY_EVENT_D_2_ABED, pTemp);
+                        if (pInstance)
+                            if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_ABEDNEUM)))
+                                DoScriptText(SAY_EVENT_D_2_ABED, pTemp);
                         SpawnSummon(1);
                         JumpToNextStep(5000);
                         break;
@@ -701,8 +701,9 @@ public:
                         JumpToNextStep(10000);
                         break;
                     case 27:
-                        if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_ABEDNEUM)))
-                            DoScriptText(SAY_EVENT_D_4_ABED, pTemp);
+                        if (pInstance)
+                            if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_ABEDNEUM)))
+                                DoScriptText(SAY_EVENT_D_4_ABED, pTemp);
                         SpawnSummon(1);
                         JumpToNextStep(10000);
                         break;
@@ -710,7 +711,8 @@ public:
                         me->SetReactState(REACT_DEFENSIVE);
                         DoScriptText(SAY_EVENT_END_01, me);
                         me->SetStandState(UNIT_STAND_STATE_STAND);
-                        pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_SKY_FLOOR), true);
+                        if (pInstance)
+                            pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_SKY_FLOOR),true);
                         if (Creature* pTemp = Unit::GetCreature(*me, uiControllerGUID))
                             pTemp->DealDamage(pTemp, pTemp->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                         bIsBattle = true;
@@ -719,24 +721,28 @@ public:
                         break;
                     case 29:
                         DoScriptText(SAY_EVENT_END_02, me);
+                        if (pInstance)
+                        {
+                            pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_ABEDNEUM),true);
+                            pInstance->SetData(DATA_BRANN_EVENT, DONE);
 
-                        pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_ABEDNEUM), true);
-                        pInstance->SetData(DATA_BRANN_EVENT, DONE);
-                        DespawnSummon();
+                            DespawnSummon(); 
 
-                        // Achievement criteria is with spell 59046 which does not exist.
-                        // There is thus no way it can be given by casting the spell on the players.
-                        pInstance->DoUpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_BE_SPELL_TARGET, 59046);
+                            // Achievement criteria is with spell 59046 which does not exist.
+                            // There is thus no way it can be given by casting the spell on the players.
+                            pInstance->DoUpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_BE_SPELL_TARGET, 59046);
 
-                        if (!bHasBeenDamaged && IsHeroic())
-                            pInstance->DoCompleteAchievement(ACHIEV_BRANN_SPANKIN_NEW);
+                            if (!bHasBeenDamaged && IsHeroic())
+                                pInstance->DoCompleteAchievement(ACHIEV_BRANN_SPANKIN_NEW);
+                        }
 
                         JumpToNextStep(5500);
                         break;
                     case 30:
-                        if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_ABEDNEUM)))
-                            DoScriptText(SAY_EVENT_END_03_ABED, pTemp);
-                        me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                        if (pInstance)
+                            if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_ABEDNEUM)))
+                                DoScriptText(SAY_EVENT_END_03_ABED, pTemp);
+                        me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP); // ??
                         JumpToNextStep(8500);
                         break;
                     case 31:
@@ -744,8 +750,9 @@ public:
                         JumpToNextStep(11500);
                         break;
                     case 32:
-                        if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_ABEDNEUM)))
-                            DoScriptText(SAY_EVENT_END_05_ABED, pTemp);
+                        if (pInstance)
+                            if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_ABEDNEUM)))
+                                DoScriptText(SAY_EVENT_END_05_ABED, pTemp);
                         JumpToNextStep(11500);
                         break;
                     case 33:
@@ -753,8 +760,9 @@ public:
                         JumpToNextStep(4500);
                         break;
                     case 34:
-                        if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_ABEDNEUM)))
-                            DoScriptText(SAY_EVENT_END_07_ABED, pTemp);
+                        if (pInstance)
+                            if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_ABEDNEUM)))
+                                DoScriptText(SAY_EVENT_END_07_ABED, pTemp);
                         JumpToNextStep(22500);
                         break;
                     case 35:
@@ -762,9 +770,12 @@ public:
                         JumpToNextStep(7500);
                         break;
                     case 36:
-                        pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_KADDRAK), true);
-                        if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_KADDRAK)))
-                            DoScriptText(SAY_EVENT_END_09_KADD, pTemp);
+                        if (pInstance)
+                        {
+                            pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_KADDRAK),true);
+                            if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_KADDRAK)))
+                                DoScriptText(SAY_EVENT_END_09_KADD, pTemp);
+                        }
                         JumpToNextStep(18500);
                         break;
                     case 37:
@@ -772,17 +783,19 @@ public:
                         JumpToNextStep(5500);
                         break;
                     case 38:
-                        if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_KADDRAK)))
-                            DoScriptText(SAY_EVENT_END_11_KADD, pTemp);
-                        JumpToNextStep(20500);
+                        if (pInstance)
+                            if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_KADDRAK)))
+                                DoScriptText(SAY_EVENT_END_11_KADD, pTemp);
+                            JumpToNextStep(20500);
                         break;
                     case 39:
                         DoScriptText(SAY_EVENT_END_12, me);
                         JumpToNextStep(2500);
                         break;
                     case 40:
-                        if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_KADDRAK)))
-                            DoScriptText(SAY_EVENT_END_13_KADD, pTemp);
+                        if (pInstance)
+                            if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_KADDRAK)))
+                                DoScriptText(SAY_EVENT_END_13_KADD, pTemp);
                         JumpToNextStep(19500);
                         break;
                     case 41:
@@ -790,9 +803,12 @@ public:
                         JumpToNextStep(10500);
                         break;
                     case 42:
-                        pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_MARNAK), true);
-                        if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_MARNAK)))
-                            DoScriptText(SAY_EVENT_END_15_MARN, pTemp);
+                        if (pInstance)
+                        {
+                            pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_MARNAK),true);
+                            if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_MARNAK)))
+                                DoScriptText(SAY_EVENT_END_15_MARN, pTemp);
+                        }
                         JumpToNextStep(6500);
                         break;
                     case 43:
@@ -800,17 +816,19 @@ public:
                         JumpToNextStep(6500);
                         break;
                     case 44:
-                        if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_MARNAK)))
-                            DoScriptText(SAY_EVENT_END_17_MARN, pTemp);
-                        JumpToNextStep(25500);
+                        if (pInstance)
+                            if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_MARNAK)))
+                                DoScriptText(SAY_EVENT_END_17_MARN, pTemp);
+                            JumpToNextStep(25500);
                         break;
                     case 45:
                         DoScriptText(SAY_EVENT_END_18, me);
                         JumpToNextStep(23500);
                         break;
                     case 46:
-                        if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_MARNAK)))
-                            DoScriptText(SAY_EVENT_END_19_MARN, pTemp);
+                        if (pInstance)
+                            if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_MARNAK)))
+                                DoScriptText(SAY_EVENT_END_19_MARN, pTemp);
                         JumpToNextStep(3500);
                         break;
                     case 47:
@@ -818,17 +836,20 @@ public:
                         JumpToNextStep(8500);
                         break;
                     case 48:
-                        if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_ABEDNEUM)))
-                            DoScriptText(SAY_EVENT_END_21_ABED, pTemp);
+                        if (pInstance)
+                            if (Creature* pTemp = Unit::GetCreature(*me, pInstance->GetData64(DATA_ABEDNEUM)))
+                                DoScriptText(SAY_EVENT_END_21_ABED, pTemp);
                         JumpToNextStep(5500);
                         break;
                     case 49:
                     {
-                        pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_KADDRAK), false);
-                        pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_MARNAK), false);
-                        pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_ABEDNEUM), false);
-                        pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_SKY_FLOOR), false);
-
+                        if (pInstance)
+                        {
+                            pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_KADDRAK),false);
+                            pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_MARNAK),false);
+                            pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_ABEDNEUM),false);
+                            pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_SKY_FLOOR),false);
+                        }
                         Player* pPlayer = GetPlayerForEscort();
                         if (pPlayer)
                             pPlayer->GroupEventHappens(QUEST_HALLS_OF_STONE, me);
@@ -866,7 +887,6 @@ public:
                 break;
             case GOSSIP_ACTION_INFO_DEF+2:
                 CAST_AI(npc_brann_hos::npc_brann_hosAI, pCreature->AI())->uiStep = 49;
-                CAST_AI(npc_brann_hos::npc_brann_hosAI, pCreature->AI())->uiPhaseTimer = 1000;
                 break;
         }
 
@@ -922,6 +942,7 @@ public:
             bAura = false;
             bCasted = false;
             uiCheckTimer = 5500;
+
             me->SetReactState(REACT_PASSIVE);
             me->SetSpeed(MOVE_FLIGHT, 0.7f, true);
         }
@@ -934,16 +955,20 @@ public:
                 {
                     me->RemoveAllAuras();
                     me->AddAura(SPELL_DARK_MATTER_VISUAL, me);
+
                     bAura = true;
                 }
 
                 if (bCasted)
+                {
                     me->DisappearAndDie();
+                }
 
                 if (Creature* pTarget = me->FindNearestCreature(CREATURE_DARK_MATTER_TARGET, 1.0f, true))
                 {
                     if (!bCasted) // prevent double cast
                         DoCast(DUNGEON_MODE(SPELL_DARK_MATTER, H_SPELL_DARK_MATTER));
+
                     bCasted = true;
                 }
 

@@ -1,34 +1,37 @@
-/*
- * Copyright (C) 2008-2011 TrinityCore <http://www.trinitycore.org/>
+/* 
+ * Copyright (C) 2008 - 2010 Trinity <http://www.trinitycore.org/>
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Script Author: LordVanMartin
  */
-
+ 
 #include "ScriptPCH.h"
 #include "halls_of_stone.h"
 
 enum Spells
 {
     SPELL_BOULDER_TOSS                             = 50843,
+    H_SPELL_BOULDER_TOSS                           = 59742,
     SPELL_GROUND_SPIKE                             = 59750,
     SPELL_GROUND_SLAM                              = 50827,
     SPELL_GROUND_SLAM_TRIGGERED                    = 50833,
     SPELL_SHATTER                                  = 50810,
+    H_SPELL_SHATTER                                = 61546,
     SPELL_SHATTER_EFFECT                           = 50811,
     H_SPELL_SHATTER_EFFECT                         = 61547,
     SPELL_STONED                                   = 50812,
-    SPELL_STOMP                                    = 50868,
+    SPELL_STOMP                                    = 48131,
     H_SPELL_STOMP                                  = 59744
 };
 
@@ -40,155 +43,162 @@ enum Yells
     SAY_SHATTER                                 = -1599010
 };
 
-enum Events
-{
-    EVENT_NONE,
-    EVENT_BOULDER_TOSS,
-    EVENT_GROUND_SPIKE,
-    EVENT_GROUND_SLAM,
-    EVENT_STOMP,
-    EVENT_SHATTER_CAST,
-    EVENT_SHATTER
-};
-
 class boss_krystallus : public CreatureScript
 {
-    public:
+public:
     boss_krystallus() : CreatureScript("boss_krystallus") { }
+
+    CreatureAI* GetAI(Creature* pCreature) const
+    {
+        return new boss_krystallusAI (pCreature);
+    }
 
     struct boss_krystallusAI : public ScriptedAI
     {
-        boss_krystallusAI(Creature* c) : ScriptedAI(c)
+        boss_krystallusAI(Creature *c) : ScriptedAI(c)
         {
-            _instance = c->GetInstanceScript();
+            pInstance = c->GetInstanceScript();
 
-            // temporary to let ground slam effect not be interrupted
-            SpellEntry* tempSpell;
-            tempSpell = GET_SPELL(SPELL_GROUND_SLAM_TRIGGERED);
-            if (tempSpell)
-                tempSpell->InterruptFlags = 0;
+            //temporary to let ground slam effect not be interrupted
+            SpellEntry *TempSpell;
+            TempSpell = GET_SPELL(SPELL_GROUND_SLAM_TRIGGERED);
+            if (TempSpell)
+            { 
+                TempSpell->InterruptFlags = 0;
+            }
         }
+
+        uint32 uiBoulderTossTimer;
+        uint32 uiGroundSpikeTimer;
+        uint32 uiGroundSlamTimer;
+        uint32 uiStompTimer;
+
+        bool bIsSlam;
+
+        InstanceScript* pInstance;
 
         void Reset()
         {
-            IsSlam = false;
-            events.Reset();
+            bIsSlam = false;
 
-            if (_instance)
-                _instance->SetData(DATA_KRYSTALLUS_EVENT, NOT_STARTED);
+            uiBoulderTossTimer = 3000 + rand()%6000;
+            uiGroundSpikeTimer = 6000 + rand()%5000;
+            uiGroundSlamTimer = 20000 + rand()%3000;
+            uiStompTimer = 15000 + rand()%5000;
+
+            if (pInstance)
+                pInstance->SetData(DATA_KRYSTALLUS_EVENT, NOT_STARTED);
         }
 
         void EnterCombat(Unit* /*who*/)
         {
             DoScriptText(SAY_AGGRO, me);
 
-            events.ScheduleEvent(EVENT_BOULDER_TOSS, urand(3000, 9000));
-            events.ScheduleEvent(EVENT_GROUND_SLAM, urand(20000, 23000));
-            events.ScheduleEvent(EVENT_STOMP, urand(15000, 20000));
-
-            if (IsHeroic())
-                events.ScheduleEvent(EVENT_GROUND_SPIKE, urand(6000, 11000));
-
-            if (_instance)
-                _instance->SetData(DATA_KRYSTALLUS_EVENT, IN_PROGRESS);
+            if (pInstance)
+                pInstance->SetData(DATA_KRYSTALLUS_EVENT, IN_PROGRESS);
         }
 
-        void UpdateAI(uint32 const diff)
+        void UpdateAI(const uint32 diff)
         {
+            //Return since we have no target
             if (!UpdateVictim())
                 return;
 
-            events.Update(diff);
-
-            if (me->HasUnitState(UNIT_STAT_CASTING))
-                return;
-
-            while (uint32 eventId = events.ExecuteEvent())
+            if (bIsSlam)
             {
-                switch (eventId)
+                if (uiGroundSlamTimer <= diff)
                 {
-                    case EVENT_GROUND_SPIKE:
-                        if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
-                            DoCast(target, SPELL_GROUND_SPIKE);
-                        events.ScheduleEvent(EVENT_GROUND_SPIKE, urand(7000, 12000));
-                        break;
-                    case EVENT_BOULDER_TOSS:
-                        if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
-                            DoCast(target, SPELL_BOULDER_TOSS);
-                        events.ScheduleEvent(EVENT_BOULDER_TOSS, urand(9000, 15000));
-                        break;
-                    case EVENT_STOMP:
-                        DoCast(DUNGEON_MODE(SPELL_STOMP, H_SPELL_STOMP));
-                        events.ScheduleEvent(EVENT_STOMP, urand(12000, 18000));
-                        break;
-                    case EVENT_GROUND_SLAM:
-                        me->GetMotionMaster()->Clear();
-                        me->GetMotionMaster()->MoveIdle();
-                        IsSlam = true;
-                        DoCast(SPELL_GROUND_SLAM);
-                        events.DelayEvents(13000);
-                        events.ScheduleEvent(EVENT_SHATTER_CAST, 11000);
-                        break;
-                    case EVENT_SHATTER_CAST:
-                        DoCast(SPELL_SHATTER);
-                        DoScriptText(SAY_SHATTER, me);
-                        events.ScheduleEvent(EVENT_SHATTER, 1100);
-                        break;
-                    case EVENT_SHATTER:
-                        _instance->DoCastSpellOnPlayers(DUNGEON_MODE(SPELL_SHATTER_EFFECT, H_SPELL_SHATTER_EFFECT));
-                        _instance->DoRemoveAurasDueToSpellOnPlayers(SPELL_STONED);
-                        if (IsSlam)
-                        {
-                            IsSlam = false;
-                            if (me->GetMotionMaster()->GetCurrentMovementGeneratorType() != TARGETED_MOTION_TYPE)
-                            {
-                                if (me->getVictim())
-                                    me->GetMotionMaster()->MoveChase(me->getVictim());
-                            }
-                        }
-                        events.ScheduleEvent(EVENT_GROUND_SLAM, urand(15000, 20000));
-                        break;
-                    default:
-                        break;
-                }
+                    uiGroundSlamTimer = 15000 + rand()%5000;
+                    DoCast(me, DUNGEON_MODE(SPELL_SHATTER, H_SPELL_SHATTER));
+                } 
+                else uiGroundSlamTimer -= diff;
             }
+            else
+            {
+                if (IsHeroic())
+                {
+                    if (uiGroundSpikeTimer <= diff)
+                    {
+                        if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                            DoCast(pTarget, SPELL_GROUND_SPIKE);
+                        uiGroundSpikeTimer = 7000 + rand()%5000;
+                    } 
+                    else uiGroundSpikeTimer -= diff;
+                }
 
-            if (!IsSlam)
+                if (uiBoulderTossTimer <= diff)
+                {
+                    if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                        DoCast(pTarget, SPELL_BOULDER_TOSS);
+                    uiBoulderTossTimer = 9000 + rand()%6000;
+                } 
+                else uiBoulderTossTimer -= diff;
+
+                if (uiStompTimer <= diff)
+                {
+                    DoCast(me, SPELL_STOMP);
+                    uiStompTimer = 12000 + rand()%6000;
+                } 
+                else uiStompTimer -= diff;
+
+                if (uiGroundSlamTimer <= diff)
+                {
+                    me->GetMotionMaster()->Clear();
+                    me->GetMotionMaster()->MoveIdle();
+
+                    bIsSlam = true;
+                    uiGroundSlamTimer = 10000;
+
+                    DoCast(me, SPELL_GROUND_SLAM, true); //TODO: let cast not be interrupted
+                } 
+                else uiGroundSlamTimer -= diff;
+
                 DoMeleeAttackIfReady();
+            }
         }
 
         void JustDied(Unit* /*killer*/)
         {
             DoScriptText(SAY_DEATH, me);
 
-            if (_instance)
-            {
-                _instance->SetData(DATA_KRYSTALLUS_EVENT, DONE);
-                _instance->DoRemoveAurasDueToSpellOnPlayers(SPELL_STONED);
-                _instance->DoRemoveAurasDueToSpellOnPlayers(SPELL_GROUND_SLAM);
-                _instance->DoRemoveAurasDueToSpellOnPlayers(SPELL_GROUND_SLAM_TRIGGERED);
-            }
+            if (pInstance)
+                pInstance->SetData(DATA_KRYSTALLUS_EVENT, DONE);
         }
 
         void KilledUnit(Unit * victim)
         {
             if (victim == me)
                 return;
-
             DoScriptText(SAY_KILL, me);
         }
 
-    private:
-        InstanceScript* _instance;
-        EventMap events;
-        bool IsSlam;
+        void SpellHitTarget(Unit* pTarget, const SpellEntry* pSpell)
+        {
+            //this part should be in the core
+            if (pSpell->Id == SPELL_SHATTER || pSpell->Id == H_SPELL_SHATTER)
+            {
+                //this spell must have custom handling in the core, dealing damage based on distance
+                pTarget->CastSpell(pTarget, DUNGEON_MODE(SPELL_SHATTER_EFFECT, H_SPELL_SHATTER_EFFECT), true);
 
+                if (pTarget->HasAura(SPELL_STONED))
+                    pTarget->RemoveAurasDueToSpell(SPELL_STONED);
+
+                //clear this, if we are still performing
+                if (bIsSlam)
+                {
+                    bIsSlam = false;
+
+                    //and correct movement, if not already
+                    if (me->GetMotionMaster()->GetCurrentMovementGeneratorType() != TARGETED_MOTION_TYPE)
+                    {
+                        if (me->getVictim())
+                            me->GetMotionMaster()->MoveChase(me->getVictim());
+                    }
+                }
+            }
+        }
     };
 
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new boss_krystallusAI(creature);
-    }
 };
 
 void AddSC_boss_krystallus()

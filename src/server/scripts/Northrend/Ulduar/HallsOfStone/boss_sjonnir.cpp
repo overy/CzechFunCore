@@ -1,27 +1,20 @@
-/*
- * Copyright (C) 2008-2011 TrinityCore <http://www.trinitycore.org/>
+/* 
+ * Copyright (C) 2008 - 2010 Trinity <http://www.trinitycore.org/>
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Script Author: LordVanMartin
  */
-
-/* Script Data Start
-SDName: Boss sjonnir
-SDAuthor: LordVanMartin
-SD%Complete:
-SDComment:
-SDCategory:
-Script Data End */
 
 #include "ScriptPCH.h"
 #include "halls_of_stone.h"
@@ -192,7 +185,7 @@ public:
                 if (!me->IsNonMeleeSpellCasted(false))
                 {
                     DoCast(me, SPELL_LIGHTING_RING);
-                    uiLightningRingTimer = urand(30000, 35000);
+                    uiLightningRingTimer = urand(25000, 30000);
                 }
             } else uiLightningRingTimer -= diff;
 
@@ -303,7 +296,7 @@ public:
         {
             if (victim == me)
                 return;
-            DoScriptText(RAND(SAY_SLAY_1, SAY_SLAY_2, SAY_SLAY_3), me);
+            DoScriptText(RAND(SAY_SLAY_1,SAY_SLAY_2,SAY_SLAY_3), me);
         }
 
         void KilledIronSludge()
@@ -336,7 +329,7 @@ public:
 
         void Reset()
         {
-            uiMergeTimer = 7500;
+            uiMergeTimer = 5000;
         }
 
         void JustSummoned(Creature* pSummon)
@@ -360,7 +353,7 @@ public:
                         me->DisappearAndDie();
                     }
 
-                uiMergeTimer = 7500;
+                uiMergeTimer = 5000;
             } else uiMergeTimer -= diff;
         }
     };
@@ -400,7 +393,7 @@ public:
             if (uiToxicVolleyTimer <= diff)
             {
                 DoCast(me->getVictim(), SPELL_TOXIC_VOLLEY);
-                uiToxicVolleyTimer = urand(5000, 10000);
+                uiToxicVolleyTimer = 5000;
             } else uiToxicVolleyTimer -= diff;
 
             DoMeleeAttackIfReady();
