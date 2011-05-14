@@ -136,6 +136,27 @@ void CreatureAI::DoAttackerAreaInCombat(Unit* attacker, float range, Unit* pUnit
     }
 }
 
+/*void CreatureAI::DoAttackerGroupInCombat(Player* attacker)
+{
+    if(attacker)
+    {
+        if( Group *pGroup = attacker->GetGroup() )
+        {
+            for(GroupReference *itr = pGroup->GetFirstMember(); itr != NULL; itr = itr->next())
+            {
+                Player *pGroupGuy = itr->getSource();
+
+                if(pGroupGuy && pGroupGuy->isAlive() && pGroupGuy->GetMapId() == me->GetMapId())
+                {
+                    me->SetInCombatWith(pGroupGuy);
+                    pGroupGuy->SetInCombatWith(me);
+                    me->AddThreat(pGroupGuy, 0.0f);
+                }
+            }
+        }
+    }
+}
+*/
 // scripts does not take care about MoveInLineOfSight loops
 // MoveInLineOfSight can be called inside another MoveInLineOfSight and cause stack overflow
 void CreatureAI::MoveInLineOfSight_Safe(Unit *who)

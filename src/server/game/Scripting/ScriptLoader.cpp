@@ -204,6 +204,7 @@ void AddSC_stratholme();
 void AddSC_sunken_temple();                  // Sunken Temple
 void AddSC_instance_sunken_temple();
 void AddSC_instance_sunwell_plateau();       //Sunwell Plateau
+void AddSC_mob_sunwell_plateau();
 void AddSC_boss_kalecgos();
 void AddSC_boss_brutallus();
 void AddSC_boss_felmyst();
@@ -410,7 +411,7 @@ void AddSC_boss_malygos();              // The Nexus: Eye of Eternity
 void AddSC_instance_eye_of_eternity();
 void AddSC_boss_sartharion();            //Obsidian Sanctum
 void AddSC_instance_obsidian_sanctum();
-void AddSC_mob_obsidian_sanctum;
+void AddSC_mob_obsidian_sanctum();
 void AddSC_boss_bjarngrim();             //Ulduar Halls of Lightning
 void AddSC_boss_loken();
 void AddSC_boss_ionar();
@@ -808,6 +809,7 @@ void AddEasternKingdomsScripts()
     AddSC_sunken_temple();                  // Sunken Temple
     AddSC_instance_sunken_temple();
     AddSC_instance_sunwell_plateau();       //Sunwell Plateau
+    AddSC_mob_sunwell_plateau();
     AddSC_boss_kalecgos();
     AddSC_boss_brutallus();
     AddSC_boss_felmyst();
@@ -1108,7 +1110,7 @@ void AddNorthrendScripts()
     AddSC_instance_eye_of_eternity();
     AddSC_boss_sartharion();            //Obsidian Sanctum
     AddSC_instance_obsidian_sanctum();
-    AddSC_mob_obsidian_sanctum
+    AddSC_mob_obsidian_sanctum();
     AddSC_boss_bjarngrim();             //Ulduar Halls of Lightning
     AddSC_boss_loken();
     AddSC_boss_ionar();
