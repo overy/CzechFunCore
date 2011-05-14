@@ -44,6 +44,7 @@ set(scripts_STAT_SRCS
   Northrend/ObsidianSanctum/instance_obsidian_sanctum.cpp
   Northrend/ObsidianSanctum/obsidian_sanctum.h
   Northrend/ObsidianSanctum/boss_sartharion.cpp
+  Northrend/ObsidianSanctum/mob_obsidian_sanctum.cpp
   Northrend/FrozenHalls/HallsOfReflection/halls_of_reflection.h
   Northrend/FrozenHalls/HallsOfReflection/boss_falric.cpp
   Northrend/FrozenHalls/HallsOfReflection/instance_halls_of_reflection.cpp
