@@ -29,15 +29,21 @@ enum eTypes
     TYPE_ASSEMBLY               = 4,
     TYPE_KOLOGARN               = 5,
     TYPE_AURIAYA                = 6,
-    TYPE_MIMIRON                = 7,
-    TYPE_HODIR                  = 8,
-    TYPE_THORIM                 = 9,
-    TYPE_FREYA                  = 10,
+    TYPE_HODIR                  = 7,
+    TYPE_THORIM                 = 8,
+    TYPE_FREYA                  = 9,
+    TYPE_MIMIRON                = 10,
     TYPE_VEZAX                  = 11,
     TYPE_YOGGSARON              = 12,
     TYPE_ALGALON                = 13,
     TYPE_COLOSSUS               = 14,
 
+    TYPE_SARA,
+    TYPE_BRAIN_DOOR_1,
+    TYPE_BRAIN_DOOR_2,
+    TYPE_BRAIN_DOOR_3,
+    DATA_KEEPER_SUPPORT_YOGG,
+    
     // Assembly of Iorn
     DATA_STEELBREAKER,
     DATA_MOLGEIM,
@@ -49,6 +55,29 @@ enum eTypes
     // Kologarn:
     DATA_LEFT_ARM,
     DATA_RIGHT_ARM,
+
+    // Freya Elders
+    TYPE_ELDER_BRIGHTLEAF,
+    TYPE_ELDER_IRONBRANCH,
+    TYPE_ELDER_STONEBARK,
+
+    // Thorim
+    DATA_RUNIC_COLOSSUS,
+    DATA_RUNE_GIANT,
+    DATA_RUNIC_DOOR,
+    DATA_STONE_DOOR,
+    DATA_HODIR_RARE_CHEST,
+
+    DATA_CALL_TRAM,
+    //Mimiron
+    DATA_LEVIATHAN_MK_II,
+    DATA_MIMIRON_ELEVATOR,
+    DATA_AERIAL_UNIT,
+    DATA_VX_001,
+    DATA_MAGNETIC_CORE,
+
+    //Pre YoggSaron
+    DATA_ADD_HELP_FLAG,
 };
 
 enum eNPCs
@@ -72,15 +101,22 @@ enum eNPCs
     NPC_RUBBLE                  = 33768,
     NPC_AURIAYA                 = 33515,
     NPC_MIMIRON                 = 33350,
-    NPC_HODIR                   = 32845,
-    NPC_THORIM                  = 32865,
-    NPC_FREYA                   = 32906,
-    NPC_VEZAX                   = 33271,
-    NPC_YOGGSARON               = 33288,
-    NPC_ALGALON                 = 32871,
+    NPC_AERIAL_COMMAND_UNIT     = 33670,
+    NPC_MAGNETIC_CORE           = 34068,
     NPC_LEVIATHAN_MKII          = 33432,
     NPC_VX_001                  = 33651,
-    NPC_AERIAL_COMMAND_UNIT     = 33670,
+    NPC_HODIR                   = 32845,
+    NPC_THORIM                  = 32865,
+    NPC_RUNIC_COLOSSUS          = 32872,
+    NPC_RUNE_GIANT              = 32873,
+    NPC_FREYA                   = 32906,
+    NPC_ELDER_IRONBRANCH        = 32913,
+    NPC_ELDER_STONEBARK         = 32914,
+    NPC_ELDER_BRIGHTLEAF        = 32915,
+    NPC_VEZAX                   = 33271,
+    NPC_YOGGSARON               = 33288,
+    NPC_SARA                    = 33134,
+    NPC_ALGALON                 = 32871,
 };
 
 enum eGameObjects
@@ -91,19 +127,44 @@ enum eGameObjects
     GO_KOLOGARN_DOOR        = 194553,
     GO_THORIM_CHEST_HERO    = 194315,
     GO_THORIM_CHEST         = 194314,
+    GO_THORIM_ENCOUNTER_DOOR= 194559,
+    GO_THORIM_STONE_DOOR    = 194558,
+    GO_THORIM_RUNIC_DOOR    = 194557,
     GO_HODIR_CHEST_HERO     = 194308,
     GO_HODIR_CHEST          = 194307,
+    GO_HODIR_IN_DOOR_STONE  = 194442,
+    GO_HODIR_OUT_DOOR_ICE   = 194441,
+    GO_HODIR_OUT_DOOR_STONE = 194634,
     GO_FREYA_CHEST_HERO     = 194325,
     GO_FREYA_CHEST          = 194324,
     GO_LEVIATHAN_DOOR       = 194905,
     GO_LEVIATHAN_GATE       = 194630,
+    GO_MIMIRON_TRAIN        = 194675,
+    GO_MIMIRON_ELEVATOR     = 194749,
+    GO_MIMIRON_DOOR_1       = 194776,
+    GO_MIMIRON_DOOR_2       = 194774,
+    GO_MIMIRON_DOOR_3       = 194775,
+    GO_WAY_TO_YOGG          = 194255,
     GO_VEZAX_DOOR           = 194750,
+    GO_YOGGSARON_DOOR       = 194773,
+    GO_YOGGBRAIN_DOOR_1     = 194635,
+    GO_YOGGBRAIN_DOOR_2     = 194636,
+    GO_YOGGBRAIN_DOOR_3     = 194637,
     GO_MOLE_MACHINE         = 194316,
     GO_RAZOR_HARPOON_1      = 194542,
     GO_RAZOR_HARPOON_2      = 194541,
     GO_RAZOR_HARPOON_3      = 194543,
     GO_RAZOR_HARPOON_4      = 194519,
     GO_RAZOR_BROKEN_HARPOON = 194565,
+    GO_ALGALON_ACCESS       = 194628,
+    GO_ALGALON_DOOR_1       = 194911,
+    GO_ALGALON_DOOR_2       = 194767,
+    GO_ALGALON_PLATFORM     = 194715,
+    GO_ALGALON_GLOBE        = 194148,
+    GO_ALGALON_BRIDGE       = 194253,
+    GO_ALGALON_B_VISUAL     = 194716,
+    GO_ALGALON_B_DOOR       = 194910,
+    GO_GIFT_OF_THE_OBSERVER = 194821,
 };
 
 enum eTowerEvents
@@ -112,6 +173,12 @@ enum eTowerEvents
     EVENT_TOWER_OF_FROST_DESTROYED     = 21032,
     EVENT_TOWER_OF_FLAMES_DESTROYED    = 21033,
     EVENT_TOWER_OF_LIFE_DESTROYED      = 21030
+};
+
+enum eAchievements
+{
+    ACHIEVEMENT_CHAMPION_OF_ULDUAR      = 2903,
+    ACHIEVEMENT_CONQUEROR_OF_ULDUAR     = 2904,
 };
 
 enum eAchievementCriteria
@@ -130,6 +197,79 @@ enum eAchievementCriteria
     ACHIEVEMENT_CRITERIA_HOT_POCKET_25                   = 10431,
     ACHIEVEMENT_CRITERIA_QUICK_SHAVE_10                  = 10062, // Razorscale
     ACHIEVEMENT_CRITERIA_QUICK_SHAVE_25                  = 10063,
+    ACHIEVEMENT_CRITERIA_THE_ASSASSINATION_OF_KING_LLANE_25 = 10321, // Yogg-Saron
+    ACHIEVEMENT_CRITERIA_THE_ASSASSINATION_OF_KING_LLANE_10 = 10324,
+    ACHIEVEMENT_CRITERIA_FORGING_OF_THE_DEMON_SOUL_25       = 10322,
+    ACHIEVEMENT_CRITERIA_FORGING_OF_THE_DEMON_SOUL_10       = 10325,
+    ACHIEVEMENT_CRITERIA_THE_TORTURED_CHAMPION_25           = 10323,
+    ACHIEVEMENT_CRITERIA_THE_TORTURED_CHAMPION_10           = 10326,
+
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_FLAMELEVIATAN_10       = 10042,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_IGNIS_10               = 10342,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_RAZORSCALE_10          = 10340,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_XT002_10               = 10341,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_ASSEMBLY_10            = 10598,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_KOLOGARN_10            = 10348,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_AURIAYA_10             = 10351,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_HODIR_10               = 10439,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_THORIM_10              = 10403,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_FREYA_10               = 10582,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_MIMIRON_10             = 10347,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_VEZAX_10               = 10349,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_YOGGSARON_10           = 10350,
+
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_FLAMELEVIATAN_25       = 10352,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_IGNIS_25               = 10355,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_RAZORSCALE_25          = 10353,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_XT002_25               = 10354,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_ASSEMBLY_25            = 10599,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_KOLOGARN_25            = 10357,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_AURIAYA_25             = 10363,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_HODIR_25               = 10719,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_THORIM_25              = 10404,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_FREYA_25               = 10583,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_MIMIRON_25             = 10361,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_VEZAX_25               = 10362,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_YOGGSARON_25           = 10364,
+
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_ALGALON_10             = 10568,
+    ACHIEVEMENT_CRITERIA_KILL_WITHOUT_DEATHS_ALGALON_25             = 10570,
+};
+
+enum eKeeperSupport
+{
+    THORIM_SUPPORT                      = 0x01,
+    HODIR_SUPPORT                       = 0x02,
+    FREYA_SUPPORT                       = 0x04,
+    MIMIRON_SUPPORT                     = 0x08,
+};
+
+enum eBossDeadFlags
+{
+    DEAD_FLAME_LEVIATHAN                = 0x0001,
+    DEAD_IGNIS                          = 0x0002,
+    DEAD_RAZORSCALE                     = 0x0004,
+    DEAD_XT002                          = 0x0008,
+    DEAD_ASSEMBLY                       = 0x0010,
+    DEAD_KOLOGARN                       = 0x0020,
+    DEAD_AURIAYA                        = 0x0040, 
+    DEAD_HODIR                          = 0x0080,
+    DEAD_THORIM                         = 0x0100,
+    DEAD_FREYA                          = 0x0200,
+    DEAD_MIMIRON                        = 0x0400,
+    DEAD_VEZAX                          = 0x0800,
+    DEAD_YOGGSARON                      = 0x1000,
+};
+
+enum eData
+{
+    DATA_PORTAL_PHASE = 1,
+};
+
+enum eWorldstates
+{
+    WORLDSTATE_ALGALON_TIME = 4131,
+    WORLDSTATE_ALGALON_SHOW = 4132
 };
 
 #endif

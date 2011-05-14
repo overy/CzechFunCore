@@ -72,6 +72,7 @@ enum Spells
     SPELL_DUST_CLOUD_IMPACT                     = 54740,
     AURA_STEALTH_DETECTION                      = 18950,
     SPELL_RIDE_VEHICLE                          = 46598,
+    SPELL_ANTI_AIR_ROCKET_DMG                   = 62363
 };
 
 enum Creatures
@@ -238,9 +239,6 @@ class boss_flame_leviathan : public CreatureScript
                 Shutout = true;
                 Unbroken = true;
 
-                // need to have correct immunities set in db
-                me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);
-                me->ApplySpellImmune(0, IMMUNITY_ID, 49560, true); //deathgrip
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_STUNNED);
                 me->SetReactState(REACT_PASSIVE);
             }
@@ -755,37 +753,6 @@ class boss_flame_leviathan_overload_device : public CreatureScript
         }
 };
 
-class boss_flame_leviathan_safety_container : public CreatureScript
-{
-    public:
-        boss_flame_leviathan_safety_container() : CreatureScript("boss_flame_leviathan_safety_container") { }
-
-        struct boss_flame_leviathan_safety_containerAI : public PassiveAI
-        {
-            boss_flame_leviathan_safety_containerAI(Creature* creature) : PassiveAI(creature)
-            {
-            }
-
-            void JustDied(Unit* /*killer*/)
-            {
-                float x, y, z;
-                me->GetPosition(x, y, z);
-                z = me->GetMap()->GetHeight(x, y, z);
-                me->GetMotionMaster()->MovePoint(0, x, y, z);
-                me->GetMap()->CreatureRelocation(me, x, y, z, 0);
-            }
-
-            void UpdateAI(uint32 const /*diff*/)
-            {
-            }
-        };
-
-        CreatureAI* GetAI(Creature* creature) const
-        {
-            return new boss_flame_leviathan_safety_containerAI(creature);
-        }
-};
-
 class npc_mechanolift : public CreatureScript
 {
     public:
@@ -793,59 +760,75 @@ class npc_mechanolift : public CreatureScript
 
         struct npc_mechanoliftAI : public PassiveAI
         {
-            npc_mechanoliftAI(Creature* creature) : PassiveAI(creature)
-            {
-                ASSERT(me->GetVehicleKit());
-            }
+            npc_mechanoliftAI(Creature* creature) : PassiveAI(creature) { }
 
-            uint32 MoveTimer;
-
-            void Reset()
+            void JustDied(Unit * /*killer*/)
             {
-                MoveTimer = 0;
-                me->GetMotionMaster()->MoveRandom(50);
-            }
-
-            void JustDied(Unit* /*killer*/)
-            {
-                me->GetMotionMaster()->MoveTargetedHome();
-                DoCast(SPELL_DUSTY_EXPLOSION);
-                Creature* liquid = DoSummon(NPC_LIQUID, me, 0);
+                Creature* liquid = DoSummon(NPC_LIQUID, me, 0, 190000, TEMPSUMMON_TIMED_DESPAWN);
                 if (liquid)
                 {
-                    liquid->CastSpell(liquid, SPELL_LIQUID_PYRITE, true);
-                    liquid->CastSpell(liquid, SPELL_DUST_CLOUD_IMPACT, true);
+                    float x, y, z;
+                    me->GetPosition(x, y, z);
+                    z = me->GetMap()->GetHeight(x, y, MAX_HEIGHT);
+                    liquid->GetMotionMaster()->MovePoint(0, x, y, z);
                 }
-            }
-
-            void MovementInform(uint32 type, uint32 id)
-            {
-                if (type == POINT_MOTION_TYPE && id == 1)
-                    if (Creature* container = me->FindNearestCreature(NPC_CONTAINER, 5, true))
-                        container->EnterVehicle(me);
-            }
-
-            void UpdateAI(const uint32 diff)
-            {
-                if (MoveTimer <= diff)
-                {
-                    if (me->GetVehicleKit()->HasEmptySeat(-1))
-                    {
-                        Creature* container = me->FindNearestCreature(NPC_CONTAINER, 50, true);
-                        if (container && !container->GetVehicle())
-                            me->GetMotionMaster()->MovePoint(1, container->GetPositionX(), container->GetPositionY(), container->GetPositionZ());
-                    }
-
-                    MoveTimer = 30000; //check next 30 seconds
-                }
-                else
-                    MoveTimer -= diff;
             }
         };
 
         CreatureAI* GetAI(Creature* creature) const
         {
             return new npc_mechanoliftAI(creature);
+        }
+};
+
+class npc_liquid_pyrite : public CreatureScript
+{
+    public:
+        npc_liquid_pyrite() : CreatureScript("npc_liquid_pyrite") { }
+
+        struct npc_liquid_pyriteAI : public PassiveAI
+        {
+            npc_liquid_pyriteAI(Creature* creature) : PassiveAI(creature) { }
+
+            uint32 DespawnTimer;
+
+            void Reset()
+            {
+                DoCast(me, SPELL_LIQUID_PYRITE, true);
+                me->SetDisplayId(28476);
+                DespawnTimer = 7000;
+            }
+
+            void MovementInform(uint32 type, uint32 /*id*/)
+            {
+                if (type == POINT_MOTION_TYPE)
+                {
+                    DoCast(me, SPELL_DUSTY_EXPLOSION, true);
+                    DoCast(me, SPELL_DUST_CLOUD_IMPACT, true);
+                    me->SetDisplayId(28783);
+                }
+            }
+
+            void DamageTaken(Unit* /*who*/, uint32& damage)
+            {
+                damage = 0;
+            }
+
+            void UpdateAI(const uint32 diff)
+            {
+                if (DespawnTimer <= diff)
+                {
+                    if (me->GetVehicle())
+                        me->DisappearAndDie();
+                    DespawnTimer = 7000;
+                }
+                else DespawnTimer -= diff;
+            }
+        };
+
+        CreatureAI* GetAI(Creature* creature) const
+        {
+            return new npc_liquid_pyriteAI(creature);
         }
 };
 
@@ -1412,6 +1395,65 @@ class achievement_unbroken : public AchievementCriteriaScript
         }
 };
 
+// strange workaround until traj target selection works
+class spell_anti_air_rocket : public SpellScriptLoader
+{
+    public:
+        spell_anti_air_rocket() : SpellScriptLoader("spell_anti_air_rocket") { }
+
+        class spell_anti_air_rocket_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_anti_air_rocket_SpellScript);
+
+            bool Validate(SpellEntry const* /*spell*/)
+            {
+                if (!sSpellStore.LookupEntry(SPELL_ANTI_AIR_ROCKET_DMG))
+                    return false;
+                return true;
+            }
+
+            void HandleTriggerMissile(SpellEffIndex effIndex)
+            {
+                PreventHitDefaultEffect(effIndex);
+
+                if (Position* pos = GetTargetDest())
+                {
+                    if (Creature* temp = GetCaster()->SummonCreature(89, *pos, TEMPSUMMON_TIMED_DESPAWN, 500))
+                    {
+                        temp->SetReactState(REACT_PASSIVE);
+                        temp->SetFlying(true);
+                        temp->SetVisible(false);
+                        std::list<Creature*> list;
+                        GetCreatureListWithEntryInGrid(list, GetCaster(), NPC_MECHANOLIFT, 100.0f);
+
+                        while (!list.empty())
+                        {
+                            std::list<Creature*>::iterator itr = list.begin();
+                            std::advance(itr, urand(0, list.size()-1));
+
+                            if ((*itr)->IsInBetween(GetCaster(), temp, 10.0f))
+                            {
+                                GetCaster()->CastSpell((*itr)->GetPositionX(), (*itr)->GetPositionY(), (*itr)->GetPositionZ(), SPELL_ANTI_AIR_ROCKET_DMG, true);
+                                return;
+                            }
+                            list.erase(itr);
+                        }
+                    }
+                }
+            }
+
+            void Register()
+            {
+                OnEffect += SpellEffectFn(spell_anti_air_rocket_SpellScript::HandleTriggerMissile, EFFECT_0, SPELL_EFFECT_TRIGGER_MISSILE);
+            }
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_anti_air_rocket_SpellScript();
+        }
+};
+
 void AddSC_boss_flame_leviathan()
 {
     new boss_flame_leviathan();
@@ -1419,8 +1461,8 @@ void AddSC_boss_flame_leviathan()
     new boss_flame_leviathan_defense_turret();
     new boss_flame_leviathan_defense_cannon();
     new boss_flame_leviathan_overload_device();
-    new boss_flame_leviathan_safety_container();
     new npc_mechanolift();
+    new npc_liquid_pyrite();
     new spell_pool_of_tar();
     new npc_colossus();
     new npc_thorims_hammer();
@@ -1437,4 +1479,5 @@ void AddSC_boss_flame_leviathan()
     new achievement_three_car_garage_siege();
     new achievement_shutout();
     new achievement_unbroken();
+    new spell_anti_air_rocket();
 }

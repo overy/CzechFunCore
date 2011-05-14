@@ -90,7 +90,9 @@ enum Events
     EVENT_CHAIN_LIGHTNING,
     EVENT_OVERLOAD,
     EVENT_LIGHTNING_WHIRL,
-    EVENT_LIGHTNING_TENDRILS,
+    EVENT_LIGHTNING_TENDRILS_START,
+    EVENT_LIGHTNING_TENDRILS_END,
+    EVENT_THREAT_WIPE,
     EVENT_STORMSHIELD,
 };
 
@@ -219,6 +221,7 @@ public:
             events.Reset();
             phase = 0;
             me->RemoveAllAuras();
+            me->RemoveLootMode(1);
             if (pInstance)
             {
                 pInstance->SetBossState(TYPE_ASSEMBLY, NOT_STARTED);
@@ -260,6 +263,7 @@ public:
             if (damage >= me->GetHealth())
             {
                 bool has_supercharge = false;
+                bool allowLoot = true;
 
                 if (Creature* Brundir = Unit::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_BRUNDIR) : 0))
                 {
@@ -267,8 +271,11 @@ public:
                     {
                         Brundir->SetFullHealth();
                         has_supercharge = UpdateSupercharge(Brundir);
+                        allowLoot = false;
                     }
                 }
+                else
+                    allowLoot = false;
 
                 if (Creature* Molgeim = Unit::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_MOLGEIM) : 0))
                 {
@@ -276,11 +283,17 @@ public:
                     {
                         Molgeim->SetFullHealth();
                         has_supercharge = UpdateSupercharge(Molgeim);
+                        allowLoot = false;
                     }
                 }
+                else
+                    allowLoot = false;
 
                 if (!has_supercharge)
                     DoCast(SPELL_SUPERCHARGE);
+
+                if (allowLoot)
+                    me->ResetLootMode();
             }
         }
 
@@ -296,7 +309,7 @@ public:
             DoScriptText(RAND(SAY_STEELBREAKER_SLAY_1, SAY_STEELBREAKER_SLAY_2), me);
 
             if (phase == 3)
-                DoCast(me, SPELL_ELECTRICAL_CHARGE);
+                DoCast(me, SPELL_ELECTRICAL_CHARGE, true);
         }
 
         void SpellHit(Unit * /*from*/, const SpellEntry *spell)
@@ -343,6 +356,42 @@ public:
 
 };
 
+class spell_meltdown : public SpellScriptLoader
+{
+    public:
+        spell_meltdown() : SpellScriptLoader("spell_meltdown") { }
+
+        class spell_meltdown_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_meltdown_SpellScript);
+
+            bool Validate(SpellEntry const* /*spell*/)
+            {
+                if (!sSpellStore.LookupEntry(SPELL_ELECTRICAL_CHARGE))
+                    return false;
+                return true;
+            }
+
+            void TriggerElectricalCharge(SpellEffIndex /*effIndex*/)
+            {
+                if (Unit* target = GetHitUnit())
+                    if (InstanceScript* _instance = target->GetInstanceScript())
+                        if (Creature* steelbreaker = ObjectAccessor::GetCreature(*target, _instance->GetData64(DATA_STEELBREAKER)))
+                            steelbreaker->CastSpell(steelbreaker, SPELL_ELECTRICAL_CHARGE, true);
+            }
+
+            void Register()
+            {
+                OnEffect += SpellEffectFn(spell_meltdown_SpellScript::TriggerElectricalCharge, EFFECT_1, SPELL_EFFECT_INSTAKILL);
+            }
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_meltdown_SpellScript();
+        }
+};
+
 class boss_runemaster_molgeim : public CreatureScript
 {
 public:
@@ -370,6 +419,7 @@ public:
 
             events.Reset();
             me->RemoveAllAuras();
+            me->RemoveLootMode(1);
             phase = 0;
         }
 
@@ -407,6 +457,7 @@ public:
             if (damage >= me->GetHealth())
             {
                 bool has_supercharge = false;
+                bool allowLoot = true;
 
                 if (Creature* Steelbreaker = Unit::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_STEELBREAKER) : 0))
                 {
@@ -414,8 +465,11 @@ public:
                     {
                         Steelbreaker->SetFullHealth();
                         has_supercharge = UpdateSupercharge(Steelbreaker);
+                        allowLoot = false;
                     }
                 }
+                else
+                    allowLoot = false;
 
                 if (Creature* Brundir = Unit::GetCreature((*me), pInstance ? pInstance->GetData64(DATA_BRUNDIR) : 0))
                 {
@@ -423,11 +477,17 @@ public:
                     {
                         Brundir->SetFullHealth();
                         has_supercharge = UpdateSupercharge(Brundir);
+                        allowLoot = false;
                     }
                 }
+                else
+                    allowLoot = false;
 
                 if (!has_supercharge)
                     DoCast(me, SPELL_SUPERCHARGE);
+
+                if (allowLoot)
+                    me->ResetLootMode();
             }
         }
 
@@ -610,6 +670,7 @@ public:
             }
 
             me->RemoveAllAuras();
+            me->RemoveLootMode(1);
             events.Reset();
             phase = 0;
         }
@@ -634,13 +695,13 @@ public:
                 case EVENT_UPDATEPHASE:
                     events.SetPhase(++phase);
                     events.RescheduleEvent(EVENT_CHAIN_LIGHTNING, urand(9000, 17000));
-                    events.RescheduleEvent(EVENT_OVERLOAD, urand(60000, 125000));
+                    events.RescheduleEvent(EVENT_OVERLOAD, urand(60000, 80000));
                     if (phase >= 2)
                         events.RescheduleEvent(EVENT_LIGHTNING_WHIRL, urand(20000, 40000));
                     if (phase >= 3)
                     {
                         DoCast(me, SPELL_STORMSHIELD);
-                        events.RescheduleEvent(EVENT_LIGHTNING_TENDRILS, urand(40000, 80000));
+                        events.RescheduleEvent(EVENT_LIGHTNING_TENDRILS_START, urand(40000, 80000));
                     }
                 break;
 
@@ -652,6 +713,7 @@ public:
             if (damage >= me->GetHealth())
             {
                 bool has_supercharge = false;
+                bool allowLoot = true;
 
                 if (Creature* Steelbreaker = Unit::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_STEELBREAKER) : 0))
                 {
@@ -659,8 +721,11 @@ public:
                     {
                         Steelbreaker->SetFullHealth();
                         has_supercharge = UpdateSupercharge(Steelbreaker);
+                        allowLoot = false;
                     }
                 }
+                else
+                    allowLoot = false;
 
                 if (Creature* Molgeim = Unit::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_MOLGEIM) : 0))
                 {
@@ -668,11 +733,17 @@ public:
                     {
                         Molgeim->SetFullHealth();
                         has_supercharge = UpdateSupercharge(Molgeim);
+                        allowLoot = false;
                     }
                 }
+                else
+                    allowLoot = false;
 
                 if (!has_supercharge)
                     DoCast(SPELL_SUPERCHARGE);
+
+                if (allowLoot)
+                    me->ResetLootMode();
             }
         }
 
@@ -701,6 +772,9 @@ public:
 
             events.Update(diff);
 
+            if (me->HasUnitState(UNIT_STAT_CASTING))
+                return;
+
             while (uint32 eventId = events.ExecuteEvent())
             {
                 switch(eventId)
@@ -711,26 +785,41 @@ public:
                         break;
                     case EVENT_CHAIN_LIGHTNING:
                         if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0))
-                            DoCast(pTarget, RAID_MODE(SPELL_CHAIN_LIGHTNING_N , SPELL_CHAIN_LIGHTNING_H));
-                        events.ScheduleEvent(EVENT_CHAIN_LIGHTNING, urand(9000, 17000));
+                            DoCast(pTarget, RAID_MODE(SPELL_CHAIN_LIGHTNING_N, SPELL_CHAIN_LIGHTNING_H));
+                        events.ScheduleEvent(EVENT_CHAIN_LIGHTNING, urand(3000, 5000));
                         break;
                     case EVENT_OVERLOAD:
                         DoCast(RAID_MODE(SPELL_OVERLOAD , SPELL_OVERLOAD_H));
-                        events.ScheduleEvent(EVENT_OVERLOAD, urand(60000, 125000));
+                        events.ScheduleEvent(EVENT_OVERLOAD, urand(60000, 80000));
                         break;
                     case EVENT_LIGHTNING_WHIRL:
-                        DoCast(RAID_MODE(SPELL_LIGHTNING_WHIRL , SPELL_LIGHTNING_WHIRL_H));
+                        DoCast(RAID_MODE(SPELL_LIGHTNING_WHIRL, SPELL_LIGHTNING_WHIRL_H));
                         events.ScheduleEvent(EVENT_LIGHTNING_WHIRL, urand(20000, 40000));
                         break;
-                    case EVENT_LIGHTNING_TENDRILS:
-                        DoCast(RAID_MODE(SPELL_LIGHTNING_TENDRILS, SPELL_LIGHTNING_TENDRILS_H));
-                        events.DelayEvents(15000, 5000);
+                    case EVENT_THREAT_WIPE:
                         DoResetThreat();
+                        events.ScheduleEvent(EVENT_THREAT_WIPE, 5000);
+                        break;
+                    case EVENT_LIGHTNING_TENDRILS_START:
+                        DoCast(RAID_MODE(SPELL_LIGHTNING_TENDRILS, SPELL_LIGHTNING_TENDRILS_H));
+                        me->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING);
+                        me->SendMovementFlagUpdate();
+                        events.DelayEvents(35000);
+                        events.ScheduleEvent(EVENT_LIGHTNING_TENDRILS_END, 30000);
+                        events.ScheduleEvent(EVENT_THREAT_WIPE, 0);
+                        break;
+                    case EVENT_LIGHTNING_TENDRILS_END:
+                        me->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING);
+                        me->SendMovementFlagUpdate();
+                        me->RemoveAurasDueToSpell(RAID_MODE(SPELL_LIGHTNING_TENDRILS, SPELL_LIGHTNING_TENDRILS_H));
+                        events.ScheduleEvent(EVENT_LIGHTNING_TENDRILS_START, urand(40000, 80000));
+                        events.CancelEvent(EVENT_THREAT_WIPE);
                         break;
                 }
             }
 
-            DoMeleeAttackIfReady();
+            if (!me->HasAura(RAID_MODE(SPELL_LIGHTNING_TENDRILS, SPELL_LIGHTNING_TENDRILS_H)))
+                DoMeleeAttackIfReady();
         }
     };
 
@@ -767,6 +856,7 @@ class spell_shield_of_runes : public SpellScriptLoader
 void AddSC_boss_assembly_of_iron()
 {
     new boss_steelbreaker();
+    new spell_meltdown();
     new boss_runemaster_molgeim();
     new boss_stormcaller_brundir();
     new mob_lightning_elemental();

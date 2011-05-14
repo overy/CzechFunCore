@@ -33,13 +33,40 @@ The teleporter appears to be active and stable.
 - Conservatory of Life
 */
 
-#define BASE_CAMP    200
-#define GROUNDS      201
-#define FORGE        202
-#define SCRAPYARD    203
-#define ANTECHAMBER  204
-#define WALKWAY      205
-#define CONSERVATORY 206
+#define MAP_ULDUAR 603
+
+enum UlduarTeleportTargets
+{
+    BASE_CAMP       = 0,
+    GROUNDS         = 1,
+    FORGE           = 2,
+    SCRAPYARD       = 3,
+    ANTECHAMBER     = 4,
+    WALKWAY         = 5,
+    CONSERVATORY    = 6,
+    SPARK           = 7,
+    MADNESS         = 8,
+    MAX             = 9
+};
+
+float TeleportPointsUlduarGOs[9][3] =
+{
+    {-706.122f, -92.6024f, 429.876f},   // Base Camp
+    {131.248f, -35.3802f, 409.804f},    // Grounds
+    {553.233f, -12.3247f, 409.679f},    // Forge
+    {926.292f, -11.4635f, 418.595f},    //Scrapyard
+    {1498.09f, -24.246f, 420.967f},     // Antechamber
+    {1859.45f, -24.1f, 448.9f},         // Walkway
+    {2086.27f, -24.3134f, 421.239f},    // Conservatory
+    {2518.13f, 2569.34f, 421.382f},     // Spark
+    {1855.03f, -11.629f, 334.58f},      //Descent into Madness
+};
+
+enum TeleportSpells
+{
+    //64024
+    //64032
+};
 
 class ulduar_teleporter : public GameObjectScript
 {
@@ -54,60 +81,35 @@ public:
         if (!pPlayer->getAttackers().empty())
             return false;
 
-        switch(action)
-        {
-        case BASE_CAMP:
-            pPlayer->TeleportTo(603, -706.122f, -92.6024f, 429.876f, 0.0f);
-            pPlayer->CLOSE_GOSSIP_MENU();
-            break;
-        case GROUNDS:
-            pPlayer->TeleportTo(603, 131.248f, -35.3802f, 409.804f, 0.0f);
-            pPlayer->CLOSE_GOSSIP_MENU();
-            break;
-        case FORGE:
-            pPlayer->TeleportTo(603, 553.233f, -12.3247f, 409.679f, 0.0f);
-            pPlayer->CLOSE_GOSSIP_MENU();
-            break;
-        case SCRAPYARD:
-            pPlayer->TeleportTo(603, 926.292f, -11.4635f, 418.595f, 0.0f);
-            pPlayer->CLOSE_GOSSIP_MENU();
-            break;
-        case ANTECHAMBER:
-            pPlayer->TeleportTo(603, 1498.09f, -24.246f, 420.967f, 0.0f);
-            pPlayer->CLOSE_GOSSIP_MENU();
-            break;
-        case WALKWAY:
-            pPlayer->TeleportTo(603, 1859.45f, -24.1f, 448.9f, 0.0f);
-            pPlayer->CLOSE_GOSSIP_MENU();
-            break;
-        case CONSERVATORY:
-            pPlayer->TeleportTo(603, 2086.27f, -24.3134f, 421.239f, 0.0f);
-            pPlayer->CLOSE_GOSSIP_MENU();
-            break;
-        }
+        int pos = action - GOSSIP_ACTION_INFO_DEF;
+        if(pos >= 0 && pos < MAX)
+            pPlayer->TeleportTo(MAP_ULDUAR, TeleportPointsUlduarGOs[pos][0], TeleportPointsUlduarGOs[pos][1], TeleportPointsUlduarGOs[pos][2], 0.0f);
+        pPlayer->CLOSE_GOSSIP_MENU();
 
         return true;
     }
 
     bool OnGossipHello(Player *pPlayer, GameObject *pGO)
     {
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Expedition Base Camp", GOSSIP_SENDER_MAIN, BASE_CAMP);
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Expedition Base Camp", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + BASE_CAMP);
         if (InstanceScript* pInstance = pGO->GetInstanceScript())
         {
             if (pInstance->GetData(TYPE_COLOSSUS) == 2) //count of 2 collossus death
-                pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Formation Grounds", GOSSIP_SENDER_MAIN, GROUNDS);
+                pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Formation Grounds", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + GROUNDS);
             if (pInstance->GetBossState(TYPE_LEVIATHAN) == DONE)
-                pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Colossal Forge", GOSSIP_SENDER_MAIN, FORGE);
+                pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Colossal Forge", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + FORGE);
             if (pInstance->GetBossState(TYPE_XT002) == DONE)
             {
-                pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Scrapyard", GOSSIP_SENDER_MAIN, SCRAPYARD);
-                pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Antechamber of Ulduar", GOSSIP_SENDER_MAIN, ANTECHAMBER);
+                pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Scrapyard", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + SCRAPYARD);
+                pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Antechamber of Ulduar", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + ANTECHAMBER);
             }
             if (pInstance->GetBossState(TYPE_KOLOGARN) == DONE)
-                pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Shattered Walkway", GOSSIP_SENDER_MAIN, WALKWAY);
+                pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Shattered Walkway", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + WALKWAY);
             if (pInstance->GetBossState(TYPE_AURIAYA) == DONE)
-                pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Conservatory of Life", GOSSIP_SENDER_MAIN, CONSERVATORY);
+                pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Conservatory of Life", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + CONSERVATORY);
         }
+        // TO DO 2 Missing Teleports ... SPARK nachdem man das entsprechenden Objekt aktiviert hat
+        //                           ... MADDNESS nachdem General Vezax erledigt wurde
         pPlayer->SEND_GOSSIP_MENU(pGO->GetGOInfo()->GetGossipMenuId(), pGO->GetGUID());
         return true;
     }

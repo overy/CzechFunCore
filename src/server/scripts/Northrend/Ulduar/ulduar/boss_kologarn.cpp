@@ -113,9 +113,15 @@ class boss_kologarn : public CreatureScript
                 DoCast(SPELL_KOLOGARN_REDUCE_PARRY);
                 SetCombatMovement(false);
                 Reset();
+
+                /* should be triggered on caster? */
+                SpellEntry* tempSpell;
+                tempSpell = GET_SPELL(SPELL_STONE_SHOUT);
+                if (tempSpell)
+                    tempSpell->EffectImplicitTargetA[0] = 1;
             }
 
-            Vehicle *vehicle;
+            Vehicle* vehicle;
             bool left, right;
             uint64 eyebeamTarget;
 
@@ -135,13 +141,18 @@ class boss_kologarn : public CreatureScript
                         arm->ToCreature()->SetInCombatWithZone();
 
                 _EnterCombat();
+                me->SetReactState(REACT_AGGRESSIVE);
             }
 
             void Reset()
             {
                 _Reset();
 
+                //if (me->GetVehicleKit())
+                //    me->GetVehicleKit()->Reset();
+
                 eyebeamTarget = 0;
+                me->SetReactState(REACT_DEFENSIVE);
             }
 
             void JustDied(Unit * /*victim*/)
@@ -185,11 +196,11 @@ class boss_kologarn : public CreatureScript
                         instance->SetData64(DATA_RIGHT_ARM, who->GetGUID());
                 }
 
+                if (!isEncounterInProgress)
+                    return;
+
                 if (!apply)
                 {
-                    if (!isEncounterInProgress)
-                        return;
-
                     who->CastSpell(me, SPELL_ARM_DEAD_DAMAGE, true);
 
                     if (Creature* rubbleStalker = who->FindNearestCreature(NPC_RUBBLE_STALKER, 70.0f))
@@ -289,15 +300,15 @@ class boss_kologarn : public CreatureScript
                         break;
                     case EVENT_RESPAWN_LEFT_ARM:
                     {
-                        if (Creature* arm = Unit::GetCreature(*me, instance ? instance->GetData64(DATA_LEFT_ARM) : 0))
-                            RespawnArm(arm->ToCreature());
+                        // if (Creature* arm = Unit::GetCreature(*me, instance ? instance->GetData64(DATA_LEFT_ARM) : 0))
+                        RespawnArm(NPC_LEFT_ARM);
                         events.CancelEvent(EVENT_RESPAWN_LEFT_ARM);
                         break;
                     }
                     case EVENT_RESPAWN_RIGHT_ARM:
                     {
-                        if (Creature* arm = Unit::GetCreature(*me, instance ? instance->GetData64(DATA_RIGHT_ARM) : 0))
-                            RespawnArm(arm->ToCreature());
+                        // if (Creature* arm = Unit::GetCreature(*me, instance ? instance->GetData64(DATA_RIGHT_ARM) : 0))
+                        RespawnArm(NPC_RIGHT_ARM);
                         events.CancelEvent(EVENT_RESPAWN_RIGHT_ARM);
                         break;
                     }
@@ -325,16 +336,24 @@ class boss_kologarn : public CreatureScript
                 DoMeleeAttackIfReady();
             }
 
-            void RespawnArm(Creature* arm)
+            void RespawnArm(uint32 entry)
             {
-                if (!arm->isAlive())
-                    arm->Respawn();
+                /* no way to get arms by guid as they got unsummoned in Unit::_ExitVehicle.
+                    temporary spawn them here */
 
-                // HACK: We should send spell SPELL_ARM_ENTER_VEHICLE here, but this will not work, because
-                // the aura system will not allow it to stack from two different casters
-                int32 seatId = arm->GetEntry() == NPC_LEFT_ARM ? 0 : 1;
-                arm->CastCustomSpell(SPELL_ARM_ENTER_VEHICLE, SPELLVALUE_BASE_POINT0, seatId+1, me, true);
-                arm->CastSpell(arm, SPELL_ARM_ENTER_VISUAL, true);
+                if (Creature* arm = me->SummonCreature(entry, *me))
+                {
+                    arm->AddUnitTypeMask(UNIT_MASK_ACCESSORY);
+
+                    // if (!arm->isAlive())
+                    //     arm->Respawn();
+
+                    // HACK: We should send spell SPELL_ARM_ENTER_VEHICLE here, but this will not work, because
+                    // the aura system will not allow it to stack from two different casters
+                    int32 seatId = entry == NPC_LEFT_ARM ? 0 : 1;
+                    arm->CastCustomSpell(SPELL_ARM_ENTER_VEHICLE, SPELLVALUE_BASE_POINT0, seatId+1, me, true);
+                    arm->CastSpell(arm, SPELL_ARM_ENTER_VISUAL, true);
+                }
             }
         };
 };
@@ -630,7 +649,11 @@ class spell_ulduar_stone_grip : public SpellScriptLoader
             return new spell_ulduar_stone_grip_AuraScript();
         }
 };
-
+/*
+DELETE FROM `npc_spellclick_spells` WHERE `npc_entry` IN (32930);
+INSERT INTO `npc_spellclick_spells` (`npc_entry`,`spell_id`,`quest_start`,`quest_start_active`,`quest_end`,`cast_flags`,`aura_required`,`aura_forbidden`,`user_type`) VALUES
+(32930,46598,0,0,0,1,0,0,0); -- Kologarn - Arm - Ride Vehicle Hardcoded
+*/
 void AddSC_boss_kologarn()
 {
     new boss_kologarn();

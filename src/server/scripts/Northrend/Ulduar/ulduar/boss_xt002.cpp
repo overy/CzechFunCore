@@ -17,12 +17,14 @@
 
 /*
     TODO:
-        Add achievments
+        Achievments:
+            Nerf Scrapbots - in Scrapbot script
+            Nerf Gravity Bombs - (?) - Spellscript
+            Must Deconstruct Faster - in XT-002 script / core
+
         Boombot explosion only hurt allies to the npc at the moment
         Boombot explosion visual
-        Test the enrage timer
-        Fix gravity bomb - tractor beam.
-        Fix void zone spell
+
         If the boss is to close to a scrap pile -> no summon
         make the life sparks visible...
 */
@@ -39,17 +41,19 @@ enum Spells
 
     SPELL_GRAVITY_BOMB_10                       = 63024,
     SPELL_GRAVITY_BOMB_25                       = 64234,
-    SPELL_GRAVITY_BOMB_AURA_10                  = 63025,
-    SPELL_GRAVITY_BOMB_AURA_25                  = 63233,
 
     SPELL_HEARTBREAK_10                         = 65737,
     SPELL_HEARTBREAK_25                         = 64193,
+
+    SPELL_HEART_EXPOSED                         = 62789, //a little useless
 
     SPELL_ENRAGE                                = 26662,
 
     //------------------VOID ZONE--------------------
     SPELL_VOID_ZONE_10                          = 64203,
     SPELL_VOID_ZONE_25                          = 64235,
+    SPELL_CONSUMPTION_10                        = 64208, // DBM
+    SPELL_CONSUMPTION_25                        = 64206,
 
     // Life Spark
     SPELL_STATIC_CHARGED_10                     = 64227,
@@ -58,6 +62,7 @@ enum Spells
 
     //----------------XT-002 HEART-------------------
     SPELL_EXPOSED_HEART                         = 63849,
+    SPELL_HEART_RIDE_XT002                      = 63852,
 
     //---------------XM-024 PUMMELLER----------------
     SPELL_ARCING_SMASH                          = 8374,
@@ -66,12 +71,15 @@ enum Spells
 
     //------------------BOOMBOT-----------------------
     SPELL_BOOM                                  = 62834,
+    SPELL_EXPLOSION_VISUAL                      = 62987, // dont know if right
+
+    //-----------------SCRAPBOT-----------------------
+    SPELL_HEAL_XT002                            = 62832
 };
 
 enum Timers
 {
-    TIMER_TYMPANIC_TANTRUM_MIN                  = 32000,
-    TIMER_TYMPANIC_TANTRUM_MAX                  = 36000,
+    TIMER_TYMPANIC_TANTRUM                      = 60000,
     TIMER_SEARING_LIGHT                         = 20000,
     TIMER_SPAWN_LIFE_SPARK                      = 9000,
     TIMER_GRAVITY_BOMB                          = 20000,
@@ -86,11 +94,12 @@ enum Timers
 
     // Pummeller
     // Timers may be off
-    TIMER_ARCING_SMASH                          = 27000,
-    TIMER_TRAMPLE                               = 22000,
-    TIMER_UPPERCUT                              = 17000,
+    // Timers where completely off
+    TIMER_ARCING_SMASH                          = 7000,
+    TIMER_TRAMPLE                               = 2000,
+    TIMER_UPPERCUT                              = 10000,
 
-    TIMER_SPAWN_ADD                             = 12000,
+    TIMER_SPAWN_ADD                             = 12000
 };
 
 enum Creatures
@@ -100,17 +109,18 @@ enum Creatures
     NPC_XT002_HEART                             = 33329,
     NPC_XS013_SCRAPBOT                          = 33343,
     NPC_XM024_PUMMELLER                         = 33344,
-    NPC_XE321_BOOMBOT                           = 33346,
+    NPC_XE321_BOOMBOT                           = 33346
 };
 
 enum Actions
 {
-    ACTION_ENTER_HARD_MODE                      = 0,
+    ACTION_ENTER_HARD_MODE,
+    ACTION_XT002_REACHED
 };
 
 enum XT002Data
 {
-    DATA_TRANSFERED_HEALTH                      = 0,
+    DATA_TRANSFERED_HEALTH                      = 0
 };
 
 enum Yells
@@ -123,23 +133,21 @@ enum Yells
     SAY_SLAY_2                                  = -1603305,
     SAY_BERSERK                                 = -1603306,
     SAY_DEATH                                   = -1603307,
-    SAY_SUMMON                                  = -1603308,
+    SAY_SUMMON                                  = -1603308
 };
 
 enum
 {
-    ACHIEV_TIMED_START_EVENT                      = 21027,
+    ACHIEV_TIMED_START_EVENT                    = 21027
 };
 
-//#define GRAVITY_BOMB_DMG_MIN_10                11700
-//#define GRAVITY_BOMB_DMG_MAX_10                12300
-//#define GRAVITY_BOMB_DMG_MIN_25                14625
-//#define GRAVITY_BOMB_DMG_MAX_25                15375
-//#define GRAVITY_BOMB_RADIUS                    12
-
-//#define VOID_ZONE_DMG_10                      5000
-//#define VOID_ZONE_DMG_25                      7500
-//#define VOID_ZONE_RADIUS
+enum Achievments
+{
+    ACHIEVEMENT_NERF_ENGINEERING_10             = 2931,
+    ACHIEVEMENT_NERF_ENGINEERING_25             = 2932,
+    ACHIEVEMENT_HEARTBREAKER_10                 = 3058,
+    ACHIEVEMENT_HEARTBREAKER_25                 = 3059
+};
 
 /************************************************
 -----------------SPAWN LOCATIONS-----------------
@@ -169,14 +177,14 @@ class boss_xt002 : public CreatureScript
 public:
     boss_xt002() : CreatureScript("boss_xt002") { }
 
-    CreatureAI* GetAI(Creature* pCreature) const
+    CreatureAI* GetAI(Creature* creature) const
     {
-        return new boss_xt002_AI(pCreature);
+        return new boss_xt002_AI(creature);
     }
 
     struct boss_xt002_AI : public BossAI
     {
-        boss_xt002_AI(Creature *pCreature) : BossAI(pCreature, TYPE_XT002)
+        boss_xt002_AI(Creature* creature) : BossAI(creature, TYPE_XT002)
         {
         }
 
@@ -203,9 +211,14 @@ public:
         bool enterHardMode;
         bool hardMode;
 
+        bool nerfEngineering;
+
         void Reset()
         {
-            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_NOT_SELECTABLE);
+            _Reset();
+            me->SetStandState(UNIT_STAND_STATE_STAND);
+            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_1 | UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_NOT_SELECTABLE);
+            me->ResetLootMode();
 
             //Makes XT-002 to cast a light bomb 10 seconds after aggro.
             uiSearingLightTimer = TIMER_SEARING_LIGHT/2;
@@ -216,14 +229,16 @@ public:
             uiSpawnAddTimer = TIMER_SPAWN_ADD;
             uiEnrageTimer = TIMER_ENRAGE;
 
-            //Tantrum is casted a bit slower the first time.
-            uiTympanicTantrumTimer = urand(TIMER_TYMPANIC_TANTRUM_MIN, TIMER_TYMPANIC_TANTRUM_MAX) * 2;
+            // DBM
+            uiTympanicTantrumTimer = RAID_MODE(35000, 50000);
 
             searing_light_active = false;
             gravity_bomb_active = false;
             enraged = false;
             hardMode = false;
             enterHardMode = false;
+
+            nerfEngineering = true;
 
             phase = 1;
             heart_exposed = 0;
@@ -241,6 +256,11 @@ public:
                 instance->DoStartTimedAchievement(ACHIEVEMENT_TIMED_TYPE_EVENT, ACHIEV_TIMED_START_EVENT);
         }
 
+        void JustSummoned(Creature* summoned)
+        {
+            summons.Summon(summoned);
+        }
+
         void DoAction(const int32 action)
         {
             switch (action)
@@ -249,9 +269,11 @@ public:
                     if (!hardMode)
                     {
                         hardMode = true;
+                        me->AddLootMode(LOOT_MODE_HARD_MODE_1);
 
                         // Enter hard mode
                         enterHardMode = true;
+                        uiEnrageTimer = TIMER_ENRAGE;
 
                         // set max health
                         me->SetFullHealth();
@@ -260,12 +282,15 @@ public:
                         me->CastSpell(me, RAID_MODE(SPELL_HEARTBREAK_10, SPELL_HEARTBREAK_25), true);
                     }
                     break;
+                case ACTION_XT002_REACHED:
+                    nerfEngineering = false;
+                    break;
             }
         }
 
         void SetData(uint32 id, uint32 value)
         {
-            switch(id)
+            switch (id)
             {
                 case DATA_TRANSFERED_HEALTH:
                     transferHealth = value;
@@ -273,7 +298,7 @@ public:
             }
         }
 
-        void KilledUnit(Unit* /*victim*/)
+        void KilledUnit(Unit * /*victim*/)
         {
             DoScriptText(RAND(SAY_SLAY_1, SAY_SLAY_2), me);
         }
@@ -282,6 +307,47 @@ public:
         {
             DoScriptText(SAY_DEATH, me);
             _JustDied();
+
+            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_1 | UNIT_FLAG_NOT_SELECTABLE);
+
+            if (instance)
+            {
+                if (nerfEngineering)
+                    instance->DoCompleteAchievement(RAID_MODE(ACHIEVEMENT_NERF_ENGINEERING_10, ACHIEVEMENT_NERF_ENGINEERING_25));
+
+                if (hardMode)
+                    instance->DoCompleteAchievement(RAID_MODE(ACHIEVEMENT_HEARTBREAKER_10, ACHIEVEMENT_HEARTBREAKER_25));
+            }
+        }
+
+        void SpellHitTarget(Unit* target, const SpellEntry* spell)
+        {
+            if (!target->ToPlayer())
+                return;
+
+            switch (spell->Id)
+            {
+                case SPELL_SEARING_LIGHT_10:
+                case SPELL_SEARING_LIGHT_25:
+                {
+                    if (hardMode)
+                        searing_light_active = true;
+
+                    uiSpawnLifeSparkTimer = TIMER_SPAWN_LIFE_SPARK;
+                    uiSearingLightTarget = target->GetGUID();
+                }
+                break;
+                case SPELL_GRAVITY_BOMB_10:
+                case SPELL_GRAVITY_BOMB_25:
+                {
+                    if (hardMode)
+                        gravity_bomb_active = true;
+
+                    uiGravityBombAuraTimer = TIMER_GRAVITY_BOMB_AURA;
+                    uiGravityBombTarget = target->GetGUID();
+                }
+                break;
+            }
         }
 
         void UpdateAI(const uint32 diff)
@@ -289,44 +355,34 @@ public:
             if (!UpdateVictim())
                 return;
 
+            _DoAggroPulse(diff);
+
             if (enterHardMode)
             {
                 SetPhaseOne();
                 enterHardMode = false;
             }
 
-            // Handles spell casting. These spells only occur during phase 1 and hard mode
+            // Handles spell casting. These spells only occur during phase 1 or hard mode
             if (phase == 1 || hardMode)
             {
                 if (uiSearingLightTimer <= diff)
                 {
-                    if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0))
-                    {
-                        DoCast(pTarget, RAID_MODE(SPELL_SEARING_LIGHT_10, SPELL_SEARING_LIGHT_25));
-                        uiSearingLightTarget = pTarget->GetGUID();
-                    }
-                    uiSpawnLifeSparkTimer = TIMER_SPAWN_LIFE_SPARK;
-                    if (hardMode)
-                        searing_light_active = true;
+                    DoCast(me, RAID_MODE(SPELL_SEARING_LIGHT_10, SPELL_SEARING_LIGHT_25), true);
                     uiSearingLightTimer = TIMER_SEARING_LIGHT;
                 } else uiSearingLightTimer -= diff;
 
                 if (uiGravityBombTimer <= diff)
                 {
-                    if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0))
-                    {
-                        DoCast(pTarget, RAID_MODE(SPELL_GRAVITY_BOMB_10, SPELL_GRAVITY_BOMB_25));
-                        uiGravityBombTarget = pTarget->GetGUID();
-                    }
+                    DoCast(me, RAID_MODE(SPELL_GRAVITY_BOMB_10, SPELL_GRAVITY_BOMB_25), true);
                     uiGravityBombTimer = TIMER_GRAVITY_BOMB;
-                    gravity_bomb_active = true;
                 } else uiGravityBombTimer -= diff;
 
                 if (uiTympanicTantrumTimer <= diff)
                 {
                     DoScriptText(SAY_TYMPANIC_TANTRUM, me);
                     DoCast(SPELL_TYMPANIC_TANTRUM);
-                    uiTympanicTantrumTimer = urand(TIMER_TYMPANIC_TANTRUM_MIN, TIMER_TYMPANIC_TANTRUM_MAX);
+                    uiTympanicTantrumTimer = TIMER_TYMPANIC_TANTRUM;
                 } else uiTympanicTantrumTimer -= diff;
             }
 
@@ -334,25 +390,15 @@ public:
             {
                 if (phase == 1)
                 {
-                    if (HealthBelowPct(75) && heart_exposed == 0)
-                    {
+                    if (HealthBelowPct(100 - (heart_exposed + 1) * 25))
                         exposeHeart();
-                    }
-                    else if (HealthBelowPct(50) && heart_exposed == 1)
-                    {
-                        exposeHeart();
-                    }
-                    else if (HealthBelowPct(25) && heart_exposed == 2)
-                    {
-                        exposeHeart();
-                    }
 
                     DoMeleeAttackIfReady();
                 }
                 else
                 {
                     //Stop moving
-                    me->StopMoving();
+                    //me->StopMoving();
 
                     //Start summoning adds
                     if (uiSpawnAddTimer <= diff)
@@ -399,8 +445,7 @@ public:
                         DoScriptText(SAY_HEART_CLOSED, me);
                         SetPhaseOne();
                     }
-                    else
-                        uiHeartPhaseTimer -= diff;
+                    else uiHeartPhaseTimer -= diff;
                 }
             }
             else
@@ -410,34 +455,29 @@ public:
                 {
                     if (uiSpawnLifeSparkTimer <= diff)
                     {
-                        if (Unit *pSearingLightTarget = me->GetUnit(*me, uiSearingLightTarget))
-                            pSearingLightTarget->SummonCreature(NPC_LIFE_SPARK, pSearingLightTarget->GetPositionX(), pSearingLightTarget->GetPositionY(), pSearingLightTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 60000);
+                        Unit* searingLightTarget = me->GetUnit(*me, uiSearingLightTarget);
+                        if (searingLightTarget && searingLightTarget->isAlive())
+                            me->SummonCreature(NPC_LIFE_SPARK, *searingLightTarget);
+
                         uiSpawnLifeSparkTimer = TIMER_SPAWN_LIFE_SPARK;
                         searing_light_active = false;
                     } else uiSpawnLifeSparkTimer -= diff;
                 }
 
-                DoMeleeAttackIfReady();
-            }
-
-            if (gravity_bomb_active)
-            {
-                if (uiGravityBombAuraTimer <= diff)
+                if (gravity_bomb_active)
                 {
-                    if (Unit *pGravityBombTarget = me->GetUnit(*me, uiGravityBombTarget))
+                    if (uiGravityBombAuraTimer <= diff)
                     {
-                        pGravityBombTarget->RemoveAurasDueToSpell(RAID_MODE(SPELL_GRAVITY_BOMB_10, SPELL_GRAVITY_BOMB_25));
-                        if (hardMode)
-                        {
-                            //Remains spawned for 3 minutes
-                            pGravityBombTarget->SummonCreature(NPC_VOID_ZONE, pGravityBombTarget->GetPositionX(), pGravityBombTarget->GetPositionY(), pGravityBombTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 180000);
-                        }
-                    }
+                        Unit* gravityBombTarget = me->GetUnit(*me, uiGravityBombTarget);
+                        if (gravityBombTarget && gravityBombTarget->isAlive())
+                            me->SummonCreature(NPC_VOID_ZONE, *gravityBombTarget, TEMPSUMMON_TIMED_DESPAWN, 180000);
 
-                    gravity_bomb_active = false;
-                    uiGravityBombAuraTimer = TIMER_GRAVITY_BOMB_AURA;
-                    //gravityBomb();
-                } else uiGravityBombAuraTimer -= diff;
+                        uiGravityBombAuraTimer = TIMER_GRAVITY_BOMB_AURA;
+                        gravity_bomb_active = false;
+                    } else uiGravityBombAuraTimer -= diff;
+                }
+
+                DoMeleeAttackIfReady();
             }
 
             //Enrage stuff
@@ -449,25 +489,39 @@ public:
                     DoCast(me, SPELL_ENRAGE);
                     enraged = true;
                 } else uiEnrageTimer -= diff;
+            }else
+            {
+                if (!me->HasAura(SPELL_ENRAGE))
+                    DoCast(me, SPELL_ENRAGE);
             }
         }
 
+        // NOT BLIZZLIKE ... Heart is Spawned the whole Encounter ... VX - 002 is a vehicle
         void exposeHeart()
         {
-            //Make untargetable
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
+            me->GetMotionMaster()->MoveIdle();
+            me->SetStandState(UNIT_STAND_STATE_SUBMERGED);
 
-            //Summon the heart npc
-            me->SummonCreature(NPC_XT002_HEART, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ() + 7, 0, TEMPSUMMON_TIMED_DESPAWN, TIMER_HEART_PHASE);
+            // Make untargetable
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_1 | UNIT_FLAG_NOT_SELECTABLE);
+
+            // Summon the heart npc
+            if (Creature* heart = me->SummonCreature(NPC_XT002_HEART, *me, TEMPSUMMON_TIMED_DESPAWN, TIMER_HEART_PHASE))
+            {
+                heart->EnterVehicle(me, 1);
+                heart->ClearUnitState(UNIT_STAT_ONVEHICLE); // Hack
+                heart->SetInCombatWithZone();
+                heart->CastSpell(heart, SPELL_EXPOSED_HEART, false);
+            }
 
             // Start "end of phase 2 timer"
             uiHeartPhaseTimer = TIMER_HEART_PHASE;
 
-            //Phase 2 has offically started
+            // Phase 2 has offically started
             phase = 2;
             heart_exposed++;
 
-            //Reset the add spawning timer
+            // Reset the add spawning timer
             uiSpawnAddTimer = TIMER_SPAWN_ADD;
 
             DoScriptText(SAY_HEART_OPENED, me);
@@ -475,45 +529,20 @@ public:
 
         void SetPhaseOne()
         {
+            me->SetStandState(UNIT_STAND_STATE_STAND);
+            me->GetMotionMaster()->MoveChase(me->getVictim());
+
             uiSearingLightTimer = TIMER_SEARING_LIGHT / 2;
             uiGravityBombTimer = TIMER_GRAVITY_BOMB;
-            uiTympanicTantrumTimer = urand(TIMER_TYMPANIC_TANTRUM_MIN, TIMER_TYMPANIC_TANTRUM_MAX);
+            uiTympanicTantrumTimer = TIMER_TYMPANIC_TANTRUM;
             uiSpawnAddTimer = TIMER_SPAWN_ADD;
 
             if (!hardMode)
                 me->ModifyHealth(-((int32)transferHealth));
 
-            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
+            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_1 | UNIT_FLAG_NOT_SELECTABLE);
             phase = 1;
         }
-
-        // TODO: put in comment and kept for reference. The spell should be fixed properly in spell system, if necessary.
-        ////Have to do this the custom way since the original spell messes up player movement
-        //void gravityBomb()
-        //{
-        //    uint32 maxDamage = RAID_MODE(GRAVITY_BOMB_DMG_MAX_10, GRAVITY_BOMB_DMG_MAX_25);
-        //    uint32 minDamage = RAID_MODE(GRAVITY_BOMB_DMG_MIN_10, GRAVITY_BOMB_DMG_MIN_25);
-        //    uint16 range = GRAVITY_BOMB_RADIUS;
-        //    Map* pMap = me->GetMap();
-        //    if (pMap && pMap->IsDungeon())
-        //    {
-        //        Map::PlayerList const &PlayerList = pMap->GetPlayers();
-        //        for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-        //        {
-        //            //If a player is within the range of the spell
-        //            if (i->getSource() && i->getSource()->GetDistance2d(pGravityBombTarget) <= range)
-        //            {
-        //                //Deal damage to the victim
-        //                int32 damage = urand(minDamage, maxDamage);
-        //                i->getSource()->ModifyHealth(-damage);
-        //                me->SendSpellNonMeleeDamageLog(i->getSource(), SPELL_GRAVITY_BOMB_AURA_10, damage, SPELL_SCHOOL_MASK_SHADOW, 0, 0, false, 0);
-
-        //                //Replacing the tractor beam effect
-        //                i->getSource()->JumpTo(pGravityBombTarget, 5);
-        //            }
-        //        }
-        //    }
-        //}
     };
 };
 
@@ -527,27 +556,27 @@ class mob_xt002_heart : public CreatureScript
 public:
     mob_xt002_heart() : CreatureScript("mob_xt002_heart") { }
 
-    CreatureAI* GetAI(Creature* pCreature) const
+    CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_xt002_heartAI(pCreature);
+        return new mob_xt002_heartAI(creature);
     }
 
-    struct mob_xt002_heartAI : public ScriptedAI
+    struct mob_xt002_heartAI : public Scripted_NoMovementAI
     {
-        mob_xt002_heartAI(Creature* pCreature) : ScriptedAI(pCreature)
+        mob_xt002_heartAI(Creature* creature) : Scripted_NoMovementAI(creature)
         {
-            m_pInstance = pCreature->GetInstanceScript();
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_STUNNED);
+            _instance = creature->GetInstanceScript();
+            //me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_STUNNED);
             me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
-            DoCast(me, SPELL_EXPOSED_HEART);
+            //DoCast(me, SPELL_EXPOSED_HEART);
         }
 
-        InstanceScript* m_pInstance;
+        InstanceScript* _instance;
 
         void JustDied(Unit * /*victim*/)
         {
-            if (m_pInstance)
-                if (Creature* pXT002 = me->GetCreature(*me, m_pInstance->GetData64(TYPE_XT002)))
+            if (_instance)
+                if (Creature* pXT002 = me->GetCreature(*me, _instance->GetData64(TYPE_XT002)))
                     if (pXT002->AI())
                         pXT002->AI()->DoAction(ACTION_ENTER_HARD_MODE);
 
@@ -557,7 +586,7 @@ public:
 
         void DamageTaken(Unit * /*pDone*/, uint32 &damage)
         {
-            if (Creature* pXT002 = me->GetCreature(*me, m_pInstance->GetData64(TYPE_XT002)))
+            if (Creature* pXT002 = me->GetCreature(*me, _instance->GetData64(TYPE_XT002)))
                 if (pXT002->AI())
                 {
                     uint32 health = me->GetHealth();
@@ -568,8 +597,9 @@ public:
                     pXT002->AI()->SetData(DATA_TRANSFERED_HEALTH, me->GetMaxHealth() - health);
                 }
         }
-    };
 
+        void UpdateAI(const uint32 diff) { }
+    };
 };
 
 /*-------------------------------------------------------
@@ -582,42 +612,46 @@ class mob_scrapbot : public CreatureScript
 public:
     mob_scrapbot() : CreatureScript("mob_scrapbot") { }
 
-    CreatureAI* GetAI(Creature* pCreature) const
+    CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_scrapbotAI(pCreature);
+        return new mob_scrapbotAI(creature);
     }
 
     struct mob_scrapbotAI : public ScriptedAI
     {
-        mob_scrapbotAI(Creature* pCreature) : ScriptedAI(pCreature)
+        mob_scrapbotAI(Creature* creature) : ScriptedAI(creature)
         {
-            m_pInstance = me->GetInstanceScript();
+            _instance = me->GetInstanceScript();
+            casted = false;
         }
 
-        InstanceScript* m_pInstance;
+        InstanceScript* _instance;
+        bool casted;
 
         void Reset()
         {
             me->SetReactState(REACT_PASSIVE);
 
-            if (Creature* pXT002 = me->GetCreature(*me, m_pInstance->GetData64(TYPE_XT002)))
-                me->GetMotionMaster()->MoveChase(pXT002);
+            if (Creature* pXT002 = me->GetCreature(*me, _instance->GetData64(TYPE_XT002)))
+                me->GetMotionMaster()->MoveFollow(pXT002, 1, float(2*M_PI*rand_norm()));
         }
 
         void UpdateAI(const uint32 /*diff*/)
         {
-            if (Creature* pXT002 = me->GetCreature(*me, m_pInstance->GetData64(TYPE_XT002)))
+            if (Creature* pXT002 = me->GetCreature(*me, _instance->GetData64(TYPE_XT002)))
             {
-                if (me->GetDistance2d(pXT002) <= 0.5)
-                {
-                    // TODO Send raid message
-
-                    // Increase health with 1 percent
-                    pXT002->ModifyHealth(int32(pXT002->CountPctFromMaxHealth(1)));
-
-                    // Despawns the scrapbot
-                    me->DespawnOrUnsummon();
-                }
+                if (!casted)
+                    if (me->GetDistance2d(pXT002) <= 2)
+                    {
+                        // TODO Send raid message
+                        casted = true;
+                        // Increase health with 1 percent
+                        pXT002->CastSpell(pXT002, SPELL_HEAL_XT002, true);
+                        //pXT002->ModifyHealth(int32(pXT002->CountPctFromMaxHealth(1)));
+                        pXT002->AI()->DoAction(ACTION_XT002_REACHED);
+                        // Despawns the scrapbot
+                        me->DespawnOrUnsummon(500);
+                    }
             }
         }
     };
@@ -634,19 +668,15 @@ class mob_pummeller : public CreatureScript
 public:
     mob_pummeller() : CreatureScript("mob_pummeller") { }
 
-    CreatureAI* GetAI(Creature* pCreature) const
+    CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_pummellerAI(pCreature);
+        return new mob_pummellerAI(creature);
     }
 
     struct mob_pummellerAI : public ScriptedAI
     {
-        mob_pummellerAI(Creature* pCreature) : ScriptedAI(pCreature)
-        {
-            m_pInstance = pCreature->GetInstanceScript();
-        }
+        mob_pummellerAI(Creature* creature) : ScriptedAI(creature) { }
 
-        InstanceScript* m_pInstance;
         uint32 uiArcingSmashTimer;
         uint32 uiTrampleTimer;
         uint32 uiUppercutTimer;
@@ -656,6 +686,19 @@ public:
             uiArcingSmashTimer = TIMER_ARCING_SMASH;
             uiTrampleTimer = TIMER_TRAMPLE;
             uiUppercutTimer = TIMER_UPPERCUT;
+
+            if (Unit* target = SelectPlayerTargetInRange(500.0f))
+                me->AI()->AttackStart(target);
+        }
+
+
+        Unit* SelectPlayerTargetInRange(float range)
+        {
+            Player* target = NULL;
+            Trinity::AnyPlayerInObjectRangeCheck u_check(me, range, true);
+            Trinity::PlayerSearcher<Trinity::AnyPlayerInObjectRangeCheck> searcher(me, target, u_check);
+            me->VisitNearbyObject(range, searcher);
+            return target;
         }
 
         void UpdateAI(const uint32 diff)
@@ -700,47 +743,48 @@ class mob_boombot : public CreatureScript
 public:
     mob_boombot() : CreatureScript("mob_boombot") { }
 
-    CreatureAI* GetAI(Creature* pCreature) const
+    CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_boombotAI(pCreature);
+        return new mob_boombotAI(creature);
     }
 
     struct mob_boombotAI : public ScriptedAI
     {
-        mob_boombotAI(Creature* pCreature) : ScriptedAI(pCreature)
+        mob_boombotAI(Creature* creature) : ScriptedAI(creature)
         {
-            m_pInstance = pCreature->GetInstanceScript();
+            boomed = false;
         }
 
-        InstanceScript* m_pInstance;
+        bool boomed;
+
+        Unit* SelectPlayerTargetInRange(float range)
+        {
+            Player* target = NULL;
+            Trinity::AnyPlayerInObjectRangeCheck u_check(me, range, true);
+            Trinity::PlayerSearcher<Trinity::AnyPlayerInObjectRangeCheck> searcher(me, target, u_check);
+            me->VisitNearbyObject(range, searcher);
+            return target;
+        }
 
         void Reset()
         {
-            me->SetReactState(REACT_PASSIVE);
-
-            if (Creature* pXT002 = me->GetCreature(*me, m_pInstance->GetData64(TYPE_XT002)))
-                me->GetMotionMaster()->MoveChase(pXT002);
+            if (Unit* target = SelectPlayerTargetInRange(500.0f))
+                AttackStart(target);
         }
 
-        void JustDied(Unit * /*killer*/)
+        void DamageTaken(Unit * /*attacker*/, uint32 &amount)
         {
-            DoCast(SPELL_BOOM);
-        }
+            if (boomed)
+                return;
 
-        void UpdateAI(const uint32 /*diff*/)
-        {
-            if (Creature* pXT002 = me->GetCreature(*me, m_pInstance->GetData64(TYPE_XT002)))
+            if ((me->GetHealth() - amount) < (me->GetMaxHealth()/2))
             {
-                if (me->GetDistance2d(pXT002) <= 0.5)
-                {
-                    //Explosion
-                    DoCast(me, SPELL_BOOM);
-
-                    //Despawns the boombot
-                    me->DespawnOrUnsummon();
-                }
+                boomed = true;
+                DoCast(me, SPELL_BOOM, true);
             }
         }
+
+        void UpdateAI(const uint32 /*diff*/) { }
     };
 
 };
@@ -755,57 +799,35 @@ class mob_void_zone : public CreatureScript
 public:
     mob_void_zone() : CreatureScript("mob_void_zone") { }
 
-    CreatureAI* GetAI(Creature* pCreature) const
+    CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_void_zoneAI(pCreature);
+        return new mob_void_zoneAI(creature);
     }
 
     struct mob_void_zoneAI : public ScriptedAI
     {
-        mob_void_zoneAI(Creature* pCreature) : ScriptedAI(pCreature)
+        mob_void_zoneAI(Creature* creature) : ScriptedAI(creature)
         {
-            m_pInstance = pCreature->GetInstanceScript();
             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
         }
 
-        InstanceScript* m_pInstance;
-        uint32 uiVoidZoneTimer;
+        uint32 voidZoneTimer;
 
         void Reset()
         {
-            uiVoidZoneTimer = TIMER_VOID_ZONE;
+            voidZoneTimer = TIMER_VOID_ZONE;
         }
 
         void UpdateAI(const uint32 diff)
         {
-            if (uiVoidZoneTimer <= diff)
+            if (voidZoneTimer <= diff)
             {
-                //voidZone();
-                uiVoidZoneTimer = TIMER_VOID_ZONE;
-            } else uiVoidZoneTimer -= diff;
+                int32 dmg = RAID_MODE(5000, 7500);
+                me->CastCustomSpell(me, RAID_MODE(SPELL_CONSUMPTION_10, SPELL_CONSUMPTION_25), &dmg, 0, 0, false);
+                voidZoneTimer = TIMER_VOID_ZONE;
+            } else voidZoneTimer -= diff;
         }
-
-        // TODO: put in comment and kept for reference. The spell should be fixed properly in spell system, if necessary.
-        //void voidZone()
-        //{
-        //    Map* pMap = me->GetMap();
-        //    if (pMap && pMap->IsDungeon())
-        //    {
-        //        Map::PlayerList const &PlayerList = pMap->GetPlayers();
-        //        for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-        //        {
-        //            // If a player is within the range of the spell
-        //            if (i->getSource() && i->getSource()->GetDistance2d(me) <= 16)
-        //            {
-        //                // Deal damage to the victim
-        //                int32 damage = RAID_MODE(VOID_ZONE_DMG_10, VOID_ZONE_DMG_25);
-        //                me->DealDamage(i->getSource(), damage, NULL, SPELL_DIRECT_DAMAGE, SPELL_SCHOOL_MASK_SHADOW);
-        //            }
-        //        }
-        //    }
-        //}
     };
-
 };
 
 /*-------------------------------------------------------
@@ -818,25 +840,21 @@ class mob_life_spark : public CreatureScript
 public:
     mob_life_spark() : CreatureScript("mob_life_spark") { }
 
-    CreatureAI* GetAI(Creature* pCreature) const
+    CreatureAI* GetAI(Creature* creature) const
     {
-        return new mob_life_sparkAI(pCreature);
+        return new mob_life_sparkAI(creature);
     }
 
     struct mob_life_sparkAI : public ScriptedAI
     {
-        mob_life_sparkAI(Creature* pCreature) : ScriptedAI(pCreature)
-        {
-            m_pInstance = pCreature->GetInstanceScript();
-        }
+        mob_life_sparkAI(Creature* creature) : ScriptedAI(creature) { }
 
-        InstanceScript* m_pInstance;
-        uint32 uiShockTimer;
+        uint32 shockTimer;
 
         void Reset()
         {
             DoCast(me, RAID_MODE(SPELL_STATIC_CHARGED_10, SPELL_STATIC_CHARGED_25));
-            uiShockTimer = 0; // first one is immediate.
+            shockTimer = 0; // first one is immediate.
         }
 
         void UpdateAI(const uint32 diff)
@@ -844,18 +862,44 @@ public:
             if (!UpdateVictim())
                 return;
 
-            if (uiShockTimer <= diff)
+            if (shockTimer <= diff)
             {
                 if (me->IsWithinMeleeRange(me->getVictim()))
                 {
-                    DoCast(me->getVictim(), SPELL_SHOCK);
-                    uiShockTimer = TIMER_SHOCK;
+                    DoCastVictim(SPELL_SHOCK);
+                    shockTimer = TIMER_SHOCK;
                 }
             }
-            else uiShockTimer -= diff;
+            else shockTimer -= diff;
         }
     };
+};
 
+class spell_gravity_bomb_targeting : public SpellScriptLoader
+{
+    public:
+        spell_gravity_bomb_targeting() : SpellScriptLoader("spell_gravity_bomb_targeting") { }
+
+        class spell_gravity_bomb_targeting_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_gravity_bomb_targeting_SpellScript);
+
+            void FilterTargets(std::list<Unit*>& unitList)
+            {
+                unitList.remove(GetTargetUnit());
+            }
+
+            void Register()
+            {
+                OnUnitTargetSelect += SpellUnitTargetFn(spell_gravity_bomb_targeting_SpellScript::FilterTargets, EFFECT_0, TARGET_DST_CASTER);
+                OnUnitTargetSelect += SpellUnitTargetFn(spell_gravity_bomb_targeting_SpellScript::FilterTargets, EFFECT_1, TARGET_DST_CASTER);
+            }
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_gravity_bomb_targeting_SpellScript();
+        }
 };
 
 void AddSC_boss_xt002()
@@ -867,4 +911,5 @@ void AddSC_boss_xt002()
     new mob_void_zone();
     new mob_life_spark();
     new boss_xt002();
+    new spell_gravity_bomb_targeting();
 }
