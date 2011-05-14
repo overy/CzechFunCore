@@ -25,7 +25,8 @@ enum Spells
     SPELL_DEATHBLOOM                                       = 29865,
     H_SPELL_DEATHBLOOM                                     = 55053,
     SPELL_INEVITABLE_DOOM                                  = 29204,
-    H_SPELL_INEVITABLE_DOOM                                = 55052
+    H_SPELL_INEVITABLE_DOOM                                = 55052,
+    SPELL_BERSERK                                          = 27680
 };
 
 enum Events
@@ -34,6 +35,7 @@ enum Events
     EVENT_AURA,
     EVENT_BLOOM,
     EVENT_DOOM,
+    EVENT_BERSERK
 };
 
 class boss_loatheb : public CreatureScript
@@ -50,12 +52,19 @@ public:
     {
         boss_loathebAI(Creature *c) : BossAI(c, BOSS_LOATHEB) {}
 
+        void Reset()
+        {
+            _Reset();
+            SetImmuneToDeathGrip();
+        }
+
         void EnterCombat(Unit * /*who*/)
         {
             _EnterCombat();
             events.ScheduleEvent(EVENT_AURA, 10000);
             events.ScheduleEvent(EVENT_BLOOM, 5000);
             events.ScheduleEvent(EVENT_DOOM, 120000);
+            events.ScheduleEvent(EVENT_BERSERK, 12*60000);
         }
 
         void UpdateAI(const uint32 diff)
@@ -82,6 +91,14 @@ public:
                     case EVENT_DOOM:
                         DoCastAOE(RAID_MODE(SPELL_INEVITABLE_DOOM, H_SPELL_INEVITABLE_DOOM));
                         events.ScheduleEvent(EVENT_DOOM, events.GetTimer() < 5*60000 ? 30000 : 15000);
+                        break;
+                    case EVENT_BERSERK:
+                        if(GetDifficulty() == RAID_DIFFICULTY_25MAN_NORMAL)
+                        {
+                            if(!me->HasAura(SPELL_BERSERK))
+                                DoCast(me,SPELL_BERSERK,true);
+                        }
+                         events.ScheduleEvent(EVENT_BERSERK, 60000);
                         break;
                 }
             }
@@ -113,7 +130,7 @@ public:
 
         void JustDied(Unit* killer)
         {
-            DoCast(killer, SPELL_FUNGAL_CREEP);
+            DoCastAOE(SPELL_FUNGAL_CREEP, true); //A Little bit hacky ... but it works now (without triggered no cast on death)
         }
     };
 

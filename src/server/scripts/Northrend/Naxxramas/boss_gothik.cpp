@@ -88,6 +88,33 @@ const Waves waves[] =
     {MOB_LIVE_TRAINEE, 25000, 0},
     {0, 0, 1},
 };
+//Orignal Waves
+const Waves hardwaves[] =
+{
+    {MOB_LIVE_TRAINEE, 20000, 1},
+    {MOB_LIVE_TRAINEE, 20000, 1},
+    {MOB_LIVE_TRAINEE, 20000, 1},
+    {MOB_LIVE_KNIGHT, 10000, 1},
+    {MOB_LIVE_TRAINEE, 10000, 1},
+    {MOB_LIVE_KNIGHT, 15000, 1},
+    {MOB_LIVE_TRAINEE, 5000, 1},
+    {MOB_LIVE_TRAINEE, 20000, 1},
+    {MOB_LIVE_KNIGHT, 0, 1},
+    {MOB_LIVE_RIDER, 10000, 1},
+    {MOB_LIVE_TRAINEE, 10000, 1},
+    {MOB_LIVE_KNIGHT, 5000, 1},
+    {MOB_LIVE_TRAINEE, 15000, 1},
+    {MOB_LIVE_RIDER, 0, 1},
+    {MOB_LIVE_KNIGHT, 10000, 1},
+    {MOB_LIVE_TRAINEE, 10000, 1},
+    {MOB_LIVE_RIDER, 10000, 1},
+    {MOB_LIVE_KNIGHT, 5000, 1},
+    {MOB_LIVE_TRAINEE, 5000, 1},
+    {MOB_LIVE_TRAINEE, 20000, 1},
+    {MOB_LIVE_RIDER, 0, 1},
+    {MOB_LIVE_KNIGHT, 0, 1},
+    {0, 0, 1},
+};
 
 #define POS_Y_GATE  -3360.78f
 #define POS_Y_WEST  -3285.0f
@@ -180,6 +207,7 @@ public:
             mergedSides = false;
             phaseTwo = false;
             thirtyPercentReached = false;
+            SetImmuneToDeathGrip();
         }
 
         void EnterCombat(Unit * /*who*/)
@@ -284,15 +312,15 @@ public:
                 {
                     case MOB_LIVE_TRAINEE:
                     {
-                        if (Creature *LiveTrigger0 = Unit::GetCreature(*me, LiveTriggerGUID[4]))
+                        if (Creature *LiveTrigger0 = Unit::GetCreature(*me, LiveTriggerGUID[1]))
                             DoSummon(MOB_LIVE_TRAINEE, LiveTrigger0, 1);
-                        if (Creature *LiveTrigger1 = Unit::GetCreature(*me, LiveTriggerGUID[4]))
+                        if (Creature *LiveTrigger1 = Unit::GetCreature(*me, LiveTriggerGUID[2]))
                             DoSummon(MOB_LIVE_TRAINEE, LiveTrigger1, 1);
                         break;
                     }
                     case MOB_LIVE_KNIGHT:
                     {
-                        if (Creature *LiveTrigger5 = Unit::GetCreature(*me, LiveTriggerGUID[4]))
+                        if (Creature *LiveTrigger5 = Unit::GetCreature(*me, LiveTriggerGUID[3]))
                             DoSummon(MOB_LIVE_KNIGHT, LiveTrigger5, 1);
                         break;
                     }
@@ -347,6 +375,12 @@ public:
 
         void SpellHit(Unit * /*caster*/, const SpellEntry *spell)
         {
+            if (!phaseTwo)
+            {
+                me->SetHealth(me->GetMaxHealth());
+                me->RemoveAllAuras();
+            }
+
             uint32 spellId = 0;
             switch(spell->Id)
             {
