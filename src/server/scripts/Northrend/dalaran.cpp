@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2008-2011 TrinityCore <http://www.trinitycore.org/>
  *
@@ -159,7 +160,8 @@ public:
 };
 
 /*######
-## npc_archmage_vargoth
+## npc_archmage_vargoth http://www.wowhead.com/item=44738
+
 ######*/
 
 enum eArchmageVargoth
@@ -189,14 +191,14 @@ public:
             if(!pPlayer->HasSpell(SPELL_FAMILAR_PET) && !pPlayer->HasItemCount(ITEM_FAMILAR_PET,1,true))
                 pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_TEXT_FAMILIAR_WELCOME, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
         }
-
         pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
-
         return true;
     }
 
     bool OnGossipSelect (Player* pPlayer, Creature* pCreature, uint32 /*uiSender*/, uint32 uiAction)
     {
+        pPlayer->PlayerTalkClass->ClearMenus();
+
         switch (uiAction)
         {
             case GOSSIP_ACTION_INFO_DEF+1:
@@ -208,6 +210,104 @@ public:
                 pPlayer->CLOSE_GOSSIP_MENU();
                 break;
         }
+        return true;
+    }
+};
+
+/*######
+## npc_steampowered_auctioneer
+######*/
+
+#define GOSSIP_TEXT_ID_STEAM  14764 
+
+class npc_steampowered_auctioneer : public CreatureScript
+{
+public:
+    npc_steampowered_auctioneer() : CreatureScript("npc_steampowered_auctioneer") { }
+
+    bool OnGossipHello(Player* pPlayer, Creature* pCreature)
+    {
+        if (!pCreature->isAuctioner())
+            return false;
+
+        if (pPlayer->GetSkillValue(SKILL_ENGINERING) > 349)
+            pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_VENDOR, GOSSIP_TEXT_BROWSE_GOODS, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_AUCTION);
+
+        pPlayer->SEND_GOSSIP_MENU(GOSSIP_TEXT_ID_STEAM, pCreature->GetGUID());
+
+        return true;
+    }
+
+    bool OnGossipSelect(Player* pPlayer, Creature* pCreature, uint32 /*uiSender*/, uint32 uiAction)
+    {
+        pPlayer->PlayerTalkClass->ClearMenus();
+
+        if (uiAction == GOSSIP_ACTION_AUCTION)
+            pPlayer->GetSession()->SendAuctionHello(pCreature->GetGUID(), pCreature);
+
+        return true;
+    }
+};
+
+/*
+* Npc Magister Hathorel (36670)
+*/
+
+#define GOSSIP_TEXT_ARCANIST_TYBALIN "I'm ready to deliver the tome, Magister Tybalin"
+class npc_arcanist_tybalin : public CreatureScript
+{
+public:
+    npc_arcanist_tybalin() : CreatureScript("npc_arcanist_tybalin") { }
+
+    bool OnGossipHello(Player* pPlayer, Creature* pCreature)
+    {
+	     if (pCreature->isQuestGiver())
+            	pPlayer->PrepareQuestMenu(pCreature->GetGUID());
+
+	     if (pPlayer->GetQuestStatus(24451)== QUEST_STATUS_INCOMPLETE){
+		pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_TEXT_ARCANIST_TYBALIN, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+	}
+	pPlayer->TalkedToCreature(pCreature->GetEntry(), pCreature->GetGUID());
+	pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
+	
+        return true;
+    }
+
+    bool OnGossipSelect(Player* pPlayer, Creature* pCreature, uint32 /*uiSender*/, uint32 uiAction)
+    {
+        pPlayer->PlayerTalkClass->ClearMenus();
+        if (uiAction == GOSSIP_ACTION_INFO_DEF+1)
+            pPlayer->CastSpell(pPlayer, 69722, true);
+
+        return true;
+    }
+};
+
+#define GOSSIP_TEXT_ARCANIST_HATHOREL "I'm ready to deliver the tome, Magister Hathorel"
+class npc_arcanist_hathorel : public CreatureScript
+{
+public:
+    npc_arcanist_hathorel() : CreatureScript("npc_arcanist_hathorel") { }
+
+    bool OnGossipHello(Player* pPlayer, Creature* pCreature)
+    {
+	     if (pCreature->isQuestGiver())
+            	pPlayer->PrepareQuestMenu(pCreature->GetGUID());
+
+	     if (pPlayer->GetQuestStatus(20439)==QUEST_STATUS_INCOMPLETE){
+		pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_TEXT_ARCANIST_HATHOREL, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+	}
+	pPlayer->TalkedToCreature(pCreature->GetEntry(), pCreature->GetGUID());
+	pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
+	
+        return true;
+    }
+
+    bool OnGossipSelect(Player* pPlayer, Creature* pCreature, uint32 /*uiSender*/, uint32 uiAction)
+    {
+        pPlayer->PlayerTalkClass->ClearMenus();
+        if (uiAction == GOSSIP_ACTION_INFO_DEF+1)
+            pPlayer->CastSpell(pPlayer, 69722, true);
 
         return true;
     }
@@ -215,11 +315,10 @@ public:
 
 void AddSC_dalaran()
 {
-    new npc_mageguard_dalaran();
-    new npc_hira_snowdawn();
-    new npc_archmage_vargoth();
-
-    //INSERT INTO npc_text (ID,text0_0) VALUES 
-    //(40000,'Amazing! There are passages in here that I have never seen before. This must have taken quite a while for you to track down. If you ever find anymore books like this, I would like to be notified immediately. $B$BPlease take one of my Kirin Tor Familiars with you just in case you stumble across anything.');
-    //UPDATE creature_template SET scriptname = 'npc_archmage_vargoth' WHERE entry = 19481;
+    new npc_mageguard_dalaran;
+    new npc_hira_snowdawn;
+    new npc_archmage_vargoth;
+    new npc_steampowered_auctioneer;
+    new npc_arcanist_hathorel;
+    new npc_arcanist_tybalin;
 }
