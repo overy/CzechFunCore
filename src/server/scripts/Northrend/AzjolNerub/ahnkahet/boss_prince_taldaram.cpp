@@ -42,7 +42,7 @@ enum Misc
 {
     DATA_EMBRACE_DMG                              = 20000,
     H_DATA_EMBRACE_DMG                            = 40000,
-    DATA_SPHERE_DISTANCE                          =    15
+    DATA_SPHERE_DISTANCE                          =   100
 };
 #define DATA_SPHERE_ANGLE_OFFSET            0.7f
 #define DATA_GROUND_POSITION_Z             11.4f
@@ -84,6 +84,18 @@ public:
             pInstance = c->GetInstanceScript();
             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+
+            //SPELL_BLOODTHIRST should trigger effect 1 on self
+            //TODO: move to core
+            SpellEntry *TempSpell;
+            TempSpell = GET_SPELL(SPELL_BLOODTHIRST);
+            if (TempSpell)
+                TempSpell->EffectImplicitTargetA[1] = 1;
+
+            //below may need another adjustment
+            TempSpell = GET_SPELL(DUNGEON_MODE(SPELL_FLAME_SPHERE_PERIODIC, H_SPELL_FLAME_SPHERE_PERIODIC));
+            if (TempSpell)
+                TempSpell->EffectAmplitude[0] = 500;
         }
 
         uint32 uiBloodthirstTimer;
@@ -125,6 +137,7 @@ public:
         {
             if (!UpdateVictim())
                 return;
+
             if (uiPhaseTimer <= diff)
             {
                 switch (Phase)
@@ -179,8 +192,9 @@ public:
                         uiPhaseTimer = 1300;
                         break;
                     case VANISHED:
+                        me->SetVisible(true);
                         if (Unit *pEmbraceTarget = GetEmbraceTarget())
-                            DoCast(pEmbraceTarget, SPELL_EMBRACE_OF_THE_VAMPYR);
+                            DoCast(pEmbraceTarget, DUNGEON_MODE(SPELL_EMBRACE_OF_THE_VAMPYR, H_SPELL_EMBRACE_OF_THE_VAMPYR));
                         me->GetMotionMaster()->Clear();
                         me->SetSpeed(MOVE_WALK, 1.0f, true);
                         me->GetMotionMaster()->MoveChase(me->getVictim());
@@ -225,7 +239,8 @@ public:
                             if (target_list.size() > 2)
                             {
                                 DoScriptText(RAND(SAY_VANISH_1, SAY_VANISH_2), me);
-                                DoCast(me, SPELL_VANISH);
+                                //DoCast(me, SPELL_VANISH);                             // causes health reset issue?
+                                me->SetVisible(false);
                                 Phase = JUST_VANISHED;
                                 uiPhaseTimer = 500;
                                 if (Unit* pEmbraceTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
@@ -316,6 +331,7 @@ public:
                 return;
             me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
             me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             me->RemoveAurasDueToSpell(SPELL_BEAM_VISUAL);
             me->SetUnitMovementFlags(MOVEMENTFLAG_WALKING);
             me->SetHomePosition(me->GetPositionX(), me->GetPositionY(), DATA_GROUND_POSITION_Z, me->GetOrientation());
@@ -353,7 +369,7 @@ public:
             me->SetFloatValue(OBJECT_FIELD_SCALE_X, 1.0f);
             DoCast(me, SPELL_FLAME_SPHERE_VISUAL);
             DoCast(me, SPELL_FLAME_SPHERE_SPAWN_EFFECT);
-            DoCast(me, SPELL_FLAME_SPHERE_PERIODIC);
+            DoCast(me, DUNGEON_MODE(SPELL_FLAME_SPHERE_PERIODIC, H_SPELL_FLAME_SPHERE_PERIODIC));
             uiDespawnTimer = 10*IN_MILLISECONDS;
         }
 
