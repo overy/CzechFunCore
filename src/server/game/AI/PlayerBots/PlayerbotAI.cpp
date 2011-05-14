@@ -3,6 +3,7 @@
 #include "DBCStores.h"
 #include "World.h"
 #include "SpellMgr.h"
+#include "GroupMgr.h"
 #include "PlayerbotAI.h"
 #include "PlayerbotPriestAI.h"
 #include "PlayerbotWarriorAI.h"
@@ -111,7 +112,7 @@ m_FeastSpamTimer(0)
             delete m_group;
             return;
         }
-        sObjectMgr->AddGroup(m_group);
+        sGroupMgr->AddGroup(m_group);
         if(!m_group->IsFull()) m_group->AddMember(bot);
     }
 
@@ -423,7 +424,7 @@ void PlayerbotAI::SendNotEquipList(Player &player)
         out << descr[equipSlot] << ": ";
         for(std::list<Item *>::iterator it = itemListForEqSlot->begin(); it != itemListForEqSlot->end(); ++it)
         {
-            const ItemPrototype *const pItemProto = (*it)->GetProto();
+            const ItemTemplate *const pItemProto = (*it)->GetTemplate();
             out << " |cffffffff|Hitem:" << pItemProto->ItemId
             << ":0:0:0:0:0:0:0" << "|h[" << pItemProto->Name1
             << "]|h|r";
@@ -969,9 +970,9 @@ void PlayerbotAI::HandleMasterIncomingPacket(const WorldPacket &packet, WorldSes
                             if (!item)
                                 continue;
 
-                            if (item->CanBeTraded() && item->GetProto()->Quality == ITEM_QUALITY_POOR)
+                            if (item->CanBeTraded() && item->GetTemplate()->Quality == ITEM_QUALITY_POOR)
                             {
-                                int32 cost = item->GetCount() * item->GetProto()->SellPrice;
+                                int32 cost = item->GetCount() * item->GetTemplate()->SellPrice;
                                 bot->ModifyMoney(cost);
                                 bot->MoveItemFromInventory(item->GetBagSlot(), item->GetSlot(), true);
                                 bot->AddItemToBuyBackSlot(item);
@@ -980,7 +981,7 @@ void PlayerbotAI::HandleMasterIncomingPacket(const WorldPacket &packet, WorldSes
                                 TotalCost = TotalCost + cost;
 
                                 report << "Sold " << item->GetCount() << "x";
-                                report << " |cffffffff|Hitem:" << item->GetProto()->ItemId << ":0:0:0:0:0:0:0" << "|h[" << item->GetProto()->Name1 << "]|h|r";
+                                report << " |cffffffff|Hitem:" << item->GetTemplate()->ItemId << ":0:0:0:0:0:0:0" << "|h[" << item->GetTemplate()->Name1 << "]|h|r";
                                 report << " for ";
 
                                 uint32 gold = uint32(cost / 10000);
@@ -998,9 +999,9 @@ void PlayerbotAI::HandleMasterIncomingPacket(const WorldPacket &packet, WorldSes
                                 }
                                 report << cost << "|TInterface\\Icons\\INV_Misc_Coin_05:16|t\n";
                             }
-                            else if (item->GetProto()->SellPrice > 0)
+                            else if (item->GetTemplate()->SellPrice > 0)
                             {
-                                canSell << "|cffffffff|Hitem:" << item->GetProto()->ItemId << ":0:0:0:0:0:0:0" << "|h[" << item->GetProto()->Name1 << "]|h|r ";
+                                canSell << "|cffffffff|Hitem:" << item->GetTemplate()->ItemId << ":0:0:0:0:0:0:0" << "|h[" << item->GetTemplate()->Name1 << "]|h|r ";
                             }
                         }
 
@@ -1015,9 +1016,9 @@ void PlayerbotAI::HandleMasterIncomingPacket(const WorldPacket &packet, WorldSes
                                     if (!item)
                                         continue;
 
-                                    if (item->CanBeTraded() && item->GetProto()->Quality == ITEM_QUALITY_POOR)
+                                    if (item->CanBeTraded() && item->GetTemplate()->Quality == ITEM_QUALITY_POOR)
                                     {
-                                        int32 cost = item->GetCount() * item->GetProto()->SellPrice;
+                                        int32 cost = item->GetCount() * item->GetTemplate()->SellPrice;
                                         bot->ModifyMoney(cost);
                                         bot->MoveItemFromInventory(item->GetBagSlot(), item->GetSlot(), true);
                                         bot->AddItemToBuyBackSlot(item);
@@ -1026,7 +1027,7 @@ void PlayerbotAI::HandleMasterIncomingPacket(const WorldPacket &packet, WorldSes
                                         TotalCost = TotalCost + cost;
 
                                         report << "Sold " << item->GetCount() << "x";
-                                        report << " |cffffffff|Hitem:" << item->GetProto()->ItemId << ":0:0:0:0:0:0:0" << "|h[" << item->GetProto()->Name1 << "]|h|r";
+                                        report << " |cffffffff|Hitem:" << item->GetTemplate()->ItemId << ":0:0:0:0:0:0:0" << "|h[" << item->GetTemplate()->Name1 << "]|h|r";
                                         report << " for ";
 
                                         uint32 gold = uint32(cost / 10000);
@@ -1043,9 +1044,9 @@ void PlayerbotAI::HandleMasterIncomingPacket(const WorldPacket &packet, WorldSes
                                         }
                                         report << cost << "|TInterface\\Icons\\INV_Misc_Coin_05:16|t\n";
                                     }
-                                    else if (item->GetProto()->SellPrice > 0)
+                                    else if (item->GetTemplate()->SellPrice > 0)
                                     {
-                                        canSell << "|cffffffff|Hitem:" << item->GetProto()->ItemId << ":0:0:0:0:0:0:0" << "|h[" << item->GetProto()->Name1 << "]|h|r ";
+                                        canSell << "|cffffffff|Hitem:" << item->GetTemplate()->ItemId << ":0:0:0:0:0:0:0" << "|h[" << item->GetTemplate()->Name1 << "]|h|r ";
                                     }
                                 }
                             }
@@ -1368,7 +1369,7 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket &packet)
                     const Item *const pItem = m_bot->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
                     if(pItem && pItem->CanBeTraded())
                     {
-                        const ItemPrototype *const pItemProto = pItem->GetProto();
+                        const ItemTemplate *const pItemProto = pItem->GetTemplate();
                         std::string name = pItemProto->Name1;
 
                         out << " |cffffffff|Hitem:" << pItemProto->ItemId << ":0:0:0:0:0:0:0" << "|h[" << name << "]|h|r";
@@ -1387,7 +1388,7 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket &packet)
                             const Item *const pItem = m_bot->GetItemByPos(bag, slot);
                             if(pItem && pItem->CanBeTraded())
                             {
-                                const ItemPrototype *const pItemProto = pItem->GetProto();
+                                const ItemTemplate *const pItemProto = pItem->GetTemplate();
                                 const std::string name = pItemProto->Name1;
 
                                 //item link format: http://www.wowwiki.com/ItemString
@@ -1712,7 +1713,7 @@ Item *PlayerbotAI::FindFood() const
         Item* const pItem = m_bot->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
         if (pItem)
         {
-            const ItemPrototype* const pItemProto = pItem->GetProto();
+            const ItemTemplate* const pItemProto = pItem->GetTemplate();
             if (! pItemProto || m_bot->CanUseItem(pItemProto)!=EQUIP_ERR_OK) continue;
             if (pItemProto->Class==ITEM_CLASS_CONSUMABLE &&
                 (pItemProto->SubClass==ITEM_SUBCLASS_FOOD ||
@@ -1736,7 +1737,7 @@ Item *PlayerbotAI::FindFood() const
                 Item* const pItem = m_bot->GetItemByPos(bag, slot);
                 if (pItem)
                 {
-                    const ItemPrototype* const pItemProto = pItem->GetProto();
+                    const ItemTemplate* const pItemProto = pItem->GetTemplate();
                     if (! pItemProto || m_bot->CanUseItem(pItemProto)!=EQUIP_ERR_OK) continue;
                     if (pItemProto->Class==ITEM_CLASS_CONSUMABLE &&
                         (pItemProto->SubClass==ITEM_SUBCLASS_FOOD ||
@@ -1762,7 +1763,7 @@ Item *PlayerbotAI::FindDrink() const
         Item* const pItem = m_bot->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
         if (pItem)
         {
-            const ItemPrototype* const pItemProto = pItem->GetProto();
+            const ItemTemplate* const pItemProto = pItem->GetTemplate();
             if (! pItemProto || m_bot->CanUseItem(pItemProto)!=EQUIP_ERR_OK) continue;
             if (pItemProto->Class==ITEM_CLASS_CONSUMABLE &&
                 (pItemProto->SubClass==ITEM_SUBCLASS_FOOD ||
@@ -1786,7 +1787,7 @@ Item *PlayerbotAI::FindDrink() const
                 Item* const pItem = m_bot->GetItemByPos(bag, slot);
                 if (pItem)
                 {
-                    const ItemPrototype* const pItemProto = pItem->GetProto();
+                    const ItemTemplate* const pItemProto = pItem->GetTemplate();
 
                     if (! pItemProto || m_bot->CanUseItem(pItemProto)!=EQUIP_ERR_OK) continue;
                     if (pItemProto->Class==ITEM_CLASS_CONSUMABLE &&
@@ -1815,7 +1816,7 @@ Item *PlayerbotAI::FindPotion() const
         Item* const pItem = m_bot->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
         if (pItem)
         {
-            const ItemPrototype* const pItemProto = pItem->GetProto();
+            const ItemTemplate* const pItemProto = pItem->GetTemplate();
             if (! pItemProto || m_bot->CanUseItem(pItemProto)!=EQUIP_ERR_OK) continue;
             if (pItemProto->IsPotion())
             {
@@ -1834,7 +1835,7 @@ Item *PlayerbotAI::FindPotion() const
                 Item* const pItem = m_bot->GetItemByPos(bag, slot);
                 if (pItem)
                 {
-                    const ItemPrototype* const pItemProto = pItem->GetProto();
+                    const ItemTemplate* const pItemProto = pItem->GetTemplate();
                     if (! pItemProto || m_bot->CanUseItem(pItemProto)!=EQUIP_ERR_OK) continue;
                     if (pItemProto->IsPotion())
                     {
@@ -1857,7 +1858,7 @@ Item *PlayerbotAI::FindBandage() const
         Item *const pItem = m_bot->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
         if(pItem)
         {
-            const ItemPrototype *const pItemProto = pItem->GetProto();
+            const ItemTemplate *const pItemProto = pItem->GetTemplate();
             if(!pItemProto || m_bot->CanUseItem(pItemProto)!=EQUIP_ERR_OK) continue;
             if(pItemProto->Class == ITEM_CLASS_CONSUMABLE && pItemProto->SubClass == ITEM_SUBCLASS_BANDAGE) return pItem;
         }
@@ -1873,7 +1874,7 @@ Item *PlayerbotAI::FindBandage() const
                 Item *const pItem = m_bot->GetItemByPos(bag, slot);
                 if(pItem)
                 {
-                    const ItemPrototype *const pItemProto = pItem->GetProto();
+                    const ItemTemplate *const pItemProto = pItem->GetTemplate();
                     if(!pItemProto || m_bot->CanUseItem(pItemProto)!=EQUIP_ERR_OK) continue;
                     if(pItemProto->Class == ITEM_CLASS_CONSUMABLE && pItemProto->SubClass == ITEM_SUBCLASS_BANDAGE) return pItem;
                 }
@@ -1892,7 +1893,7 @@ Item *PlayerbotAI::FindPoisonForward() const
         Item *const pItem = m_bot->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
         if(pItem)
         {
-            const ItemPrototype *const pItemProto = pItem->GetProto();
+            const ItemTemplate *const pItemProto = pItem->GetTemplate();
             if(!pItemProto || m_bot->CanUseItem(pItemProto)!=EQUIP_ERR_OK) continue;
             if(pItemProto->Class == ITEM_CLASS_CONSUMABLE && pItemProto->SubClass == ITEM_SUBCLASS_CONSUMABLE_OTHER) return pItem;
         }
@@ -1908,7 +1909,7 @@ Item *PlayerbotAI::FindPoisonForward() const
                 Item *const pItem = m_bot->GetItemByPos(bag, slot);
                 if(pItem)
                 {
-                    const ItemPrototype *const pItemProto = pItem->GetProto();
+                    const ItemTemplate *const pItemProto = pItem->GetTemplate();
                     if(!pItemProto || m_bot->CanUseItem(pItemProto)!=EQUIP_ERR_OK) continue;
                     if(pItemProto->Class == ITEM_CLASS_CONSUMABLE && pItemProto->SubClass == ITEM_SUBCLASS_CONSUMABLE_OTHER) return pItem;
                 }
@@ -1927,7 +1928,7 @@ Item *PlayerbotAI::FindPoisonBackward() const
         Item *const pItem = m_bot->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
         if(pItem)
         {
-            const ItemPrototype *const pItemProto = pItem->GetProto();
+            const ItemTemplate *const pItemProto = pItem->GetTemplate();
             if(!pItemProto || m_bot->CanUseItem(pItemProto)!=EQUIP_ERR_OK) continue;
             if(pItemProto->Class == ITEM_CLASS_GLYPH) continue;
             if(pItemProto->Class == ITEM_CLASS_CONSUMABLE && pItemProto->SubClass == ITEM_SUBCLASS_CONSUMABLE_OTHER) return pItem;
@@ -1944,7 +1945,7 @@ Item *PlayerbotAI::FindPoisonBackward() const
                 Item *const pItem = m_bot->GetItemByPos(bag, slot);
                 if(pItem)
                 {
-                    const ItemPrototype *const pItemProto = pItem->GetProto();
+                    const ItemTemplate *const pItemProto = pItem->GetTemplate();
                     if(!pItemProto || m_bot->CanUseItem(pItemProto)!=EQUIP_ERR_OK) continue;
                     if(pItemProto->Class == ITEM_CLASS_GLYPH) continue;
                     if(pItemProto->Class == ITEM_CLASS_CONSUMABLE && pItemProto->SubClass == ITEM_SUBCLASS_CONSUMABLE_OTHER) return pItem;
@@ -2134,7 +2135,7 @@ void PlayerbotAI::GetCombatOrders()
     if(thingToAttack->GetTypeId() != TYPEID_PLAYER)
     {
         //add thingToAttack to loot list
-        CreatureInfo const *cInfo = ((Creature *)thingToAttack)->GetCreatureInfo();
+        CreatureTemplate const *cInfo = ((Creature *)thingToAttack)->GetCreatureInfo();
         if(cInfo && cInfo->lootid) m_lootCreature.push_back(thingToAttack->GetGUID());
     }
 
@@ -2714,7 +2715,7 @@ void PlayerbotAI::findItemsInEquip(std::list<uint32>& itemIdSearchList, std::lis
 
         for (std::list<uint32>::iterator it = itemIdSearchList.begin(); it != itemIdSearchList.end(); ++it)
         {
-            if (pItem->GetProto()->ItemId != *it)
+            if (pItem->GetTemplate()->ItemId != *it)
                 continue;
 
             foundItemList.push_back(pItem);
@@ -2737,7 +2738,7 @@ void PlayerbotAI::findItemsInInv(std::list<uint32>& itemIdSearchList, std::list<
         if(!pItem) continue;
         for(std::list<uint32>::iterator it = itemIdSearchList.begin(); it != itemIdSearchList.end(); ++it)
         {
-            if(pItem->GetProto()->ItemId != *it) continue;
+            if(pItem->GetTemplate()->ItemId != *it) continue;
             foundItemList.push_back(pItem);
             itemIdSearchList.erase(it);
             break;
@@ -2755,7 +2756,7 @@ void PlayerbotAI::findItemsInInv(std::list<uint32>& itemIdSearchList, std::list<
             if(!pItem) continue;
             for(std::list<uint32>::iterator it = itemIdSearchList.begin(); it != itemIdSearchList.end(); ++it)
             {
-                if(pItem->GetProto()->ItemId != *it) continue;
+                if(pItem->GetTemplate()->ItemId != *it) continue;
                 foundItemList.push_back(pItem);
                 itemIdSearchList.erase(it);
                 break;
@@ -2774,7 +2775,7 @@ bool PlayerbotAI::HasPick()
         Item* const pItem = m_bot->GetItemByPos( INVENTORY_SLOT_BAG_0, slot );
         if (pItem )
         {
-            const ItemPrototype* const pItemProto = pItem->GetProto();
+            const ItemTemplate* const pItemProto = pItem->GetTemplate();
 
                 if (!pItemProto )
                     continue;
@@ -2798,7 +2799,7 @@ bool PlayerbotAI::HasPick()
         Item* const pItem = m_bot->GetItemByPos(INVENTORY_SLOT_BAG_0, slot); // 255, 23 to 38
         if (pItem)
         {
-            const ItemPrototype* const pItemProto = pItem->GetProto();
+            const ItemTemplate* const pItemProto = pItem->GetTemplate();
             if (!pItemProto )
                 continue;
             result = WorldDatabase.PQuery("SELECT TotemCategory FROM item_template WHERE entry = '%i'", pItemProto->ItemId);
@@ -2825,7 +2826,7 @@ bool PlayerbotAI::HasPick()
                 Item* const pItem = m_bot->GetItemByPos(bag, slot); // 20 to 23, 1 to bagsize
                 if (pItem)
                 {
-                    const ItemPrototype* const pItemProto = pItem->GetProto();
+                    const ItemTemplate* const pItemProto = pItem->GetTemplate();
 
                     if (!pItemProto )
                         continue;
@@ -3189,7 +3190,7 @@ void PlayerbotAI::HandleCommand(const std::string &text, Player &fromPlayer)
             return;
         }
 
-        PoisonWeapon(*poison, poison->GetProto()->Spells[0].SpellId, TARGET_FLAG_ITEM, EQUIPMENT_SLOT_MAINHAND);
+        PoisonWeapon(*poison, poison->GetTemplate()->Spells[0].SpellId, TARGET_FLAG_ITEM, EQUIPMENT_SLOT_MAINHAND);
     }
 
     // poison offhand weapon
@@ -3203,7 +3204,7 @@ void PlayerbotAI::HandleCommand(const std::string &text, Player &fromPlayer)
             return;
         }
 
-        PoisonWeapon(*poison, poison->GetProto()->Spells[0].SpellId, TARGET_FLAG_ITEM, EQUIPMENT_SLOT_OFFHAND);
+        PoisonWeapon(*poison, poison->GetTemplate()->Spells[0].SpellId, TARGET_FLAG_ITEM, EQUIPMENT_SLOT_OFFHAND);
     }
 
     //equip items
@@ -3424,7 +3425,7 @@ void PlayerbotAI::HandleCommand(const std::string &text, Player &fromPlayer)
              return;
          }
 
-         CreatureInfo const *ci = creature->GetCreatureInfo();
+         CreatureTemplate const *ci = creature->GetCreatureInfo();
 
          if (!ci)
          {
@@ -3555,7 +3556,7 @@ void PlayerbotAI::HandleCommand(const std::string &text, Player &fromPlayer)
              return;
          }
 
-         CreatureInfo const *ci = creature->GetCreatureInfo();
+         CreatureTemplate const *ci = creature->GetCreatureInfo();
 
          if (!ci)
          {
@@ -3695,9 +3696,9 @@ void PlayerbotAI::HandleCommand(const std::string &text, Player &fromPlayer)
         findItemsInInv(itemIds, itemList);
         for(std::list<Item *>::iterator it = itemList.begin(); it != itemList.end(); ++it)
         {
-            if ((**it).GetProto()->SellPrice > 0)
+            if ((**it).GetTemplate()->SellPrice > 0)
             {
-                int32 cost = (**it).GetCount() * (**it).GetProto()->SellPrice;
+                int32 cost = (**it).GetCount() * (**it).GetTemplate()->SellPrice;
                 m_bot->ModifyMoney(cost);
                 m_bot->MoveItemFromInventory((**it).GetBagSlot(), (**it).GetSlot(), true);
 
@@ -3706,7 +3707,7 @@ void PlayerbotAI::HandleCommand(const std::string &text, Player &fromPlayer)
 
                 if ((**it).GetCount() > 0) {
                     report << "Sold " << (**it).GetCount() << "x";
-                    report << " |cffffffff|Hitem:" << (**it).GetProto()->ItemId << ":0:0:0:0:0:0:0" << "|h[" << (**it).GetProto()->Name1 << "]|h|r";
+                    report << " |cffffffff|Hitem:" << (**it).GetTemplate()->ItemId << ":0:0:0:0:0:0:0" << "|h[" << (**it).GetTemplate()->Name1 << "]|h|r";
                     report << " for ";
 
                     uint32 gold = uint32(cost / 10000);
@@ -3911,7 +3912,7 @@ void PlayerbotAI::HandleCommand(const std::string &text, Player &fromPlayer)
              float z = fields[4].GetFloat();
              int mapid = fields[5].GetUInt16();
 
-             GameObjectInfo const * gInfo = ObjectMgr::GetGameObjectInfo(entry);
+             GameObjectTemplate const * gInfo = sObjectMgr->GetGameObjectTemplate(entry);
 
              if(!gInfo)
                  continue;
@@ -3974,7 +3975,7 @@ void PlayerbotAI::HandleCommand(const std::string &text, Player &fromPlayer)
                 {
                     for (uint8 rewardIdx=0; !wasRewarded && rewardIdx < pQuest->GetRewChoiceItemsCount(); ++rewardIdx)
                     {
-                        ItemPrototype const * const pRewardItem = sObjectMgr->GetItemPrototype(pQuest->RewChoiceItemId[rewardIdx]);
+                        ItemTemplate const * const pRewardItem = sObjectMgr->GetItemTemplate(pQuest->RewChoiceItemId[rewardIdx]);
                         if (itemId == pRewardItem->ItemId)
                         {
                             m_bot->RewardQuest(pQuest, rewardIdx, pNpc, false);
@@ -4290,7 +4291,7 @@ void PlayerbotAI::TurnInQuests( WorldObject *pNpc )
                     else if (pQuest->GetRewChoiceItemsCount() == 1)
                     {
                         int rewardIdx = 0;
-                        ItemPrototype const *pRewardItem = sObjectMgr->GetItemPrototype(pQuest->RewChoiceItemId[rewardIdx]);
+                        ItemTemplate const *pRewardItem = sObjectMgr->GetItemTemplate(pQuest->RewChoiceItemId[rewardIdx]);
                         std::string itemName = pRewardItem->Name1;
                         m_bot->GetPlayerbotAI()->ItemLocalization(itemName, pRewardItem->ItemId);
                         if (m_bot->CanRewardQuest(pQuest, rewardIdx, false))
@@ -4321,7 +4322,7 @@ void PlayerbotAI::TurnInQuests( WorldObject *pNpc )
                             << "|h[" << questTitle << "]|h|r? ";
                         for (uint8 i=0; i < pQuest->GetRewChoiceItemsCount(); ++i)
                         {
-                            ItemPrototype const * const pRewardItem = sObjectMgr->GetItemPrototype(pQuest->RewChoiceItemId[i]);
+                            ItemTemplate const * const pRewardItem = sObjectMgr->GetItemTemplate(pQuest->RewChoiceItemId[i]);
                             std::string itemName = pRewardItem->Name1;
                             m_bot->GetPlayerbotAI()->ItemLocalization(itemName, pRewardItem->ItemId);
                             out << "|cffffffff|Hitem:" << pRewardItem->ItemId << ":0:0:0:0:0:0:0" << "|h[" << itemName << "]|h|r";

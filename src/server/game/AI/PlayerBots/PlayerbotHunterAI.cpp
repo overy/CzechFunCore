@@ -477,7 +477,7 @@ void PlayerbotHunterAI::DoNonCombatActions()
                 Item* const pItem = m_bot->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
                 if (pItem)
                 {
-                    const ItemPrototype* const pItemProto = pItem->GetProto();
+                    const ItemTemplate* const pItemProto = pItem->GetTemplate();
                     if (!pItemProto )
                         continue;
                     if(pet->HaveInDiet(pItemProto)) // is pItem in pets diet
@@ -505,7 +505,7 @@ void PlayerbotHunterAI::DoNonCombatActions()
                         Item* const pItem = m_bot->GetItemByPos(bag, slot);
                         if (pItem)
                         {
-                            const ItemPrototype* const pItemProto = pItem->GetProto();
+                            const ItemTemplate* const pItemProto = pItem->GetTemplate();
                             if (!pItemProto )
                                 continue;
                             if(pet->HaveInDiet(pItemProto)) // is pItem in pets diet

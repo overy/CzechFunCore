@@ -251,7 +251,7 @@ bool PlayerbotRogueAI::ChangeWeaponEnchants()
     {
         poison = GetAI()->FindPoisonForward();
         if(poison == NULL) return false;
-        GetAI()->PoisonWeapon(*poison, poison->GetProto()->Spells[0].SpellId, TARGET_FLAG_ITEM, EQUIPMENT_SLOT_MAINHAND);
+        GetAI()->PoisonWeapon(*poison, poison->GetTemplate()->Spells[0].SpellId, TARGET_FLAG_ITEM, EQUIPMENT_SLOT_MAINHAND);
         return true;
     }
     weap = m_bot->GetWeaponForAttack(OFF_ATTACK);
@@ -259,7 +259,7 @@ bool PlayerbotRogueAI::ChangeWeaponEnchants()
     {
         poison = GetAI()->FindPoisonBackward();
         if(poison == NULL) return false;
-        GetAI()->PoisonWeapon(*poison, poison->GetProto()->Spells[0].SpellId, TARGET_FLAG_ITEM, EQUIPMENT_SLOT_OFFHAND);
+        GetAI()->PoisonWeapon(*poison, poison->GetTemplate()->Spells[0].SpellId, TARGET_FLAG_ITEM, EQUIPMENT_SLOT_OFFHAND);
         return true;
     }
     return false;

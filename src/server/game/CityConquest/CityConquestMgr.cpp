@@ -95,10 +95,10 @@ void CityConquestMgr::SwitchFaction(int id)
 			{
 				spawn->creature->setFaction(spawn->faction_A);
 
-				if(CreatureInfo const *cinfo = spawn->creature->GetCreatureInfo())
+				if (CreatureTemplate const* cinfo = spawn->creature->GetCreatureInfo())
 				{
-					const_cast<CreatureInfo*>(cinfo)->faction_A = spawn->faction_A;
-					const_cast<CreatureInfo*>(cinfo)->faction_H = spawn->faction_A;
+					const_cast<CreatureTemplate*>(cinfo)->faction_A = spawn->faction_A;
+					const_cast<CreatureTemplate*>(cinfo)->faction_H = spawn->faction_A;
 				}
 				WorldDatabase.PExecute("UPDATE creature_template SET faction_A = '%u', faction_H = '%u' WHERE entry = '%u'", spawn->faction_A, spawn->faction_A, spawn->creature->GetEntry());
 			}
@@ -106,10 +106,10 @@ void CityConquestMgr::SwitchFaction(int id)
 			{
 				spawn->creature->setFaction(spawn->faction_H);
 
-				if(CreatureInfo const *cinfo = spawn->creature->GetCreatureInfo())
+				if (CreatureTemplate const* cinfo = spawn->creature->GetCreatureInfo())
 				{
-					const_cast<CreatureInfo*>(cinfo)->faction_A = spawn->faction_H;
-					const_cast<CreatureInfo*>(cinfo)->faction_H = spawn->faction_H;
+					const_cast<CreatureTemplate*>(cinfo)->faction_A = spawn->faction_H;
+					const_cast<CreatureTemplate*>(cinfo)->faction_H = spawn->faction_H;
 				}
 				WorldDatabase.PExecute("UPDATE creature_template SET faction_A = '%u', faction_H = '%u' WHERE entry = '%u'", spawn->faction_H, spawn->faction_H, spawn->creature->GetEntry());
 			}
@@ -227,10 +227,10 @@ void CityConquestMgr::RegisterCreature(Creature * creature, int type)
 					{
 						spawn->creature->setFaction(spawn->faction_H);
 
-						if(CreatureInfo const *cinfo = spawn->creature->GetCreatureInfo())
+						if(CreatureTemplate const *cinfo = spawn->creature->GetCreatureInfo())
 						{
-							const_cast<CreatureInfo*>(cinfo)->faction_A = spawn->faction_H;
-							const_cast<CreatureInfo*>(cinfo)->faction_H = spawn->faction_H;
+							const_cast<CreatureTemplate*>(cinfo)->faction_A = spawn->faction_H;
+							const_cast<CreatureTemplate*>(cinfo)->faction_H = spawn->faction_H;
 						}
 						WorldDatabase.PExecute("UPDATE creature_template SET faction_A = '%u', faction_H = '%u' WHERE entry = '%u'", spawn->faction_H, spawn->faction_H, spawn->creature->GetEntry());
 					}
@@ -238,10 +238,10 @@ void CityConquestMgr::RegisterCreature(Creature * creature, int type)
 					{
 						spawn->creature->setFaction(spawn->faction_A);
 
-						if(CreatureInfo const *cinfo = spawn->creature->GetCreatureInfo())
+						if(CreatureTemplate const *cinfo = spawn->creature->GetCreatureInfo())
 						{
-							const_cast<CreatureInfo*>(cinfo)->faction_A = spawn->faction_A;
-							const_cast<CreatureInfo*>(cinfo)->faction_H = spawn->faction_A;
+							const_cast<CreatureTemplate*>(cinfo)->faction_A = spawn->faction_A;
+							const_cast<CreatureTemplate*>(cinfo)->faction_H = spawn->faction_A;
 						}
 						WorldDatabase.PExecute("UPDATE creature_template SET faction_A = '%u', faction_H = '%u' WHERE entry = '%u'", spawn->faction_A, spawn->faction_A, spawn->creature->GetEntry());
 					}

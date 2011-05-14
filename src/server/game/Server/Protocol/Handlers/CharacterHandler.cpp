@@ -1001,7 +1001,7 @@ void WorldSession::HandlePlayerBotLogin(SQLQueryHolder *holder)
     //This WorldSession is owned by the bot player object
     //it will deleted in the Player class constructor for Playerbots
     //only
-    WorldSession *botSession = new WorldSession(lqh->GetAccountId(), NULL, SEC_PLAYER, true, 0, LOCALE_enUS,0);
+    WorldSession *botSession = new WorldSession(lqh->GetAccountId(), NULL, SEC_PLAYER, true, 0, 0, LOCALE_enUS,0);
 
     if(!botSession) // Probably excessively verbose..
     {

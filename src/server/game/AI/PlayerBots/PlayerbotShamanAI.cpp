@@ -464,7 +464,7 @@ bool PlayerbotShamanAI::ChangeTotems(uint32 mode)
         if (!tSpell) continue;
         uint32 tEntry = (uint32) tSpell->EffectMiscValue[0];
         if (!tEntry) continue;
-        CreatureInfo const *totemEntry = GetCreatureTemplateStore(tEntry);
+        CreatureTemplate const *totemEntry = sObjectMgr->GetCreatureTemplate(tEntry);
         if (!tEntry) continue;
 
         if (CanCast(totz[i], m_bot) && !m_bot->FindNearestCreature(tEntry,30)) { return CastSpell(totz[i],m_bot,false); }

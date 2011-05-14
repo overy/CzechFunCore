@@ -3365,15 +3365,12 @@ bool ChatHandler::HandleQuestAdd(const char *args)
     }
 
     // check item starting quest (it can work incorrectly if added without item in inventory)
-    for (uint32 id = 0; id < sItemStorage.MaxEntry; id++)
+	ItemTemplateContainer const* its = sObjectMgr->GetItemTemplateStore();
+    for (ItemTemplateContainer::const_iterator itr = its->begin(); itr != its->end(); ++itr)
     {
-        ItemPrototype const *pProto = sItemStorage.LookupEntry<ItemPrototype>(id);
-        if (!pProto)
-            continue;
-
-        if (pProto->StartQuest == entry)
+        if (itr->second.StartQuest == entry)
         {
-            PSendSysMessage(LANG_COMMAND_QUEST_STARTFROMITEM, entry, pProto->ItemId);
+            PSendSysMessage(LANG_COMMAND_QUEST_STARTFROMITEM, entry, itr->second.ItemId);
             SetSentErrorMessage(true);
             return false;
         }
@@ -3501,7 +3498,7 @@ bool ChatHandler::HandleQuestComplete(const char *args)
         }
         else if (creature > 0)
         {
-            if (CreatureInfo const* cInfo = sObjectMgr->GetCreatureTemplate(creature))
+            if (CreatureTemplate const* cInfo = sObjectMgr->GetCreatureTemplate(creature))
                 for (uint16 z = 0; z < creaturecount; ++z)
                     player->KilledMonster(cInfo,0);
         }

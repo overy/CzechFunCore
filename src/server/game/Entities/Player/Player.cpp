@@ -956,7 +956,7 @@ void Player::CleanupsBeforeDelete(bool finalCleanup)
              {
                  //no one left in group so deleting group
                  delete m_group;
-                 sObjectMgr->RemoveGroup(m_group);
+                 sGroupMgr->RemoveGroup(m_group);
              }
          }
          m_bot->SetCharmerGUID(0);
@@ -2325,7 +2325,7 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
              {
                  //no one left in group so deleting group
                  delete m_group;
-                 sObjectMgr->RemoveGroup(m_group);
+                 sGroupMgr->RemoveGroup(m_group);
              }
          }
          m_bot->SetCharmerGUID(0);

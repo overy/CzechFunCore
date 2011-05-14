@@ -348,7 +348,7 @@ bool PlayerbotClassAI::TakePosition(Unit *followTarget, BotRole bRole, float bDi
     //Do not try to go behind if ranged and creature is not boss like
     if (bDist > MELEE_RANGE && followTarget->GetTypeId() != TYPEID_PLAYER)
     {
-        const CreatureInfo *cInfo = ((Creature*) followTarget)->GetCreatureInfo();
+        const CreatureTemplate *cInfo = ((Creature*) followTarget)->GetCreatureInfo();
         if (!cInfo || cInfo->rank != 3) { omitAngle = true; }
     }
 
