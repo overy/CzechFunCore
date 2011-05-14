@@ -217,6 +217,14 @@ ChatCommand * ChatHandler::getCommandTable()
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };
 
+    static ChatCommand questCommandTable[] =
+    {
+        { "add",            SEC_ADMINISTRATOR,  false, OldHandler<&ChatHandler::HandleQuestAdd>,                   "", NULL },
+        { "complete",       SEC_ADMINISTRATOR,  false, OldHandler<&ChatHandler::HandleQuestComplete>,              "", NULL },
+        { "remove",         SEC_ADMINISTRATOR,  false, OldHandler<&ChatHandler::HandleQuestRemove>,                "", NULL },
+        { NULL,             0,                  false, NULL,                                           "", NULL }
+    };
+
     static ChatCommand resetCommandTable[] =
     {
         { "achievements",   SEC_ADMINISTRATOR,  true,  OldHandler<&ChatHandler::HandleResetAchievementsCommand>,   "", NULL },
@@ -414,6 +422,9 @@ ChatCommand * ChatHandler::getCommandTable()
         { "bindsight",      SEC_ADMINISTRATOR,  false, OldHandler<&ChatHandler::HandleBindSightCommand>,           "", NULL },
         { "unbindsight",    SEC_ADMINISTRATOR,  false, OldHandler<&ChatHandler::HandleUnbindSightCommand>,         "", NULL },
         { "playall",        SEC_GAMEMASTER,  false, OldHandler<&ChatHandler::HandlePlayAllCommand>,             "", NULL },
+        // Playerbot mod
+        { "bot",            SEC_ADMINISTRATOR,  false, OldHandler<&ChatHandler::HandlePlayerbotCommand>,           "", NULL },
+        { "maintank",       SEC_PLAYER,  false, OldHandler<&ChatHandler::HandlePlayerbotMainTankCommand>,          "", NULL },
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };
 

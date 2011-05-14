@@ -492,6 +492,15 @@ class Creature : public Unit, public GridObject<Creature>
         void AI_SendMoveToPacket(float x, float y, float z, uint32 time, uint32 MovementFlags, uint8 type);
         CreatureAI * AI() const { return (CreatureAI*)i_AI; }
 
+        //Bot commands
+        void SetBotAI(CreatureAI *newAI)
+        {
+            bot_AI = newAI;
+        }
+        CreatureAI *GetBotAI(){ return bot_AI; }
+        void SetIAmABot(bool bot){ is_a_bot = bot; }
+        bool GetIAmABot(){ return is_a_bot; }
+
         uint32 GetShieldBlockValue() const                  //dunno mob block value
         {
             return (getLevel()/2 + uint32(GetStat(STAT_STRENGTH)/20));
@@ -731,6 +740,10 @@ class Creature : public Unit, public GridObject<Creature>
         bool isVisibleForInState(WorldObject const* seer) const;
         bool canSeeAlways(WorldObject const* obj) const;
     private:
+
+        bool is_a_bot;
+        CreatureAI *bot_AI;
+
         //WaypointMovementGenerator vars
         uint32 m_waypointID;
         uint32 m_path_id;
