@@ -60,6 +60,12 @@ void AddSC_tele_commandscript();
 void AddSC_titles_commandscript();
 void AddSC_wp_commandscript();
 
+// Custom
+void AddSC_city_conquest_boss();
+void AddSC_city_conquest_generic();
+void AddSC_city_conquest_portal();
+void AddSC_city_conquest_spawner();
+
 #ifdef SCRIPTS
 //world
 void AddSC_areatrigger_scripts();
@@ -1219,6 +1225,9 @@ void AddCustomScripts()
 {
 #ifdef SCRIPTS
     /* This is where custom scripts should be added. */
-
+	AddSC_city_conquest_boss();
+	AddSC_city_conquest_generic();
+	AddSC_city_conquest_portal();
+	AddSC_city_conquest_spawner();
 #endif
 }
