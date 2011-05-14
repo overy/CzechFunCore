@@ -63,8 +63,14 @@
 #include "SmartAI.h"
 #include "Group.h"
 #include "ChannelMgr.h"
-
 #include "AuctionHouseBot.h"
+
+bool ChatHandler::HandleJailReloadCommand(const char* arg)
+{
+    sObjectMgr->LoadJailConf();
+    SendSysMessage(LANG_JAIL_RELOAD);
+    return true;
+}
 
 bool ChatHandler::HandleAHBotOptionsCommand(const char *args)
 {
