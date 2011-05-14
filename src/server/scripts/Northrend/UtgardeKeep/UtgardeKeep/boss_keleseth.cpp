@@ -166,17 +166,8 @@ public:
 
             if (IsHeroic() && !ShatterFrostTomb)
             {
-                AchievementEntry const *AchievOnTheRocks = GetAchievementStore()->LookupEntry(ACHIEVEMENT_ON_THE_ROCKS);
-                if (AchievOnTheRocks)
-                {
-                    Map* pMap = me->GetMap();
-                    if (pMap && pMap->IsDungeon())
-                    {
-                        Map::PlayerList const &players = pMap->GetPlayers();
-                        for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-                            itr->getSource()->CompletedAchievement(AchievOnTheRocks);
-                    }
-                }
+                if (pInstance)
+                    pInstance->DoCompleteAchievement(ACHIEVEMENT_ON_THE_ROCKS);
             }
 
             if (pInstance)
