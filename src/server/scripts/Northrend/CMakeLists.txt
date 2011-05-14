@@ -168,6 +168,12 @@ set(scripts_STAT_SRCS
   Northrend/IcecrownCitadel/boss_blood_prince_council.cpp
   Northrend/IcecrownCitadel/boss_blood_queen_lana_thel.cpp
   Northrend/IcecrownCitadel/boss_sindragosa.cpp
+  Northrend/RubySanctum/boss_baltharus.cpp
+  Northrend/RubySanctum/boss_halion.cpp
+  Northrend/RubySanctum/boss_ragefire.cpp
+  Northrend/RubySanctum/boss_zarithrian.cpp
+  Northrend/RubySanctum/instance_ruby_sanctum.cpp
+  Northrend/RubySanctum/ruby_sanctum.h
   Northrend/zuldrak.cpp
   Northrend/icecrown.cpp
   Northrend/Gundrak/boss_slad_ran.cpp
