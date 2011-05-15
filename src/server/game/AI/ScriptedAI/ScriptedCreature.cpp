@@ -539,7 +539,7 @@ void BossAI::_JustDied()
     }
 }
 
-/*void BossAI::_DoAggroPulse(const uint32 diff)
+void BossAI::_DoAggroPulse(const uint32 diff)
 {
     if(inFightAggroCheck_Timer < diff)
     {
@@ -548,7 +548,7 @@ void BossAI::_JustDied()
         inFightAggroCheck_Timer = MAX_AGGRO_PULSE_TIMER;
     }else inFightAggroCheck_Timer -= diff;
 }
-*/
+
 void BossAI::_EnterCombat()
 {
     me->setActive(true);
@@ -574,6 +574,11 @@ void BossAI::TeleportCheaters()
         if (Unit* target = (*itr)->getTarget())
             if (target->GetTypeId() == TYPEID_PLAYER && !CheckBoundary(target))
                 target->NearTeleportTo(x, y, z, 0);
+}
+
+void BossAI::SetImmuneToDeathGrip(bool set)
+{
+    me->ApplySpellImmune(0, IMMUNITY_ID, 49560, set);
 }
 
 bool BossAI::CheckBoundary(Unit* who)

@@ -22,6 +22,7 @@
 #include "World.h"
 #include "SpellMgr.h"
 #include "Vehicle.h"
+#include "Group.h"
 
 //Disable CreatureAI when charmed
 void CreatureAI::OnCharmed(bool /*apply*/)
@@ -136,7 +137,7 @@ void CreatureAI::DoAttackerAreaInCombat(Unit* attacker, float range, Unit* pUnit
     }
 }
 
-/*void CreatureAI::DoAttackerGroupInCombat(Player* attacker)
+void CreatureAI::DoAttackerGroupInCombat(Player* attacker)
 {
     if(attacker)
     {
@@ -156,7 +157,7 @@ void CreatureAI::DoAttackerAreaInCombat(Unit* attacker, float range, Unit* pUnit
         }
     }
 }
-*/
+
 // scripts does not take care about MoveInLineOfSight loops
 // MoveInLineOfSight can be called inside another MoveInLineOfSight and cause stack overflow
 void CreatureAI::MoveInLineOfSight_Safe(Unit *who)

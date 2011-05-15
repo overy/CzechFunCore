@@ -298,6 +298,7 @@ class BossAI : public ScriptedAI
 
         bool CheckBoundary(Unit* who);
         void TeleportCheaters();
+        void SetImmuneToDeathGrip(bool set = true);
 
         EventMap events;
         SummonList summons;

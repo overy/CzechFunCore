@@ -111,6 +111,7 @@ set(scripts_STAT_SRCS
   Northrend/Naxxramas/instance_naxxramas.cpp
   Northrend/Naxxramas/boss_grobbulus.cpp
   Northrend/Naxxramas/boss_noth.cpp
+  Northrend/Naxxramas/mob_naxxramas.cpp
   Northrend/crystalsong_forest.cpp
   Northrend/VaultOfArchavon/boss_archavon.cpp
   Northrend/VaultOfArchavon/boss_koralon.cpp

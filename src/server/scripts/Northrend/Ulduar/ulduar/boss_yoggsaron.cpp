@@ -1071,7 +1071,7 @@ public:
         Player* SelectPlayerTargetInRange(float range)
         {
             Player *target = NULL;
-            Trinity::AnyPlayerInObjectRangeCheck u_check(me, range, true);
+            Trinity::AnyPlayerInObjectRangeCheck u_check(me, range);
             Trinity::PlayerSearcher<Trinity::AnyPlayerInObjectRangeCheck> searcher(me, target, u_check);
             me->VisitNearbyObject(range, searcher);
             return target;
@@ -1758,7 +1758,7 @@ public:
         Unit* SelectPlayerTargetInRange(float range)
         {
             Player *target = NULL;
-            Trinity::AnyPlayerInObjectRangeCheck u_check(me, range, true);
+            Trinity::AnyPlayerInObjectRangeCheck u_check(me, range);
             Trinity::PlayerSearcher<Trinity::AnyPlayerInObjectRangeCheck> searcher(me, target, u_check);
             me->VisitNearbyObject(range, searcher);
             return target;
@@ -1859,7 +1859,7 @@ public:
         Unit* SelectPlayerTargetInRange(float range)
         {
             Player *target = NULL;
-            Trinity::AnyPlayerInObjectRangeCheck u_check(me, range, true);
+            Trinity::AnyPlayerInObjectRangeCheck u_check(me, range);
             Trinity::PlayerSearcher<Trinity::AnyPlayerInObjectRangeCheck> searcher(me, target, u_check);
             me->VisitNearbyObject(range, searcher);
             return target;
@@ -2276,7 +2276,7 @@ public:
         Unit* SelectPlayerTargetInRange(float range)
         {
             Player *target = NULL;
-            Trinity::AnyPlayerInObjectRangeCheck u_check(me, range, true);
+            Trinity::AnyPlayerInObjectRangeCheck u_check(me, range);
             Trinity::PlayerSearcher<Trinity::AnyPlayerInObjectRangeCheck> searcher(me, target, u_check);
             me->VisitNearbyObject(range, searcher);
             return target;
