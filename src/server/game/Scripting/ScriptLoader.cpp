@@ -395,6 +395,7 @@ void AddSC_boss_faerlina();
 void AddSC_boss_heigan();
 void AddSC_boss_gothik();
 void AddSC_boss_thaddius();
+void AddSC_mob_naxxramas_trash();
 void AddSC_instance_naxxramas();
 void AddSC_boss_magus_telestra();        //The Nexus Nexus
 void AddSC_boss_anomalus();
@@ -429,10 +430,15 @@ void AddSC_boss_razorscale();
 void AddSC_boss_xt002();
 void AddSC_boss_kologarn();
 void AddSC_boss_assembly_of_iron();
+void AddSC_boss_freya();
+void AddSC_boss_mimiron();
+void AddSC_boss_thorim();
+void AddSC_boss_hodir();
 void AddSC_boss_general_vezax();
 void AddSC_ulduar_teleporter();
-void AddSC_boss_mimiron();
 void AddSC_instance_ulduar();
+void AddSC_boss_yoggsaron();
+void AddSC_boss_algalon();
 void AddSC_boss_keleseth();              //Utgarde Keep
 void AddSC_boss_skarvald_dalronn();
 void AddSC_boss_ingvar_the_plunderer();
@@ -1100,6 +1106,7 @@ void AddNorthrendScripts()
     AddSC_boss_heigan();
     AddSC_boss_gothik();
     AddSC_boss_thaddius();
+    AddSC_mob_naxxramas_trash();
     AddSC_instance_naxxramas();
     AddSC_boss_magus_telestra();        //The Nexus Nexus
     AddSC_boss_anomalus();
@@ -1135,9 +1142,14 @@ void AddNorthrendScripts()
     AddSC_boss_general_vezax();
     AddSC_boss_assembly_of_iron();
     AddSC_boss_kologarn();
-    AddSC_ulduar_teleporter();
+    AddSC_boss_freya();
     AddSC_boss_mimiron();
+    AddSC_boss_thorim();
+    AddSC_boss_hodir();
+    AddSC_ulduar_teleporter();
     AddSC_instance_ulduar();
+    AddSC_boss_yoggsaron();
+    AddSC_boss_algalon();
     AddSC_boss_keleseth();              //Utgarde Keep
     AddSC_boss_skarvald_dalronn();
     AddSC_boss_ingvar_the_plunderer();
