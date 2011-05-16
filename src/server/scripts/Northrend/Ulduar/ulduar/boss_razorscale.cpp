@@ -15,8 +15,6 @@
 * with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-//TODO: Harpoon chain from 62505 should not get removed when other chain is applied
-
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "ScriptedGossip.h"
@@ -235,6 +233,9 @@ class boss_razorscale_controller : public CreatureScript
 
             void UpdateAI(uint32 const Diff)
             {
+                if (me->isInCombat() && instance->GetBossState(TYPE_RAZORSCALE) != IN_PROGRESS)
+                    EnterEvadeMode();
+
                 events.Update(Diff);
 
                 while (uint32 eventId = events.ExecuteEvent())
@@ -419,6 +420,7 @@ class boss_razorscale : public CreatureScript
                                 events.SetPhase(PHASE_FLIGHT);
                                 me->SetFlying(true);
                                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                                me->RemoveAllAuras();
                                 me->SetReactState(REACT_PASSIVE);
                                 me->AttackStop();
                                 me->GetMotionMaster()->MovePoint(0, RazorFlight);
@@ -439,7 +441,7 @@ class boss_razorscale : public CreatureScript
                                 return;
                             case EVENT_BREATH:
                                 me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_STUNNED | UNIT_FLAG_PACIFIED);
-                                me->RemoveAllAuras();
+                                me->RemoveAurasDueToSpell(SPELL_HARPOON_TRIGGER);
                                 me->SetReactState(REACT_AGGRESSIVE);
                                 DoScriptText(EMOTE_BREATH, me, 0);
                                 DoCastAOE(SPELL_FLAMEBREATH);
@@ -454,7 +456,7 @@ class boss_razorscale : public CreatureScript
                         }
                     }
                 }
-                if (phase == PHASE_PERMAGROUND)
+                else if (phase == PHASE_PERMAGROUND)
                 {
                     while (uint32 eventId = events.ExecuteEvent())
                     {
@@ -489,7 +491,6 @@ class boss_razorscale : public CreatureScript
                                 return;
                         }
                     }
-
                     DoMeleeAttackIfReady();
                 }
                 else
@@ -523,7 +524,7 @@ class boss_razorscale : public CreatureScript
                 phase = PHASE_PERMAGROUND;
                 events.SetPhase(PHASE_PERMAGROUND);
                 me->SetFlying(false);
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_STUNNED | UNIT_FLAG_PACIFIED);
                 me->SetReactState(REACT_AGGRESSIVE);
                 me->RemoveAurasDueToSpell(SPELL_HARPOON_TRIGGER);
                 me->SetSpeed(MOVE_FLIGHT, 1.0f, true);
@@ -578,14 +579,14 @@ class npc_expedition_commander : public CreatureScript
 
         struct npc_expedition_commanderAI : public ScriptedAI
         {
-            npc_expedition_commanderAI(Creature* creature) : ScriptedAI(creature)
+            npc_expedition_commanderAI(Creature* creature) : ScriptedAI(creature), summons(me)
             {
                 instance = me->GetInstanceScript();
                 Greet = false;
             }
 
             InstanceScript* instance;
-            std::list<uint64> summons;
+            SummonList summons;
 
             bool Greet;
             uint32 AttackStartTimer;
@@ -598,7 +599,6 @@ class npc_expedition_commander : public CreatureScript
                 AttackStartTimer = 0;
                 Phase = 0;
                 Greet = false;
-                summons.clear();
             }
 
             void MoveInLineOfSight(Unit* who)
@@ -612,7 +612,7 @@ class npc_expedition_commander : public CreatureScript
 
             void JustSummoned(Creature* summoned)
             {
-                summons.push_back(summoned->GetGUID());
+                summons.Summon(summoned);
             }
 
             void DoAction(int32 const action)
@@ -623,7 +623,7 @@ class npc_expedition_commander : public CreatureScript
                         DoScriptText(SAY_GROUND_PHASE, me);
                         break;
                     case ACTION_COMMANDER_RESET:
-                        summons.clear();
+                        summons.DespawnAll();
                         me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                         break;
                 }
@@ -637,7 +637,7 @@ class npc_expedition_commander : public CreatureScript
                     {
                         case 1:
                             instance->SetBossState(TYPE_RAZORSCALE, IN_PROGRESS);
-                            summons.clear();
+                            summons.DespawnAll();
                             AttackStartTimer = 1000;
                             Phase = 2;
                             break;
@@ -813,6 +813,7 @@ class npc_devouring_flame : public CreatureScript
             npc_devouring_flameAI(Creature* creature) : Scripted_NoMovementAI(creature)
             {
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_PACIFIED);
+                me->SetDisplayId(me->GetCreatureInfo()->Modelid2);
             }
 
             void Reset()

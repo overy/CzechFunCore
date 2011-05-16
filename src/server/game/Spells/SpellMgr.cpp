@@ -3235,6 +3235,12 @@ bool SpellMgr::CanAurasStack(Aura const *aura1, Aura const *aura2, bool sameCast
         // Hack for Incanter's Absorption
         if (spellId_1 == 44413)
             return true;
+         // Power Spark
+         if (spellId_1 == 55849)
+             return true;
+        // Harpoon Shot
+        if (spellId_1 == 62505)
+            return true;
         if (aura1->GetCastItemGUID() && aura2->GetCastItemGUID())
             if (aura1->GetCastItemGUID() != aura2->GetCastItemGUID() && (GetSpellCustomAttr(spellId_1) & SPELL_ATTR0_CU_ENCHANT_PROC))
                 return true;
