@@ -187,22 +187,15 @@ public:
         InstanceScript* m_pInstance = (InstanceScript*)pCreature->GetInstanceScript();
 
         if(pCreature->isQuestGiver())
-            pPlayer->PrepareQuestMenu( pCreature->GetGUID());
-        QuestStatus status = pPlayer->GetQuestStatus(m_isSylvana ? QUEST_DELIVRANCE_FROM_THE_PIT_H2 : QUEST_DELIVRANCE_FROM_THE_PIT_A2);
-        if (status == QUEST_STATUS_COMPLETE || status == QUEST_STATUS_REWARDED)
+			pPlayer->PrepareQuestMenu( pCreature->GetGUID());
+
         switch(pCreature->GetEntry())
         {
             case NPC_JAINA:
                 pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Can you remove the sword?",GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
-        status = pPlayer->GetQuestStatus(m_isSylvana ? QUEST_WRATH_OF_THE_LICH_KING_H2 : QUEST_WRATH_OF_THE_LICH_KING_A2);
-        if (status == QUEST_STATUS_COMPLETE || status == QUEST_STATUS_REWARDED)
-                pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "My Lady, I think I hear Arthas coming. Whatever you're going to do, do it quickly!", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
                 break;
             case NPC_SYLVANA:
                 pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Can you remove the sword?", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
-        status = pPlayer->GetQuestStatus(m_isSylvana ? QUEST_WRATH_OF_THE_LICH_KING_H2 : QUEST_WRATH_OF_THE_LICH_KING_A2);
-        if (status == QUEST_STATUS_COMPLETE || status == QUEST_STATUS_REWARDED)    
-                pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Dark Lady, I think I hear Arthas coming. Whatever you're going to do, do it quickly!", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
                 break;
         }
 
