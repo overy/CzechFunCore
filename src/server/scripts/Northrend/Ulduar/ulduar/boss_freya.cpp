@@ -166,16 +166,19 @@ enum Spells
     //ancient water spirit
     SPELL_TIDAL_WAVE_10                         = 62653,
     SPELL_TIDAL_WAVE_25                         = 62935,
+    SPELL_WATER_REVIVE_VISUAL                   = 62849,
 
     //storm lasher
     SPELL_LIGHTNING_LASH_10                     = 62648,
     SPELL_LIGHTNING_LASH_25                     = 62939,
     SPELL_STORMBOLT_10                          = 62649,
     SPELL_STORMBOLT_25                          = 62938,
+    SPELL_STORM_REVIVE_VISUAL                   = 62851,
 
     //snaplasher
     SPELL_HARDENED_BARK_10                      = 62664,
     SPELL_HARDENED_BARK_25                      = 64191,
+    SPELL_LASHER_REVIVE_VISUAL                  = 62848,
 
     //ancient conservator
     SPELL_CONSERVATORS_GRIP                     = 62532,
@@ -227,7 +230,6 @@ enum Entrys
     ENTRY_CREATURE_ELDER_BRIGHTLEAF             = 32915,
 
     ENTRY_GAMEOBJECT_NATURE_BOMB                = 194902,
-
 
     ENTRY_CREATURE_SNAPLASHER                   = 32916,
     ENTRY_CREATURE_STORM_LASHER                 = 32919,
@@ -296,9 +298,11 @@ public:
         uint32 uiSunbeam_Timer;
         uint32 Ground_Tremor_Timer;
         uint32 Iron_Roots_Timer;
-
         uint32 uiNaturalBomb_Timer;
 
+        uint32 ReviveTimer;
+        uint8 ReviveCount;
+        std::set<uint64> elementalList;
 
         bool bIsElderBrightleafAlive;
         bool bIsElderIronbranchAlive;
@@ -317,6 +321,10 @@ public:
                 //m_Phase = PHASE_SPAWNING;
                 if(pInstance)
                     pInstance->SetBossState(TYPE_FREYA,NOT_STARTED);
+
+                ReviveCount = 0;
+                ReviveTimer = 15000;
+                elementalList.clear();
 
                 WaveCount = 0;
                 uiWave_Timer = 60000;
@@ -342,6 +350,67 @@ public:
             {
                 amount = 0;
                 EncounterIsDone();
+            }
+        }
+
+        void DoAction(const int32 action)
+        {
+            switch (action)
+            {
+                case ACTION_ELEMENTAL_DEAD:
+                    if (!ReviveCount)
+                        ReviveTimer = 15000;
+                    ++ReviveCount;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        void ReviveElementals()
+        {
+            if (ReviveCount >= elementalList.size())
+                elementalList.clear();
+            else
+            {
+                if (!elementalList.empty())   
+                    for (std::set<uint64>::const_iterator itr = elementalList.begin(); itr != elementalList.end(); ++itr)
+                        if (Creature* temp = me->GetCreature(*me, *itr))
+                        {
+                            if (temp->isAlive())
+                                temp->SetFullHealth();
+                            else
+                                temp->Respawn();
+
+                            switch (temp->GetEntry())
+                            {
+                                case ENTRY_CREATURE_SNAPLASHER:
+                                    temp->CastSpell(temp, SPELL_LASHER_REVIVE_VISUAL, true);
+                                    break;
+                                case ENTRY_CREATURE_STORM_LASHER:
+                                    temp->CastSpell(temp, SPELL_STORM_REVIVE_VISUAL, true);
+                                    break;
+                                case ENTRY_CREATURE_ANCIENT_WATER_SPIRIT:
+                                    temp->CastSpell(temp, SPELL_WATER_REVIVE_VISUAL, true);
+                                    break;
+                            }
+                        }
+            }
+
+            ReviveCount = 0;
+        }
+
+        void JustSummoned(Creature* summon)
+        {
+            switch (summon->GetEntry())
+            {
+                case ENTRY_CREATURE_SNAPLASHER:
+                case ENTRY_CREATURE_STORM_LASHER:
+                case ENTRY_CREATURE_ANCIENT_WATER_SPIRIT:
+                    elementalList.insert(summon->GetGUID());
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -485,6 +554,13 @@ public:
         {
             if (!UpdateVictim())
                 return;
+
+            if (ReviveCount)
+            {
+                if (ReviveTimer < diff)
+                    ReviveElementals();
+                else ReviveTimer -= diff;
+            }
 
             if(WaveCount < 6)
                 if(uiWave_Timer < diff)
@@ -741,7 +817,7 @@ public:
         mob_detonating_lasherAI(Creature *pCreature) : ScriptedAI(pCreature)
         {
             m_pInstance = pCreature->GetInstanceScript();
-        };
+        }
 
         InstanceScript* m_pInstance;
         uint32 Flame_Lash_Timer;
@@ -797,7 +873,7 @@ public:
         {
             m_pInstance = pCreature->GetInstanceScript();
             alreadyKilled = false;
-        };
+        }
 
         InstanceScript* m_pInstance;
         uint32 Tidal_Wave_Timer;
@@ -805,6 +881,7 @@ public:
 
         void Reset()
         {
+            me->SetCorpseDelay(20);
             Tidal_Wave_Timer = 20000;
 
             if(Unit* target = me->SelectNearbyTarget(100))
@@ -819,8 +896,6 @@ public:
                 alreadyKilled = true;
                 Freya->AI()->DoAction(ACTION_ELEMENTAL_DEAD);
             }
-
-            me->DespawnOrUnsummon(2000);
         }
 
         void UpdateAI(const uint32 diff)
@@ -860,7 +935,7 @@ public:
         {
             m_pInstance = pCreature->GetInstanceScript();
             alreadyKilled = false;
-        };
+        }
 
         InstanceScript* m_pInstance;
         uint32 Lightning_Lash_Timer;
@@ -869,6 +944,7 @@ public:
 
         void Reset()
         {
+            me->SetCorpseDelay(20);
             Lightning_Lash_Timer = 6000;
             Stormbolt_Timer = 3000;
 
@@ -884,8 +960,6 @@ public:
                 alreadyKilled = true;
                 Freya->AI()->DoAction(ACTION_ELEMENTAL_DEAD);
             }
-
-            me->DespawnOrUnsummon(2000);
         }
 
         void UpdateAI(const uint32 diff)
@@ -931,13 +1005,14 @@ public:
         {
             m_pInstance = pCreature->GetInstanceScript();
             alreadyKilled = false;
-        };
+        }
 
         InstanceScript* m_pInstance;
         bool alreadyKilled;
 
         void Reset()
         {
+            me->SetCorpseDelay(20);
             if(Unit* target = me->SelectNearbyTarget(100))
                 me->AI()->AttackStart(target);
         }
@@ -955,8 +1030,6 @@ public:
                 alreadyKilled = true;
                 Freya->AI()->DoAction(ACTION_ELEMENTAL_DEAD);
             }
-
-            me->DespawnOrUnsummon(2000);
         }
 
         void JustSummoned(Unit* )
@@ -992,7 +1065,7 @@ public:
         mob_ancient_conservatorAI(Creature *pCreature) : ScriptedAI(pCreature)
         {
             m_pInstance = pCreature->GetInstanceScript();
-        };
+        }
 
         InstanceScript* m_pInstance;
         uint32 Natures_Fury_Timer;
@@ -1076,7 +1149,7 @@ public:
         mob_healthy_sporeAI(Creature *pCreature) : ScriptedAI(pCreature)
         {
             m_pInstance = pCreature->GetInstanceScript();
-        };
+        }
 
         InstanceScript* m_pInstance;
         uint8 Counter;
@@ -1145,7 +1218,7 @@ public:
 
     struct mob_elder_brightleafAI : public ScriptedAI
     {
-        mob_elder_brightleafAI(Creature *pCreature) : ScriptedAI(pCreature) { };
+        mob_elder_brightleafAI(Creature *pCreature) : ScriptedAI(pCreature) { }
 
         uint32 Solar_Flare_Timer;
         uint32 Flux_Timer;
@@ -1303,7 +1376,7 @@ public:
 
     struct mob_elder_ironbranchAI : public ScriptedAI
     {
-        mob_elder_ironbranchAI(Creature *pCreature) : ScriptedAI(pCreature) { };
+        mob_elder_ironbranchAI(Creature *pCreature) : ScriptedAI(pCreature) { }
 
         uint32 Impale_Timer;
         uint32 Iron_Roots_Timer;
@@ -1378,7 +1451,7 @@ public:
 
     struct mob_elder_stonebarkAI : public ScriptedAI
     {
-        mob_elder_stonebarkAI(Creature *pCreature) : ScriptedAI(pCreature) { };
+        mob_elder_stonebarkAI(Creature *pCreature) : ScriptedAI(pCreature) { }
 
         uint32 Fists_Of_Stone_Timer;
         uint32 Ground_Tremor_Timer;
@@ -1590,7 +1663,7 @@ public:
 
     struct mob_iron_rootsAI : public ScriptedAI
     {
-        mob_iron_rootsAI(Creature *pCreature) : ScriptedAI(pCreature) { };
+        mob_iron_rootsAI(Creature *pCreature) : ScriptedAI(pCreature) { }
 
         uint64 RootsGUID;
 
