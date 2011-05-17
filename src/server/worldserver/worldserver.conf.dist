@@ -3061,6 +3061,22 @@ LevelReq.Auction = 1
 LevelReq.Mail = 1
 
 #
+#      GMIsland.PlayersNoAccess.Enable
+#        Prevent access for players to gm island
+#        Default: 1 - Enable
+#                 0 - Disable
+
+GMIsland.PlayersNoAccess.Enable = 1
+
+#
+#      GMIsland.Ban.Enable
+#        Enable to ban players that tries to access GM Island without proper Access
+#        Default: 0 - Disable
+#                 1 - Enable
+
+GMIsland.Ban.Enable = 0
+
+#
 ###################################################################################################
 # BOT CONFIGURATION
 #
@@ -3095,7 +3111,7 @@ Bot.PlayerBotsFly = 1
 #        3 = Group loot
 #        4 = Need before greed
 
-Bot.LootMethod = 2
+Bot.LootMethod = 3
 
 #    Bot.SaveOrgLocation
 #        Puts playerbots back to their original location after use
