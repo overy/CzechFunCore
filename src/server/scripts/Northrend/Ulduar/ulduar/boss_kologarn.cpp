@@ -320,7 +320,7 @@ class boss_kologarn : public CreatureScript
                     }
                     break;
                     case EVENT_FOCUSED_EYEBEAM:
-                        Unit* eyebeamTargetUnit = SelectTarget(SELECT_TARGET_FARTHEST, 0, 0, true);
+                        Unit* eyebeamTargetUnit = SelectTarget(SELECT_TARGET_FARTHEST, 0, 50.0f, true);
                         if (eyebeamTargetUnit)
                         {
                             eyebeamTarget = eyebeamTargetUnit->GetGUID();
