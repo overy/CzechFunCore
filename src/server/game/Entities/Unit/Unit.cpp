@@ -5439,6 +5439,18 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, AuraEffect* trigger
                     triggered_spell_id = 63321; // Life Tap
                     break;
                 }
+                // Purified Shard of the Scale - Onyxia 10 Caster Trinket
+                case 69755:
+                {
+                    triggered_spell_id = (procFlag & PROC_FLAG_DONE_SPELL_MAGIC_DMG_CLASS_POS) ? 69733 : 69729;
+                    break;
+                }
+                // Shiny Shard of the Scale - Onyxia 25 Caster Trinket
+                case 69739:
+                {
+                    triggered_spell_id = (procFlag & PROC_FLAG_DONE_SPELL_MAGIC_DMG_CLASS_POS) ? 69734 : 69730;
+                    break;
+                }
                 case 71519: // Deathbringer's Will Normal
                 {
                     if (GetTypeId() != TYPEID_PLAYER)
@@ -10409,8 +10421,8 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
             }
 
             // Torment the weak
-            if (spellProto->SpellFamilyFlags[0]&0x20200021 || spellProto->SpellFamilyFlags[1]& 0x9000)
-                if (pVictim->HasAuraType(SPELL_AURA_MOD_DECREASE_SPEED))
+            if (spellProto->SpellFamilyFlags[0] & 0x20600021 || spellProto->SpellFamilyFlags[1] & 0x9000)
+                if (pVictim->HasAuraType(SPELL_AURA_MOD_DECREASE_SPEED) || pVictim->HasAuraType(SPELL_AURA_MOD_MELEE_HASTE))
                 {
                     AuraEffectList const& mDumyAuras = GetAuraEffectsByType(SPELL_AURA_DUMMY);
                     for (AuraEffectList::const_iterator i = mDumyAuras.begin(); i != mDumyAuras.end(); ++i)
