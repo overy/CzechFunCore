@@ -170,6 +170,7 @@ set(scripts_STAT_SRCS
   Northrend/IcecrownCitadel/boss_blood_queen_lana_thel.cpp
   Northrend/IcecrownCitadel/boss_valithria_dreamwalker.cpp
   Northrend/IcecrownCitadel/boss_sindragosa.cpp
+  Northrend/IcecrownCitadel/boss_the_lich_king.cpp
   Northrend/RubySanctum/boss_baltharus.cpp
   Northrend/RubySanctum/boss_halion.cpp
   Northrend/RubySanctum/boss_ragefire.cpp
