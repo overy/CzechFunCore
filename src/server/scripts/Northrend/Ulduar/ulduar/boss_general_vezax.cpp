@@ -99,6 +99,12 @@ public:
             m_pInstance = c->GetInstanceScript();
             VarporList = std::list<uint64>();
             SetImmuneToPushPullEffects(true);
+
+            // add interrupt flag
+            SpellEntry* tempSpell;
+            tempSpell = GET_SPELL(SPELL_SEARING_FLAMES);
+            if (tempSpell)
+                tempSpell->InterruptFlags |= SPELL_INTERRUPT_FLAG_INTERRUPT;
         }
 
         InstanceScript* m_pInstance;
@@ -333,12 +339,12 @@ public:
                 }else uiSearingFlames_Timer -= diff;
 
             if(ImmunityToReset)
-            if(uiResetImmunity_Timer < diff)
-            {
-                me->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_INTERRUPT, true);
-                uiResetImmunity_Timer = 0;
-                ImmunityToReset = false;
-            }else uiResetImmunity_Timer -= diff;
+                if(uiResetImmunity_Timer < diff)
+                {
+                    me->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_INTERRUPT, true);
+                    uiResetImmunity_Timer = 0;
+                    ImmunityToReset = false;
+                }else uiResetImmunity_Timer -= diff;
 
             if(uiMarkOfTheFaceless < diff)
             {

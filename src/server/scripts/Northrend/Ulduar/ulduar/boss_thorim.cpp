@@ -15,12 +15,6 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* ScriptData
-SDName: Thorim
-SD%Complete: 75
-SDComments: Lightning Charge not works.
-EndScriptData */
-
 #include "ScriptPCH.h"
 #include "ulduar.h"
 
@@ -37,8 +31,9 @@ enum Spells
     SPELL_LIGHTNING_CHARGE                      = 62279,
     SPELL_LIGHTNING_DESTRUCTION                 = 62393,
     SPELL_LIGHTNING_RELEASE                     = 62466,
+    SPELL_LIGHTNING_PILLAR                      = 62976,
     SPELL_UNBALANCING_STRIKE                    = 62130,
-    SPELL_BERSERK                               = 62560,
+    SPELL_BERSERK                               = 62560
 };
 
 enum Phases
@@ -113,7 +108,7 @@ enum  PreAddSpells
     SPELL_RENEW                     = 62333,
     SPELL_RENEW_H                   = 62441,
     SPELL_GREATER_HEAL              = 62334,
-    SPELL_GREATER_HEAL_H            = 62442,
+    SPELL_GREATER_HEAL_H            = 62442
 };
 
 const uint32 PRE_PHASE_ADD[]                    = {32882, 32908, 32885, 32886, 32907, 32883};
@@ -144,6 +139,7 @@ enum ArenaAdds
 };
 
 #define NPC_SIF                                 33196
+#define NPC_POWER_SOURCE                        34055 // bad id
 
 const uint32 ARENA_PHASE_ADD[]                  = {32876, 32904, 32878, 32877, 32874, 32875, 33110};
 
@@ -173,7 +169,7 @@ enum AncientSpells
 {
     SPELL_RUNIC_FORTIFICATION                   = 62942,
     SPELL_RUNE_DETONATION                       = 62526,
-    SPELL_STOMP                                 = 62411,
+    SPELL_STOMP                                 = 62411
 };
 
 // Sif Spells
@@ -195,35 +191,35 @@ enum ThorimChests
 
 const Position Pos[7] =
 {
-{2095.53f, -279.48f, 419.84f, 0.504f},
-{2092.93f, -252.96f, 419.84f, 6.024f},
-{2097.86f, -240.97f, 419.84f, 5.643f},
-{2113.14f, -225.94f, 419.84f, 5.259f},
-{2156.87f, -226.12f, 419.84f, 4.202f},
-{2172.42f, -242.70f, 419.84f, 3.583f},
-{2171.92f, -284.59f, 419.84f, 2.691f}
+    {2095.53f, -279.48f, 419.84f, 0.504f},
+    {2092.93f, -252.96f, 419.84f, 6.024f},
+    {2097.86f, -240.97f, 419.84f, 5.643f},
+    {2113.14f, -225.94f, 419.84f, 5.259f},
+    {2156.87f, -226.12f, 419.84f, 4.202f},
+    {2172.42f, -242.70f, 419.84f, 3.583f},
+    {2171.92f, -284.59f, 419.84f, 2.691f}
 };
 
 const Position PosOrbs[7] =
 {
-{2104.99f, -233.484f, 433.576f, 5.49779f},
-{2092.64f, -262.594f, 433.576f, 6.26573f},
-{2104.76f, -292.719f, 433.576f, 0.78539f},
-{2164.97f, -293.375f, 433.576f, 2.35619f},
-{2164.58f, -233.333f, 433.576f, 3.90954f},
-{2145.81f, -222.196f, 433.576f, 4.45059f},
-{2123.91f, -222.443f, 433.576f, 4.97419f}
+    {2104.99f, -233.484f, 433.576f, 5.49779f},
+    {2092.64f, -262.594f, 433.576f, 6.26573f},
+    {2104.76f, -292.719f, 433.576f, 0.78539f},
+    {2164.97f, -293.375f, 433.576f, 2.35619f},
+    {2164.58f, -233.333f, 433.576f, 3.90954f},
+    {2145.81f, -222.196f, 433.576f, 4.45059f},
+    {2123.91f, -222.443f, 433.576f, 4.97419f}
 };
 
 const Position PosCharge[7] =
 {
-{2104.99f, -233.484f, 419.573f, 5.49779f},
-{2092.64f, -262.594f, 419.573f, 6.26573f},
-{2104.76f, -292.719f, 419.573f, 0.78539f},
-{2164.97f, -293.375f, 419.573f, 2.35619f},
-{2164.58f, -233.333f, 419.573f, 3.90954f},
-{2145.81f, -222.196f, 419.573f, 4.45059f},
-{2123.91f, -222.443f, 419.573f, 4.97419f}
+    {2108.95f, -289.241f, 420.149f, 5.49779f},
+    {2097.93f, -262.782f, 420.149f, 6.26573f},
+    {2108.66f, -237.102f, 420.149f, 0.78539f},
+    {2160.56f, -289.292f, 420.149f, 2.35619f},
+    {2161.02f, -237.258f, 420.149f, 3.90954f},
+    {2143.87f, -227.415f, 420.149f, 4.45059f},
+    {2125.84f, -227.439f, 420.149f, 4.97419f}
 };
 
 #define POS_X_ARENA  2181.19f
@@ -316,10 +312,10 @@ public:
             for (uint8 i = 0; i < 6; i++)
                 me->SummonCreature(preAddLocations[i].entry,preAddLocations[i].x,preAddLocations[i].y,preAddLocations[i].z,preAddLocations[i].o,TEMPSUMMON_CORPSE_TIMED_DESPAWN,3000);
 
-            if(GameObject *pGo = me->FindNearestGameObject(GO_LEVER,500))
+            if (GameObject* go = me->FindNearestGameObject(GO_LEVER, 500))
             {
-                //pGo->SetGoState(GO_STATE_ACTIVE);
-                pGo->SetLootState(GO_NOT_READY);
+                //go->SetGoState(GO_STATE_ACTIVE);
+                go->SetLootState(GO_NOT_READY);
             }
         }
 
@@ -373,10 +369,10 @@ public:
             events.ScheduleEvent(EVENT_BERSERK, 300000, 0, PHASE_1);
 
             
-            if(GameObject *pGo = me->FindNearestGameObject(GO_LEVER,500))
+            if (GameObject* go = me->FindNearestGameObject(GO_LEVER, 500))
             {
-                //pGo->SetGoState(GO_STATE_READY);
-                pGo->SetLootState(GO_JUST_DEACTIVATED);
+                //go->SetGoState(GO_STATE_READY);
+                go->SetLootState(GO_JUST_DEACTIVATED);
             }
         }
 
@@ -401,12 +397,12 @@ public:
             {
                 while (uint32 eventId = events.ExecuteEvent())
                 {
-                    switch(eventId)
+                    switch (eventId)
                     {
                         case EVENT_STORMHAMMER:
-                            if (Unit *pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 80, true))
-                                if (pTarget->isAlive() && IN_ARENA(pTarget))
-                                    DoCast(pTarget, SPELL_STORMHAMMER);
+                            if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 80, true))
+                                if (target->isAlive() && IN_ARENA(target))
+                                    DoCast(target, SPELL_STORMHAMMER);
                             events.ScheduleEvent(EVENT_STORMHAMMER, urand(15000, 20000), 0, PHASE_1);
                             break;
                         case EVENT_CHARGE_ORB:
@@ -429,25 +425,28 @@ public:
             {
                 while (uint32 eventId = events.ExecuteEvent())
                 {
-                    switch(eventId)
+                    switch (eventId)
                     {
                         case EVENT_UNBALANCING_STRIKE:
                             DoCastVictim(SPELL_UNBALANCING_STRIKE);
-                            events.ScheduleEvent(EVENT_UNBALANCING_STRIKE, 25000, 0, PHASE_2);
+                            events.ScheduleEvent(EVENT_UNBALANCING_STRIKE, urand(15000, 20000), 0, PHASE_2);
                             break;
                         case EVENT_CHAIN_LIGHTNING:
-                            if (Unit *pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
-                                if (pTarget->isAlive())
-                                    DoCast(pTarget, SPELL_CHAIN_LIGHTNING);
-                            events.ScheduleEvent(EVENT_CHAIN_LIGHTNING, urand(15000, 20000), 0, PHASE_2);
+                            if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                                if (target->isAlive())
+                                    DoCast(target, SPELL_CHAIN_LIGHTNING);
+                            events.ScheduleEvent(EVENT_CHAIN_LIGHTNING, urand(7000, 15000), 0, PHASE_2);
                             break;
-                        /*case EVENT_TRANSFER_ENERGY:
-                            events.ScheduleEvent(EVENT_TRANSFER_ENERGY, 20000, 0, PHASE_2);
-                            break;*/
+                        case EVENT_TRANSFER_ENERGY:
+                            if (Creature* source = me->SummonCreature(NPC_POWER_SOURCE, PosCharge[urand(0, 6)], TEMPSUMMON_TIMED_DESPAWN, 9000))
+                                source->CastSpell(source, SPELL_LIGHTNING_PILLAR, true);
+                            events.ScheduleEvent(EVENT_RELEASE_ENERGY, 8000, 0, PHASE_2);
+                            break;
                         case EVENT_RELEASE_ENERGY:
-                            DoCast(me, SPELL_LIGHTNING_CHARGE);
-                            //DoCast(EnergySource, SPELL_LIGHTNING_RELEASE);
-                            events.ScheduleEvent(EVENT_RELEASE_ENERGY, 20000, 0, PHASE_2);
+                            if (Creature* source = me->FindNearestCreature(NPC_POWER_SOURCE, 100.0f))
+                                DoCast(source, SPELL_LIGHTNING_RELEASE);
+                            DoCast(me, SPELL_LIGHTNING_CHARGE, true);
+                            events.ScheduleEvent(EVENT_TRANSFER_ENERGY, 8000, 0, PHASE_2);
                             break;
                         case EVENT_BERSERK:
                             DoCast(me, SPELL_BERSERK);
@@ -480,7 +479,7 @@ public:
     
         void spawnAdd()
         {
-            switch(spawnedAdds)
+            switch (spawnedAdds)
             {
                 case 0:
                     for (uint8 n = 0; n < 3; n++)
@@ -493,7 +492,7 @@ public:
             }
 
             spawnedAdds++;
-            if(spawnedAdds > 1)
+            if (spawnedAdds > 1)
             {
                 spawnedAdds = 0;
             }
@@ -518,8 +517,7 @@ public:
                                     me->GetMotionMaster()->MoveJump(2134.79f, -263.03f, 419.84f, 10.0f, 20.0f);
                                     events.ScheduleEvent(EVENT_UNBALANCING_STRIKE, 15000, 0, PHASE_2);
                                     events.ScheduleEvent(EVENT_CHAIN_LIGHTNING, 20000, 0, PHASE_2);
-                                    //events.ScheduleEvent(EVENT_TRANSFER_ENERGY, 20000, 0, PHASE_2);
-                                    events.ScheduleEvent(EVENT_RELEASE_ENERGY, 25000, 0, PHASE_2);
+                                    events.ScheduleEvent(EVENT_TRANSFER_ENERGY, 20000, 0, PHASE_2);
                                     events.ScheduleEvent(EVENT_BERSERK, 300000, 0, PHASE_2);
                                     // Hard Mode
                                     if (EncounterTime <= MAX_HARD_MODE_TIME)
@@ -589,16 +587,16 @@ public:
             if (PrimaryTimer <= diff)
             {
                 Unit* target = NULL;
-                if(healer)
+                if (healer)
                 {
-                    if(!(target = DoSelectLowestHpFriendly(30)))
+                    if (!(target = DoSelectLowestHpFriendly(30)))
                         target = me;
                 }else
                 {
                     target = me->getVictim();
                 }
 
-                if(target)
+                if (target)
                 {
                     DoCast(target,SPELL_PRE_PRIMARY(id));
                     PrimaryTimer = urand(15000, 20000);
@@ -609,16 +607,16 @@ public:
             if (SecondaryTimer <= diff)
             {
                 Unit* target = NULL;
-                if(healer)
+                if (healer)
                 {
-                    if(!(target = DoSelectLowestHpFriendly(30)))
+                    if (!(target = DoSelectLowestHpFriendly(30)))
                         target = me;
                 }else
                 {
                     target = me->getVictim();
                 }
 
-                if(target)
+                if (target)
                 {
                     DoCast(SPELL_PRE_SECONDARY(id));
                     SecondaryTimer = urand(4000, 8000);
@@ -727,9 +725,9 @@ public:
             if (PrimaryTimer <= diff)
             {
                 Unit* target = NULL;
-                if(healer && id != 32878)
+                if (healer && id != 32878)
                 {
-                    if(!(target = DoSelectLowestHpFriendly(30)))
+                    if (!(target = DoSelectLowestHpFriendly(30)))
                         target = me;
                 }else
                 {
@@ -744,16 +742,16 @@ public:
             if (SecondaryTimer <= diff)
             {
                 Unit* target = NULL;
-                if(healer)
+                if (healer)
                 {
-                    if(!(target = DoSelectLowestHpFriendly(30)))
+                    if (!(target = DoSelectLowestHpFriendly(30)))
                         target = me;
                 }else
                 {
                     target = me->getVictim();
                 }
 
-                if(target)
+                if (target)
                 {
                     DoCast(SPELL_ARENA_SECONDARY(id));
                     SecondaryTimer = urand(12000, 16000);
@@ -764,8 +762,8 @@ public:
             if (ChargeTimer <= diff)
             {
                 if (id == DARK_RUNE_CHAMPION)
-                    if (Unit *pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 40, true))
-                        DoCast(pTarget, SPELL_CHARGE);
+                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 40, true))
+                        DoCast(target, SPELL_CHARGE);
                 ChargeTimer = 12000;
             }
             else ChargeTimer -= diff;
@@ -839,12 +837,12 @@ public:
             if (!UpdateVictim() || me->HasUnitState(UNIT_STAT_CASTING))
                 return;
 
-            if (!me->IsWithinMeleeRange(me->getVictim()))
-                DoCast(me, SPELL_SMASH);
+            // TODO: should do some skadi-like shockwave until aggroed
+            // npc 33140, 33141
     
             if (BarrierTimer <= diff)
             {
-                me->MonsterTextEmote(EMOTE_MIGHT, 0, true);
+                me->MonsterTextEmote(EMOTE_BARRIER, 0, true);
                 DoCast(me, SPELL_RUNIC_BARRIER);
                 BarrierTimer = urand(35000, 45000);
             }
@@ -859,8 +857,8 @@ public:
         
             if (ChargeTimer <= diff)
             {
-                if (Unit *pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 30, true))
-                    DoCast(pTarget, SPELL_RUNIC_CHARGE);
+                if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, -8, true))
+                    DoCast(target, SPELL_RUNIC_CHARGE);
                 ChargeTimer = 20000;
             }
             else ChargeTimer -= diff;
@@ -921,7 +919,7 @@ public:
         void EnterCombat(Unit* /*pWho*/)
         {
             me->MonsterTextEmote(EMOTE_MIGHT, 0, true);
-            DoCast(me, SPELL_RUNIC_FORTIFICATION);
+            DoCast(me, SPELL_RUNIC_FORTIFICATION, true);
         }
 
         void JustDied(Unit* /*victim*/)

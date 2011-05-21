@@ -58,6 +58,7 @@ EndScriptData */
 #define NPC_ARM_SWEEP_STALKER   33661
 
 #define EMOTE_EYEBEAM           "Kologarn focusing his eyes on you"
+
 enum Events
 {
     EVENT_NONE = 0,
@@ -158,6 +159,10 @@ class boss_kologarn : public CreatureScript
                 DoScriptText(SAY_DEATH, me);
                 DoCast(SPELL_KOLOGARN_PACIFY);
                 me->GetMotionMaster()->MoveTargetedHome();
+
+                for (uint8 i = 0; i < 2; ++i)
+                    if (Unit* arm = vehicle->GetPassenger(i))
+                        arm->ExitVehicle();
 
                 _JustDied();
             }

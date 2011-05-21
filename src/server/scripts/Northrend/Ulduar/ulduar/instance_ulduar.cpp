@@ -33,7 +33,7 @@ public:
 
     struct instance_ulduar_InstanceMapScript : public InstanceScript
     {
-        instance_ulduar_InstanceMapScript(Map* pMap) : InstanceScript(pMap) {};
+        instance_ulduar_InstanceMapScript(InstanceMap* map) : InstanceScript(map) { }
 
         uint32 uiEncounter[MAX_ENCOUNTER];
 
@@ -343,7 +343,7 @@ public:
 
         void OnCreatureCreate(Creature* creature)
         {
-            switch(creature->GetEntry())
+            switch (creature->GetEntry())
             {
                 case NPC_LEVIATHAN:
                     uiLeviathanGUID = creature->GetGUID();
@@ -464,7 +464,7 @@ public:
 
         void OnGameObjectCreate(GameObject* go)
         {
-            switch(go->GetEntry())
+            switch (go->GetEntry())
             {
                 case GO_KOLOGARN_CHEST_HERO:
                 case GO_KOLOGARN_CHEST:
@@ -636,22 +636,22 @@ public:
         void ProcessEvent(GameObject* /*go*/, uint32 eventId)
         {
             // Flame Leviathan's Tower Event triggers
-           Creature* pFlameLeviathan = instance->GetCreature(uiLeviathanGUID);
+            Creature* FlameLeviathan = instance->GetCreature(uiLeviathanGUID);
 
-            if (pFlameLeviathan && pFlameLeviathan->isAlive()) //No leviathan, no event triggering ;)
-                switch(eventId)
+            if (FlameLeviathan && FlameLeviathan->isAlive()) //No leviathan, no event triggering ;)
+                switch (eventId)
                 {
                     case EVENT_TOWER_OF_STORM_DESTROYED:
-                        pFlameLeviathan->AI()->DoAction(1);
+                        FlameLeviathan->AI()->DoAction(1);
                         break;
                     case EVENT_TOWER_OF_FROST_DESTROYED:
-                        pFlameLeviathan->AI()->DoAction(2);
+                        FlameLeviathan->AI()->DoAction(2);
                         break;
                     case EVENT_TOWER_OF_FLAMES_DESTROYED:
-                        pFlameLeviathan->AI()->DoAction(3);
+                        FlameLeviathan->AI()->DoAction(3);
                         break;
                     case EVENT_TOWER_OF_LIFE_DESTROYED:
-                        pFlameLeviathan->AI()->DoAction(4);
+                        FlameLeviathan->AI()->DoAction(4);
                         break;
                 }
         }

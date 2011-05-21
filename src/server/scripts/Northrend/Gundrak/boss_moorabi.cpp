@@ -69,10 +69,10 @@ public:
             pInstance = pCreature->GetInstanceScript();
         
             // make 55098 interruptable
-            SpellEntry *TempSpell;
-            TempSpell = GET_SPELL(SPELL_TRANSFORMATION);
-            if (TempSpell)
-                TempSpell->InterruptFlags = 13;
+            SpellEntry* tempSpell;
+            tempSpell = GET_SPELL(SPELL_TRANSFORMATION);
+            if (tempSpell)
+                tempSpell->InterruptFlags |= SPELL_INTERRUPT_FLAG_INTERRUPT;
         }
 
         InstanceScript* pInstance;
