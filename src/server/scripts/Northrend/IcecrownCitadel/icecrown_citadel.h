@@ -304,7 +304,6 @@ enum CreaturesIds
     NPC_RAGING_SPIRIT                           = 36701,
     NPC_TRIGGER                                 = 38667,
     NPC_VILE_SPIRIT                             = 37799,
-    NPC_DEATHBOUND_WARD                         = 37007,
     NPC_SEVERED_ESSENCE                         = 38410,
     NPC_VALKYR_HERALD                           = 37098
 };
