@@ -27,3 +27,4 @@ update creature_template set scriptname = 'mob_sunwell_plateau_tash' where entry
 update creature_template set scriptname = 'mob_sunwell_plateau_tash' where entry = 25509;
 update creature_template set scriptname = 'mob_sunwell_plateau_tash' where entry = 25851;
 update creature_template set scriptname = 'mob_sunwell_plateau_tash' where entry = 25598;
+update creature_template set scriptname = 'mob_volatile_felfire_fiend' where entry=25598;
