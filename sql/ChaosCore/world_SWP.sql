@@ -1,4 +1,4 @@
-update creature_template set scriptname = 'mob_sunblade_arch_mage' where entry = 25367;
+update creature_template set scriptname = 'mob_sunwell_plateau_tash' where entry = 25367;
 update creature_template set scriptname = 'mob_sunwell_plateau_tash' where entry = 25363;
 update creature_template set scriptname = 'mob_sunwell_plateau_tash' where entry = 25371;
 update creature_template set scriptname = 'mob_sunwell_plateau_tash' where entry = 25370;
