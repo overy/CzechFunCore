@@ -86,6 +86,7 @@ public:
         uint64 uiAerialUnitGUID;
         uint64 uiMagneticCoreGUID;
         uint64 uiMimironElevatorGUID;
+        uint64 uiBigRedButtonGUID;
         std::list<uint64> uiMimironDoorGUIDList;
 
         // Thorim
@@ -541,6 +542,9 @@ public:
                     go->setActive(true);
                     uiMimironDoorGUIDList.push_back(go->GetGUID());
                     break;
+			case GO_BIG_RED_BUTTON:
+				uiBigRedButtonGUID = go->GetGUID();
+				    break;
                 case GO_WAY_TO_YOGG:
                     uiWayToYoggGUID = go->GetGUID();
 
@@ -687,6 +691,29 @@ public:
                 case TYPE_AURIAYA:
                     break;
                 case TYPE_MIMIRON:
+			    if(state == NOT_STARTED)
+			    {
+                    		if (GameObject* bigRedButton = instance->GetGameObject(uiBigRedButtonGUID))
+					{
+					    bigRedButton->SetGoState(GO_STATE_READY);
+                        bigRedButton->RemoveFlag(GAMEOBJECT_FLAGS,GO_FLAG_UNK1);
+					}
+			    }
+                if (state == DONE)
+                {
+				if (GameObject* bigRedButton = instance->GetGameObject(uiBigRedButtonGUID))
+						bigRedButton->SetFlag(GAMEOBJECT_FLAGS,GO_FLAG_UNK1);
+                }
+			    if (state == IN_PROGRESS)
+                {
+					if (GameObject* bigRedButton = instance->GetGameObject(uiBigRedButtonGUID))
+						bigRedButton->SetFlag(GAMEOBJECT_FLAGS,GO_FLAG_UNK1);
+                }
+                else
+                {
+					if (GameObject* bigRedButton = instance->GetGameObject(uiBigRedButtonGUID))
+						bigRedButton->RemoveFlag(GAMEOBJECT_FLAGS,GO_FLAG_UNK1);
+                }
                     for(std::list<uint64>::iterator i = uiMimironDoorGUIDList.begin(); i != uiMimironDoorGUIDList.end(); i++)
                     {
                         if(GameObject* obj = instance->GetGameObject(*i))
