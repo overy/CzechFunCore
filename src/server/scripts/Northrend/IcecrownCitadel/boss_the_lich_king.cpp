@@ -1988,7 +1988,7 @@ class spell_lich_king_necrotic_plague : public SpellScriptLoader
                             return false;
                         //Ignore Tirion, The Lich King, Raging Spirits, too
                         uint32 entry = u->ToCreature()->GetEntry();
-                        if (entry == NPC_LICH_KING || entry == NPC_TIRION_ICC || entry == NPC_RAGING_SPIRIT)
+                        if (entry == NPC_THE_LICH_KING || entry == NPC_TIRION_ICC || entry == NPC_RAGING_SPIRIT)
                             return false;
                         return true;
                     }

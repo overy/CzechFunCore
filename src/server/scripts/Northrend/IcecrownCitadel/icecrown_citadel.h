@@ -286,6 +286,7 @@ enum CreaturesIds
     NPC_ICY_BLAST                               = 38223,
     NPC_FROST_BOMB                              = 37186,
     NPC_ICE_TOMB                                = 36980,
+    NPC_THE_LICH_KING                                 = 36597,
 
     //Lich King
     NPC_LICH_KING                               = 36597,

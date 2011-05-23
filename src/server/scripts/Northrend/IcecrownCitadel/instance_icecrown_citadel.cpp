@@ -117,10 +117,10 @@ class instance_icecrown_citadel : public InstanceMapScript
                 SindragosaGUID = 0;
                 SpinestalkerGUID = 0;
                 RimefangGUID = 0;
+                                    TheLichKingGUID = 0;
                 FrostwyrmCount = 0;
                 SpinestalkerTrashCount = 0;
                 RimefangTrashCount = 0;
-                LichKingGUID       = 0;
                 TirionGUID         = 0;
                 TerenasFighterGUID   = 0;
                 SpiritWardenGUID     = 0;
@@ -269,13 +269,13 @@ class instance_icecrown_citadel : public InstanceMapScript
                         if (!creature->isDead())
                             ++FrostwyrmCount;
                         break;
+                       case NPC_THE_LICH_KING:
+                            TheLichKingGUID = creature->GetGUID();
+                           break;
                     case NPC_RIMEFANG:
                         RimefangGUID = creature->GetGUID();
                         if (!creature->isDead())
                             ++FrostwyrmCount;
-                        break;
-                    case NPC_LICH_KING:
-                        LichKingGUID = creature->GetGUID();
                         break;
                     case NPC_TIRION_ICC:
                         TirionGUID = creature->GetGUID();
@@ -602,11 +602,13 @@ class instance_icecrown_citadel : public InstanceMapScript
                         return SpinestalkerGUID;
                     case DATA_RIMEFANG:
                         return RimefangGUID;
+                       case DATA_THE_LICH_KING:
+                           return TheLichKingGUID;
                     case GUID_LICH_KING:                        
                     {
-                        if (!LichKingGUID || !instance->GetCreature(LichKingGUID))
+                        if (!TheLichKingGUID || !instance->GetCreature(TheLichKingGUID))
                             instance->LoadGrid(428.6f, -2123.88f);
-                        return LichKingGUID;
+                        return TheLichKingGUID;
                     }
                     case GUID_TIRION:                           return TirionGUID;
                     case GUID_LAVAMAN:                          return uilavaman;
@@ -749,6 +751,17 @@ class instance_icecrown_citadel : public InstanceMapScript
                         }
                         break;
                     case DATA_THE_LICH_KING:
+                        if (instance->IsHeroic())
+                        {
+                            if (state == FAIL && HeroicAttempts)
+                            {
+                                --HeroicAttempts;
+                                DoUpdateWorldState(WORLDSTATE_ATTEMPTS_REMAINING, HeroicAttempts);
+                                if (!HeroicAttempts)
+                                    if (Creature* sindra = instance->GetCreature(SindragosaGUID))
+                                        sindra->DespawnOrUnsummon();
+                            }
+                        }
                         break;
                     default:
                         break;
@@ -781,7 +794,8 @@ class instance_icecrown_citadel : public InstanceMapScript
                         if (instance->IsHeroic() && !HeroicAttempts)
                             return;
 
-                        if (GetBossState(DATA_SINDRAGOSA) != DONE)
+                        if (GetBossState(DATA_SINDRAGOSA) == DONE)
+
                             return;
 
                         switch (data)
@@ -1208,9 +1222,9 @@ class instance_icecrown_citadel : public InstanceMapScript
             uint64 SindragosaGUID;
             uint64 SpinestalkerGUID;
             uint64 RimefangGUID;
+            uint64 TheLichKingGUID;
             uint64 uilavaman;
             uint64 uihangingman;
-            uint64 LichKingGUID;
             uint64 TirionGUID;
             uint64 TerenasFighterGUID;
             uint64 SpiritWardenGUID;
