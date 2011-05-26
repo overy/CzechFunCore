@@ -545,7 +545,7 @@ public:
         bool liveSide;
         bool gateClose;
 
-        bool isOnSameSide(const Unit *pWho)
+        bool isOnSameSide(const Unit *pWho) const
         {
             return (liveSide == IN_LIVE_SIDE(pWho));
         }
@@ -564,10 +564,8 @@ public:
         void JustDied(Unit * /*killer*/)
         {
             if (me->isSummon())
-            {
-                if (Unit *owner = CAST_SUM(me)->GetSummoner())
+                if (Unit* owner = me->ToTempSummon()->GetSummoner())
                     CombatAI::JustDied(owner);
-            }
         }
 
         void EnterEvadeMode()

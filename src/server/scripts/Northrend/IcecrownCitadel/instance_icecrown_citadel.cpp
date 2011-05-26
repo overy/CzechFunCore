@@ -758,8 +758,8 @@ class instance_icecrown_citadel : public InstanceMapScript
                                 --HeroicAttempts;
                                 DoUpdateWorldState(WORLDSTATE_ATTEMPTS_REMAINING, HeroicAttempts);
                                 if (!HeroicAttempts)
-                                    if (Creature* sindra = instance->GetCreature(SindragosaGUID))
-                                        sindra->DespawnOrUnsummon();
+                                    if (Creature* theLichKing = instance->GetCreature(TheLichKingGUID))
+                                        theLichKing->DespawnOrUnsummon();
                             }
                         }
                         break;
@@ -966,11 +966,11 @@ class instance_icecrown_citadel : public InstanceMapScript
                     case CRITERIA_KILL_LANA_THEL_10M:
                     case CRITERIA_ONCE_BITTEN_TWICE_SHY_10N:
                     case CRITERIA_ONCE_BITTEN_TWICE_SHY_10V:
-                        return CAST_INST(InstanceMap, instance)->GetMaxPlayers() == 10;
+                        return instance->ToInstanceMap()->GetMaxPlayers() == 10;
                     case CRITERIA_KILL_LANA_THEL_25M:
                     case CRITERIA_ONCE_BITTEN_TWICE_SHY_25N:
                     case CRITERIA_ONCE_BITTEN_TWICE_SHY_25V:
-                        return CAST_INST(InstanceMap, instance)->GetMaxPlayers() == 25;
+                        return instance->ToInstanceMap()->GetMaxPlayers() == 25;
                     default:
                         break;
                 }
@@ -1066,8 +1066,8 @@ class instance_icecrown_citadel : public InstanceMapScript
                             return false;
                         // no break
                     case DATA_SINDRAGOSA:
-                        //if (GetBossState(DATA_VALITHRIA_DREAMWALKER) != DONE)
-                        //    return false;
+                        if (GetBossState(DATA_VALITHRIA_DREAMWALKER) != DONE)
+                            return false;
                         break;
                     default:
                         break;

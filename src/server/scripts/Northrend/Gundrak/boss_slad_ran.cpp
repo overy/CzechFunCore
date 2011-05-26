@@ -398,8 +398,8 @@ public:
 
         void UpdateAI(const uint32 /*diff*/)
         {
-            if (Unit* pSummoner = CAST_SUM(me)->GetSummoner())
-                WrapTargetGUID = pSummoner->GetGUID();
+            if (Unit* summoner = me->ToTempSummon()->GetSummoner())
+                WrapTargetGUID = summoner->GetGUID();
 
             Unit* temp = Unit::GetUnit((*me), WrapTargetGUID);
             if ((temp && temp->isAlive() && !temp->HasAura(SPELL_SNAKE_WRAP_STUN)) || !temp)
