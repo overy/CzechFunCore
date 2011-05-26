@@ -157,6 +157,7 @@ enum UlduarGameObjects
     GO_FREYA_CHEST          = 194324,
     GO_LEVIATHAN_DOOR       = 194905,
     GO_LEVIATHAN_GATE       = 194630,
+    GO_XT002_DOOR           = 194631,
     GO_MIMIRON_TRAIN        = 194675,
     GO_MIMIRON_ELEVATOR     = 194749,
     GO_MIMIRON_DOOR_1       = 194776,

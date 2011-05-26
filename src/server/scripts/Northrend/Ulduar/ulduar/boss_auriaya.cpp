@@ -133,10 +133,19 @@ public:
                         sentry->GetMotionMaster()->MoveFollow(me, 1.0f, M_PI*(i + 0.5f));
         }
 
-        void EnterCombat(Unit * /*who*/)
+        void EnterCombat(Unit* who)
         {
             DoScriptText(SAY_AGGRO, me);
             _EnterCombat();
+
+            std::list<Creature*> _sentrys;
+            GetCreatureListWithEntryInGrid(_sentrys, me, ENTRY_CREATURE_SANCTUM_SENTRY, 200.0f);
+            if (!_sentrys.empty())
+                for (std::list<Creature*>::iterator iter = _sentrys.begin(); iter != _sentrys.end(); ++iter)
+                {
+                    (*iter)->AI()->DoAttackerAreaInCombat((*iter), 100.0f);
+                    (*iter)->AI()->AttackStart(who);
+                }
 
             events.ScheduleEvent(EVENT_TERRIFYING_SCREECH, 40000);
             events.ScheduleEvent(EVENT_SONIC_SCREECH, 60000);

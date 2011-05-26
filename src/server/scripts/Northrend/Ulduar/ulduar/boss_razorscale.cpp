@@ -95,6 +95,7 @@ enum Actions
     ACTION_HARPOON_BUILD                         = 3,
     ACTION_PLACE_BROKEN_HARPOON                  = 4,
     ACTION_COMMANDER_RESET                       = 7,
+    ACTION_DESPAWN_ADDS                          = 8
 };
 
 enum Phases
@@ -328,6 +329,7 @@ class boss_razorscale : public CreatureScript
 
             void Reset()
             {
+                summons.DoAction(MOLE_MACHINE_TRIGGER, ACTION_DESPAWN_ADDS);
                 _Reset();
                 me->SetFlying(true);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
@@ -549,7 +551,7 @@ class boss_razorscale : public CreatureScript
                     float x = float(irand(540, 640));       // Safe range is between 500 and 650
                     float y = float(irand(-230, -195));     // Safe range is between -235 and -145
                     float z = GROUND_Z;                     // Ground level
-                    me->SummonCreature(MOLE_MACHINE_TRIGGER, x, y, z, 0, TEMPSUMMON_TIMED_DESPAWN, 15000);
+                    me->SummonCreature(MOLE_MACHINE_TRIGGER, x, y, z, 0);
                 }
             }
 
@@ -731,11 +733,13 @@ class npc_mole_machine_trigger : public CreatureScript
 
         struct npc_mole_machine_triggerAI : public Scripted_NoMovementAI
         {
-            npc_mole_machine_triggerAI(Creature* creature) : Scripted_NoMovementAI(creature)
+            npc_mole_machine_triggerAI(Creature* creature) : Scripted_NoMovementAI(creature), summons(me)
             {
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_PACIFIED);
+                me->SetVisible(false);
             }
 
+            SummonList summons;
             uint32 SummonGobTimer;
             uint32 SummonNpcTimer;
             uint32 DissapearTimer;
@@ -749,6 +753,11 @@ class npc_mole_machine_trigger : public CreatureScript
                 DissapearTimer = 10000;
                 GobSummoned = false;
                 NpcSummoned = false;
+            }
+
+            void DoAction(int32 const /*action*/)
+            {
+                summons.DespawnAll();
             }
 
             void UpdateAI(uint32 const Diff)
@@ -784,8 +793,6 @@ class npc_mole_machine_trigger : public CreatureScript
                 {
                     if (GameObject* molemachine = me->FindNearestGameObject(GO_MOLE_MACHINE, 1))
                         molemachine->Delete();
-
-                    me->DisappearAndDie();
                 }
                 else
                     DissapearTimer -= Diff;
@@ -793,6 +800,7 @@ class npc_mole_machine_trigger : public CreatureScript
 
             void JustSummoned(Creature* summoned)
             {
+                summons.Summon(summoned);
                 summoned->AI()->DoZoneInCombat();
             }
         };

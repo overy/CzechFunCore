@@ -55,6 +55,7 @@ public:
 
         // XT-002
         uint64 uiXT002GUID;
+        uint64 uiXT002DoorGUID;
 
         // Assembly of Iron
         uint64 uiAssemblyGUIDs[3];
@@ -129,8 +130,6 @@ public:
         uint64 uiAlgalonAccessGUID;
 
 
-
-
         uint32 uiSupportKeeperFlag;
         uint32 uiPlayerDeathFlag;
         uint32 uiAlgalonKillCount;
@@ -185,6 +184,7 @@ public:
             uiHodirChestGUID        = 0;
             uiFreyaChestGUID        = 0;
             uiLeviathanGateGUID     = 0;
+            uiXT002DoorGUID         = 0;
             uiVezaxDoorGUID         = 0;
             uiWayToYoggGUID         = 0;
             uiYoggSaronDoorGUID     = 0;
@@ -528,6 +528,10 @@ public:
                     else
                         HandleGameObject(NULL, false, go);
                     break;
+                case GO_XT002_DOOR:
+                    uiXT002DoorGUID = go->GetGUID();
+                    HandleGameObject(0, GetBossState(TYPE_LEVIATHAN) == DONE, go);
+                    break;
                 case GO_MIMIRON_TRAIN:
                     go->setActive(true);
                     uiMimironTrainGUID = go->GetGUID();
@@ -548,7 +552,7 @@ public:
                 case GO_WAY_TO_YOGG:
                     uiWayToYoggGUID = go->GetGUID();
 
-                    if(GetBossState(TYPE_FREYA) == DONE &&
+                    if (GetBossState(TYPE_FREYA) == DONE &&
                         GetBossState(TYPE_MIMIRON) == DONE &&
                         GetBossState(TYPE_HODIR) == DONE &&
                         GetBossState(TYPE_THORIM) == DONE)
@@ -669,9 +673,9 @@ public:
             if (!InstanceScript::SetBossState(type, state))
                 return false;
 
-            if(uiEncounter[type] != DONE)
+            if (uiEncounter[type] != DONE)
                 uiEncounter[type] = state;
-            if(state == DONE)
+            if (state == DONE)
                 SaveToDB();
 
             switch (type)
@@ -683,10 +687,18 @@ public:
                     else
                         for (uint8 uiI = 0; uiI < 7; ++uiI)
                             HandleGameObject(uiLeviathanDoor[uiI],true);
+
+                    if (state == DONE)
+                        HandleGameObject(uiXT002DoorGUID, true);
                     break;
                 case TYPE_IGNIS:
                 case TYPE_RAZORSCALE:
                 case TYPE_XT002:
+                    if (state == IN_PROGRESS)
+                        HandleGameObject(uiXT002DoorGUID, false);	
+                    else
+                        HandleGameObject(uiXT002DoorGUID, true);
+                        break;
                 case TYPE_ASSEMBLY:
                 case TYPE_AURIAYA:
                     break;
@@ -714,9 +726,9 @@ public:
 					if (GameObject* bigRedButton = instance->GetGameObject(uiBigRedButtonGUID))
 						bigRedButton->RemoveFlag(GAMEOBJECT_FLAGS,GO_FLAG_UNK1);
                 }
-                    for(std::list<uint64>::iterator i = uiMimironDoorGUIDList.begin(); i != uiMimironDoorGUIDList.end(); i++)
+                    for (std::list<uint64>::iterator i = uiMimironDoorGUIDList.begin(); i != uiMimironDoorGUIDList.end(); i++)
                     {
-                        if(GameObject* obj = instance->GetGameObject(*i))
+                        if (GameObject* obj = instance->GetGameObject(*i))
                             obj->SetGoState(state == IN_PROGRESS ? GO_STATE_READY : GO_STATE_ACTIVE );
                     }
                     break;
@@ -725,11 +737,11 @@ public:
                         HandleGameObject(uiVezaxDoorGUID, true);
                     break;
                 case TYPE_YOGGSARON:
-                if(state == IN_PROGRESS)
-                    HandleGameObject(uiYoggSaronDoorGUID,false);
-                else
-                    HandleGameObject(uiYoggSaronDoorGUID,true);
-                    break;
+                    if (state == IN_PROGRESS)
+                        HandleGameObject(uiYoggSaronDoorGUID, false);
+                    else
+                        HandleGameObject(uiYoggSaronDoorGUID, true);
+                        break;
                 case TYPE_KOLOGARN:
                     if (state == DONE)
                     {
@@ -761,7 +773,7 @@ public:
                         if (GameObject* go = instance->GetGameObject(uiThorimChestGUID))
                             go->SetRespawnTime(go->GetRespawnDelay());
 
-                    if(GameObject* obj = instance->GetGameObject(uiThorimDoorGUID))
+                    if (GameObject* obj = instance->GetGameObject(uiThorimDoorGUID))
                         obj->SetGoState(state == IN_PROGRESS ? GO_STATE_READY : GO_STATE_ACTIVE );
 
                     break;
@@ -812,7 +824,7 @@ public:
                     break;
              }
 
-             if(GetBossState(TYPE_FREYA) == DONE &&
+             if (GetBossState(TYPE_FREYA) == DONE &&
                  GetBossState(TYPE_MIMIRON) == DONE &&
                  GetBossState(TYPE_HODIR) == DONE &&
                  GetBossState(TYPE_THORIM) == DONE)
