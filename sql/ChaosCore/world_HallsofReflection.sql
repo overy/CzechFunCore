@@ -245,3 +245,13 @@ VALUES
 ('202337', '668', '2', '65535', '5241.05', '1663.44', '784.295', '0.54', '0', '0', '0', '0', '-604800', '100', '1'),
 ('202336', '668', '2', '65535', '5241.05', '1663.44', '784.295', '0.54', '0', '0', '0', '0', '-604800', '100', '1'),
 ('202079', '668', '3', '1', '5250.96', '1639.36', '784.302', '0', '0', '0', '0', '0', '-604800', '100', '1');
+
+-- Wrong flags
+
+UPDATE `creature_template` SET `unit_flags`=576 WHERE `entry`=38177;
+UPDATE `creature_template` SET `unit_flags`=576 WHERE `entry`=38564;
+UPDATE `creature_template` SET `unit_flags`=576 WHERE `entry`=38172;
+UPDATE `creature_template` SET `unit_flags`=576 WHERE `entry`=38524;
+UPDATE `creature_template` SET `unit_flags`=576 WHERE `entry`=38176;
+UPDATE `creature_template` SET `unit_flags`=576 WHERE `entry`=38544;
+
