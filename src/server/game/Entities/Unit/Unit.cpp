@@ -8726,6 +8726,18 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, AuraEffect* trig
         case 72176:
             basepoints0 = 3;
             break;
+        case 71761: // Deep Freeze Immunity State
+        {
+            if (!pVictim->ToCreature())
+                return false;
+
+            if (pVictim->ToCreature()->GetCreatureInfo()->MechanicImmuneMask & (1 << procSpell->EffectMechanic[EFFECT_0]))
+                target = pVictim;
+            else
+                return false;
+            break;
+        }
+            break;
         case 15337: // Improved Spirit Tap (Rank 1)
         case 15338: // Improved Spirit Tap (Rank 2)
         {
@@ -10926,12 +10938,12 @@ bool Unit::isSpellCrit(Unit *pVictim, SpellEntry const *spellProto, SpellSchoolM
                     switch((*i)->GetMiscValue())
                     {
                         // Shatter
-                        case  911: modChance+= 16;
-                        case  910: modChance+= 17;
-                        case  849: modChance+= 17;
-                            if (!pVictim->HasAuraState(AURA_STATE_FROZEN, spellProto, this))
-                                break;
-                            crit_chance+=modChance;
+                        case  911: modChance += 16;
+                        case  910: modChance += 17;
+                        case  849: modChance += 17;
+                            // Deep Freeze damage trigger is always shattered and does not consume FoF charges
+                            if ((spellProto->Id == 71757) || pVictim->HasAuraState(AURA_STATE_FROZEN, spellProto, this))
+                                crit_chance += modChance;
                             break;
                         case 7917: // Glyph of Shadowburn
                             if (pVictim->HasAuraState(AURA_STATE_HEALTHLESS_35_PERCENT, spellProto, this))
