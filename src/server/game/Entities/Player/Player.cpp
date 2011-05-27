@@ -7891,7 +7891,7 @@ void Player::UpdateZone(uint32 newZone, uint32 newArea)
             break;
         case AREATEAM_NONE:
             // overwrite for battlegrounds, maybe batter some zone flags but current known not 100% fit to this
-            pvpInfo.inHostileArea = sWorld->IsPvPRealm() || InBattleground() || zone->flags & AREA_FLAG_OUTDOOR_PVP;
+            pvpInfo.inHostileArea = sWorld->IsPvPRealm() || InBattleground() || zone->flags & AREA_FLAG_WINTERGRASP;
             break;
         default:                                            // 6 in fact
             pvpInfo.inHostileArea = false;
@@ -14641,7 +14641,7 @@ void Player::OnGossipSelect(WorldObject* source, uint32 gossipListId, uint32 men
     }
 
     GossipMenuItemData const* menuItemData = gossipmenu.GetItemData(gossipListId);
-    if (menuItemData)
+    if (!menuItemData)
         return;
 
     switch (gossipOptionId)
