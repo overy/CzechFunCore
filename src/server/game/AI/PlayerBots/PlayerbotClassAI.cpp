@@ -154,7 +154,7 @@ bool PlayerbotClassAI::castDispel (uint32 dispelSpell, Unit *dTarget, bool check
             {
                 if(aura->GetSpellProto()->Dispel == DISPEL_MAGIC)
                 {
-                    bool positive = aurApp->IsPositive() ? (!(aura->GetSpellProto()->AttributesEx & SPELL_ATTR0_UNK7)) : false;
+                    bool positive = aurApp->IsPositive() ? (!(aura->GetSpellProto()->AttributesEx & SPELL_ATTR0_HIDDEN_CLIENTSIDE)) : false;
 
                     // do not remove positive auras if friendly target
                     //               negative auras if non-friendly target
@@ -243,7 +243,7 @@ bool PlayerbotClassAI::castSelfCCBreakers (uint32 castList[])
                 {
                     if(aura->GetSpellProto()->Dispel == DISPEL_MAGIC)
                     {
-                        bool positive = aurApp->IsPositive() ? (!(aura->GetSpellProto()->AttributesEx & SPELL_ATTR0_UNK7)) : false;
+                        bool positive = aurApp->IsPositive() ? (!(aura->GetSpellProto()->AttributesEx & SPELL_ATTR0_HIDDEN_CLIENTSIDE)) : false;
                         if(positive)continue;
                     }
                     return CastSpell(dispelSpell, dTarget, false);

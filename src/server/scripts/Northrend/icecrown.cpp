@@ -529,7 +529,7 @@ public:
 	    }
 	
         if(questCheck || raceCheck)
-            pPlayer->SEND_VENDORLIST(pCreature->GetGUID()); 
+            pPlayer->GetSession()->SendListInventory(pCreature->GetGUID()); 
         else
             pPlayer->SEND_GOSSIP_MENU(textId, pCreature->GetGUID());
         return true;

@@ -3959,11 +3959,11 @@ void PlayerbotAI::HandleCommand(const std::string &text, Player &fromPlayer)
                 return;
 
             QuestMenu& questMenu = m_bot->PlayerTalkClass->GetQuestMenu();
-            for (uint32 iI = 0; !wasRewarded && iI < questMenu.MenuItemCount(); ++iI)
+            for (uint32 iI = 0; !wasRewarded && iI < questMenu.GetMenuItemCount(); ++iI)
             {
                 QuestMenuItem const& qItem = questMenu.GetItem(iI);
 
-                uint32 questID = qItem.m_qId;
+                uint32 questID = qItem.QuestId;
                 Quest const* pQuest = sObjectMgr->GetQuestTemplate(questID);
                 QuestStatus status = m_bot->GetQuestStatus(questID);
 
@@ -4256,10 +4256,10 @@ void PlayerbotAI::TurnInQuests( WorldObject *pNpc )
         // auto complete every completed quest this NPC has
         m_bot->PrepareQuestMenu(npcGUID);
         QuestMenu& questMenu = m_bot->PlayerTalkClass->GetQuestMenu();
-        for (uint32 iI = 0; iI < questMenu.MenuItemCount(); ++iI)
+        for (uint32 iI = 0; iI < questMenu.GetMenuItemCount(); ++iI)
         {
             QuestMenuItem const& qItem = questMenu.GetItem(iI);
-            uint32 questID = qItem.m_qId;
+            uint32 questID = qItem.QuestId;
             Quest const* pQuest = sObjectMgr->GetQuestTemplate(questID);
 
             std::ostringstream out;

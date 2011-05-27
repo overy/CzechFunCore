@@ -157,7 +157,7 @@ bool OnGossipSelect(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint3
 					pPlayer->TeleportTo(ct->port_defense->map, ct->port_defense->x, ct->port_defense->y, ct->port_defense->z, ct->port_defense->o, 0);
 				else
 					pPlayer->TeleportTo(ct->port_attack->map, ct->port_attack->x, ct->port_attack->y, ct->port_attack->z, ct->port_attack->o, 0);
-				pPlayer->PlayerTalkClass->CloseGossip();
+				pPlayer->PlayerTalkClass->SendCloseGossip();
 			}
 		}
 	}
@@ -177,7 +177,7 @@ bool OnGossipSelect(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint3
 	}
 	else if (action == GOSSIP_ACTION_CLOSE)
 	{
-		pPlayer->PlayerTalkClass->CloseGossip();
+		pPlayer->PlayerTalkClass->SendCloseGossip();
 	}
 	else if (action == GOSSIP_ACTION_PORTLIST)
 	{
