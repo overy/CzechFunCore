@@ -195,14 +195,7 @@ set(scripts_STAT_SRCS
   Northrend/DraktharonKeep/drak_tharon_keep.h
   Northrend/DraktharonKeep/boss_tharon_ja.cpp
   Northrend/DraktharonKeep/boss_dred.cpp
-<<<<<<< HEAD
   Northrend/wintergrasp.cpp
-=======
-  Northrend/RubySanctum/instance_ruby_sanctum.cpp
-  Northrend/RubySanctum/ruby_sanctum.h
-  Northrend/RubySanctum/ruby_sanctum.cpp
-  Northrend/RubySanctum/boss_baltharus_the_warborn.cpp
->>>>>>> fade2383ccebe7a3cce060e00a1a45fa28f1bd3a
 )
 
 message("  -> Prepared: Northrend")
