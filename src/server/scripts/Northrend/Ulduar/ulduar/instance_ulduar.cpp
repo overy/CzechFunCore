@@ -41,8 +41,8 @@ public:
 
         // Leviathan
         uint64 uiLeviathanGUID;
-        uint64 uiLeviathanDoor[7];
         uint64 uiLeviathanGateGUID;
+        std::list<uint64> uiLeviathanDoorGUIDList;
 
         // Ignis
         uint64 uiIgnisGUID;
@@ -144,6 +144,7 @@ public:
         void Initialize()
         {
             SetBossNumber(MAX_ENCOUNTER);
+
             uiIgnisGUID             = 0;
             uiRazorscaleGUID        = 0;
             uiRazorscaleController  = 0;
@@ -199,7 +200,6 @@ public:
 
             memset(uiEncounter, 0, sizeof(uiEncounter));
             memset(uiAssemblyGUIDs, 0, sizeof(uiAssemblyGUIDs));
-            memset(&uiLeviathanDoor, 0, sizeof(uiLeviathanDoor));
             memset(uiRazorHarpoonGUIDs, 0, sizeof(uiRazorHarpoonGUIDs));
         }
 
@@ -244,12 +244,12 @@ public:
             // This will work for 90% of all Players ... someone will found the backdoor (and i try to close this later)
             if(InstancePlayerBind* bind = player->GetBoundInstance(instance->GetId(),instance->GetDifficulty()))
             {
-                if(bind->perm)
+                if (bind->perm)
                     return;
 
                 uint32 achievement = instance->GetDifficulty() == RAID_DIFFICULTY_10MAN_NORMAL? ACHIEVEMENT_CHAMPION_OF_ULDUAR : ACHIEVEMENT_CONQUEROR_OF_ULDUAR;
 
-                if(!player->HasAchieved(achievement))
+                if (!player->HasAchieved(achievement))
                    player->GetAchievementMgr().RemoveAchievement(achievement);
             }
         }
@@ -514,12 +514,8 @@ public:
                     uiFreyaChestGUID = go->GetGUID();
                     break;
                 case GO_LEVIATHAN_DOOR:
-                    //uiLeviathanDoor[flag] = go->GetGUID();
-                    //HandleGameObject(NULL, true, go);
-                    //flag++;
-                    //if (flag == 7)
-                    //    flag =0;
-                    AddDoor(go, true);
+                    go->setActive(true);
+                    uiLeviathanDoorGUIDList.push_back(go->GetGUID());
                     break;
                 case GO_LEVIATHAN_GATE:
                     uiLeviathanGateGUID = go->GetGUID();
@@ -681,12 +677,11 @@ public:
             switch (type)
             {
                 case TYPE_LEVIATHAN:
-                    if (state == IN_PROGRESS)
-                        for (uint8 uiI = 0; uiI < 7; ++uiI)
-                            HandleGameObject(uiLeviathanDoor[uiI],false);
-                    else
-                        for (uint8 uiI = 0; uiI < 7; ++uiI)
-                            HandleGameObject(uiLeviathanDoor[uiI],true);
+                    for (std::list<uint64>::iterator i = uiLeviathanDoorGUIDList.begin(); i != uiLeviathanDoorGUIDList.end(); i++)
+                    {
+                        if (GameObject* obj = instance->GetGameObject(*i))
+                            obj->SetGoState(state == IN_PROGRESS ? GO_STATE_READY : GO_STATE_ACTIVE );
+                    }
 
                     if (state == DONE)
                         HandleGameObject(uiXT002DoorGUID, true);

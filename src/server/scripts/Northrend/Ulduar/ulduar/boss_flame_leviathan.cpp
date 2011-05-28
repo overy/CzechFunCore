@@ -311,13 +311,6 @@ class boss_flame_leviathan : public CreatureScript
                     DoScriptText(SAY_AGGRO, me);
             }
 
-            // TODO: effect 0 and effect 1 may be on different target
-            void SpellHitTarget(Unit* target, SpellEntry const* spell)
-            {
-                if (spell->Id == SPELL_PURSUED)
-                    AttackStart(target);
-            }
-
             void JustDied(Unit* /*victim*/)
             {
                 _JustDied();
@@ -336,6 +329,17 @@ class boss_flame_leviathan : public CreatureScript
                         case 1:
                             instance->DoCompleteAchievement(RAID_MODE(ACHIEV_10_ORBITAL_BOMBARDMENT, ACHIEV_25_ORBITAL_BOMBARDMENT));
                     }
+                }
+            }
+
+            void SpellHitTarget(Unit* target, SpellEntry const* spell)
+            {
+                if (spell->Id == SPELL_PURSUED)
+                {
+                    DoResetThreat();
+                    me->AddThreat(target, 9999999.0f);
+                    if (Player* player = target->GetCharmerOrOwnerPlayerOrPlayerItself())
+                        me->MonsterTextEmote(EMOTE_PURSUE, player->GetGUID(), true);
                 }
             }
 
@@ -406,6 +410,9 @@ class boss_flame_leviathan : public CreatureScript
                 if (me->HasUnitState(UNIT_STAT_CASTING))
                     return;
 
+                if (me->getVictim() && !me->getVictim()->HasAura(SPELL_PURSUED))
+                    events.RescheduleEvent(EVENT_PURSUE, 0);
+
                 uint32 eventId = events.GetEvent();
 
                 switch(eventId)
@@ -414,11 +421,7 @@ class boss_flame_leviathan : public CreatureScript
                         break; // this is a must
                     case EVENT_PURSUE:
                         DoScriptText(RAND(SAY_TARGET_1, SAY_TARGET_2, SAY_TARGET_3), me);
-                        if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 75, true))
-                        {
-                            me->AddAura(SPELL_PURSUED, target);
-                            me->MonsterTextEmote(EMOTE_PURSUE, target->GetGUID(), true);
-                        }
+                        DoCast(SPELL_PURSUED);
                         events.RepeatEvent(30*IN_MILLISECONDS);
                         break;
                     case EVENT_MISSILE:
@@ -1454,6 +1457,98 @@ class spell_anti_air_rocket : public SpellScriptLoader
         }
 };
 
+class spell_pursued : public SpellScriptLoader
+{
+    public:
+        spell_pursued() : SpellScriptLoader("spell_pursued") { }
+
+        class spell_pursued_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_pursued_SpellScript);
+
+            bool Load()
+            {
+                _target = NULL;
+                return GetCaster()->GetTypeId() == TYPEID_UNIT;
+            }
+
+            void SelectTarget(std::list<Unit*>& targetList)
+            {
+                if (targetList.empty())
+                    return;
+
+                std::list<Unit*> tempList;
+
+                // try to find demolisher or siege engine first
+                for (std::list<Unit*>::iterator itr = targetList.begin(); itr != targetList.end(); ++itr)
+                {
+                    _target = *itr;
+
+                    if (!_target->ToCreature())
+                        continue;
+
+                    if (_target->ToCreature()->GetEntry() == VEHICLE_SIEGE || _target->ToCreature()->GetEntry() == VEHICLE_DEMOLISHER)
+                        tempList.push_back(_target);
+                }
+
+                if (tempList.empty())
+                {
+                    // no demolisher or siege engine, find a chopper
+                    for (std::list<Unit*>::iterator itr = targetList.begin(); itr != targetList.end(); ++itr)
+                    {
+                        _target = *itr;
+
+                        if (!_target->ToCreature())
+                            continue;
+
+                        if (_target->ToCreature()->GetEntry() == VEHICLE_CHOPPER)
+                            tempList.push_back(_target);
+                    }
+                }
+
+                if (!tempList.empty())
+                {
+                    // found one or more vehicles, select a random one
+                    std::list<Unit*>::iterator itr = tempList.begin();
+                    std::advance(itr, urand(0, tempList.size() - 1));
+                    _target = *itr;
+                    targetList.clear();
+                    targetList.push_back(_target);
+                }
+                else
+                {
+                    // found no vehicles, select a random player or pet
+                    std::list<Unit*>::iterator itr = targetList.begin();
+                    std::advance(itr, urand(0, targetList.size() - 1));
+                    _target = *itr;
+                    targetList.clear();
+                    targetList.push_back(_target);
+                }
+            }
+
+            void SetTarget(std::list<Unit*>& targetList)
+            {
+                targetList.clear();
+
+                if (_target)
+                    targetList.push_back(_target);
+            }
+
+            void Register()
+            {
+                OnUnitTargetSelect += SpellUnitTargetFn(spell_pursued_SpellScript::SelectTarget, EFFECT_0, TARGET_UNIT_AREA_ENEMY_SRC);
+                OnUnitTargetSelect += SpellUnitTargetFn(spell_pursued_SpellScript::SetTarget, EFFECT_1, TARGET_UNIT_AREA_ENEMY_SRC);
+            }
+
+            Unit* _target;
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_pursued_SpellScript();
+        }
+};
+
 void AddSC_boss_flame_leviathan()
 {
     new boss_flame_leviathan();
@@ -1480,4 +1575,5 @@ void AddSC_boss_flame_leviathan()
     new achievement_shutout();
     new achievement_unbroken();
     new spell_anti_air_rocket();
+    new spell_pursued();
 }

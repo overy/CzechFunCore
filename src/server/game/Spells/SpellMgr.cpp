@@ -3750,7 +3750,6 @@ void SpellMgr::LoadSpellCustomAttr()
         case 25425: // Shoot
         case 45761: // Shoot
         case 42611: // Shoot
-        case 62374: // Pursued
         case 61588: // Blazing Harpoon
             spellInfo->MaxAffectedTargets = 1;
             ++count;
