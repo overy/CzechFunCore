@@ -7833,7 +7833,7 @@ void Player::UpdateZone(uint32 newZone, uint32 newArea)
                 {
                     sLog->outError("Player (GUID: %u) tried to access GM Island.", GetGUIDLow());
                     sLog->outError("Error: Cannot set tele to GM Island (map: %u). Sending possible hacker to default location. (Jail Box)",map);
-                    TeleportTo(13,1.118799,0.477914,-144.708650,3.133046); // Tele to Jail Box
+                    TeleportTo(13,1.118799f,0.477914f,-144.708650f,3.133046f); // Tele to Jail Box
                     CastSpell(this, 9454, true); // Cast GM Freeze on player
                 }
 
@@ -21787,7 +21787,7 @@ void Player::InitPrimaryProfessions()
                 {
                     SetSkill(skill_id,0 , 0, 0);
                     sLog->outError("Player %s has more than two professions. Skill %u removed",GetName(),skill_id);
-                    sWorld->BanAccount(BAN_CHARACTER, GetName(), "30d" , "Tul sok szakmad van", "Server-anticheat")
+                    sWorld->BanAccount(BAN_CHARACTER, GetName(), "30d" , "Tul sok szakmad van", "Server-anticheat");
                 }
             }
         }

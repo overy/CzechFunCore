@@ -963,7 +963,7 @@ class boss_the_lich_king : public CreatureScript
                             }
                             case 2:
                             {
-                                DoCast(me, SPELL_FURY_OF_FROSTMOURNE_NORES);
+                                //DoCast(me, SPELL_FURY_OF_FROSTMOURNE_NORES);
                                 DoCast(me, SPELL_FURY_OF_FROSTMOURNE);
                                 uiEndingTimer = 11000;
                             }
@@ -1048,13 +1048,13 @@ class boss_the_lich_king : public CreatureScript
                             }
                             case 13:
                             {
-                                me->CastSpell(me, SPELL_SUMMON_BROKEN_FROSTMOURNE, false);
-                                uiEndingTimer = 4000;
+                                //me->CastSpell(me, SPELL_SUMMON_BROKEN_FROSTMOURNE, false);
+                                uiEndingTimer = 1000;
                                 break;
                             }
                             case 14:
                             {
-                                me->CastSpell(me, SPELL_DROP_FROSTMOURNE, false);
+                                //me->CastSpell(me, SPELL_DROP_FROSTMOURNE, false);
                                 uiEndingTimer = 1000;
                                 break;
                             }
@@ -1067,22 +1067,22 @@ class boss_the_lich_king : public CreatureScript
                             }
                             case 16:
                             {
-                                SetEquipmentSlots(false, EQUIP_UNEQUIP, EQUIP_NO_CHANGE, EQUIP_NO_CHANGE);
+                                //SetEquipmentSlots(false, EQUIP_UNEQUIP, EQUIP_NO_CHANGE, EQUIP_NO_CHANGE);
                                 DoScriptText(SAY_ENDING_6_KING, me);
                                 uiEndingTimer = 3000;
                                 break;
                             }
                             case 17:
                             {
-                                DoCast(me, SPELL_SUMMON_FROSTMOURNE_TRIGGER);
-                                uiEndingTimer = 2000;
+                                me->SetUInt32Value(UNIT_NPC_EMOTESTATE, 473);
+                                SetEquipmentSlots(false, EQUIP_UNEQUIP, EQUIP_NO_CHANGE, EQUIP_NO_CHANGE);
+                                uiEndingTimer = 5000;
                                 break;
                             }
                             case 18:
                             {
-                                me->SetUInt32Value(UNIT_NPC_EMOTESTATE, 473);
-                                SetEquipmentSlots(false, EQUIP_UNEQUIP, EQUIP_NO_CHANGE, EQUIP_NO_CHANGE);
-                                uiEndingTimer = 5000;
+                                DoCast(me, SPELL_SUMMON_FROSTMOURNE_TRIGGER);
+                                uiEndingTimer = 2000;
                                 break;
                             }
                             case 19:
