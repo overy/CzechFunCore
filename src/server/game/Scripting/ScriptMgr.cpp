@@ -26,6 +26,7 @@
 #include "ScriptSystem.h"
 #include "Transport.h"
 #include "CityConquestMgr.h"
+#include "sc_npc_teleport.h"
 
 // Utility macros to refer to the script registry.
 #define SCR_REG_MAP(T) ScriptRegistry<T>::ScriptMap
@@ -149,6 +150,7 @@ void ScriptMgr::Initialize()
     uint32 oldMSTime = getMSTime();
 
     LoadDatabase();
+	LoadNpcTele();
     sLog->outString("Initializing City Conquest Engine (c) Hkarta");
     CityConquest.LoadCities();
 

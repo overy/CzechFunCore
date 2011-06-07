@@ -16,6 +16,7 @@
  */
 
 #include "ScriptLoader.h"
+#include "AnticheatMgr.h"
 
 //examples
 void AddSC_example_creature();
@@ -23,6 +24,25 @@ void AddSC_example_escort();
 void AddSC_example_gossip_codebox();
 void AddSC_example_misc();
 void AddSC_example_commandscript();
+
+//TeleNPC2
+void AddSC_npc_teleport();
+//custom
+void AddSC_npc_teleport();
+void AddSC_boss_continental();
+void AddSC_bazilisek();
+void AddSC_lava_boost();
+void AddSC_likantropo();
+void AddSC_might_sylvanas();
+void AddSC_boss_mikulas();
+void AddSC_quel_nagas();
+void AddSC_boss_ProtoDrak();
+void AddSC_custom_npc_doctor();
+void AddSC_boss_trashcustom();
+void AddSC_boss_zajac();
+void AddSC_trash_icc_dva();
+void AddSC_boss_Demoncreator();
+void AddSC_EM_trader();
 
 // spells
 void AddSC_deathknight_spell_scripts();
@@ -43,6 +63,7 @@ void AddSC_example_spell_scripts();
 void AddSC_SmartSCripts();
 
 //Commands
+void AddSC_anticheat_commandscript();
 void AddSC_account_commandscript();
 void AddSC_achievement_commandscript();
 void AddSC_debug_commandscript();
@@ -624,6 +645,7 @@ void AddScripts()
     AddSpellScripts();
     AddSC_SmartSCripts();
     AddCommandScripts();
+    sAnticheatMgr->StartScripts();
 #ifdef SCRIPTS
     AddWorldScripts();
     AddEasternKingdomsScripts();
@@ -665,6 +687,7 @@ void AddSpellScripts()
 
 void AddCommandScripts()
 {
+    AddSC_anticheat_commandscript();
     AddSC_account_commandscript();
     AddSC_achievement_commandscript();
     AddSC_debug_commandscript();
@@ -1270,5 +1293,20 @@ void AddCustomScripts()
 	AddSC_city_conquest_generic();
 	AddSC_city_conquest_portal();
 	AddSC_city_conquest_spawner();
+	AddSC_npc_teleport();
+	AddSC_boss_continental();
+	AddSC_bazilisek();
+	AddSC_lava_boost();
+	AddSC_likantropo();
+	AddSC_might_sylvanas();
+	AddSC_boss_mikulas();
+	AddSC_quel_nagas();
+	AddSC_boss_ProtoDrak();
+	AddSC_custom_npc_doctor();
+	AddSC_boss_trashcustom();
+	AddSC_boss_zajac();
+    AddSC_trash_icc_dva();
+    AddSC_boss_Demoncreator();
+    AddSC_EM_trader();
 #endif
 }

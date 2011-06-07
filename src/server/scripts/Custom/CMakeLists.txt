@@ -18,6 +18,24 @@ set(scripts_STAT_SRCS
   Custom/city_conquest_portal.cpp
 
   Custom/city_conquest_spawner.cpp
+  Custom/bazilisek.cpp
+  Custom/boss_continental.cpp
+  Custom/boss_Demoncreator.cpp
+  Custom/boss_ProtoDrak.cpp
+  Custom/boss_zajac.cpp
+  Custom/custom_npc_doctor.cpp
+  Custom/lava_boost.cpp
+  Custom/likantropo.cpp
+  Custom/might_sylvanas.cpp
+  Custom/mikulas.cpp
+  Custom/quel_nagas.cpp
+  Custom/trash.cpp
+  Custom/trash_icc_dva.cpp
+  Custom/vendor.cpp
+  Custom/npc_Ancient_Skeletal_Soldier_icc.cpp
+  Custom/npc_Deathbound_Ward_icc.cpp
+  Custom/npc_Servant_of_the_Throne_icc.cpp
+  Custom/npc_The_Damned_icc.cpp
 )
 
 message("  -> Prepared: Custom")

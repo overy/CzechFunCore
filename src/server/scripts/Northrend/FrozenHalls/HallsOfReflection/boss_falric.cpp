@@ -53,6 +53,11 @@ class boss_falric : public CreatureScript
 public:
     boss_falric() : CreatureScript("boss_falric") { }
 
+	CreatureAI* GetAI(Creature* pCreature) const
+    {
+        return new boss_falricAI(pCreature);
+    }
+
     struct boss_falricAI : public ScriptedAI
     {
         boss_falricAI(Creature *pCreature) : ScriptedAI(pCreature)
@@ -256,23 +261,12 @@ public:
                 m_uiBerserkTimer = 180000;
             } else  m_uiBerserkTimer -= uiDiff;
 
-            if ((uiHopelessnessCount < 1 && HealthBelowPct(66))
-                || (uiHopelessnessCount < 2 && HealthBelowPct(33))
-                || (uiHopelessnessCount < 3 && HealthBelowPct(10)))
-            {
-                uiHopelessnessCount++;
-                DoCast(DUNGEON_MODE(SPELL_HOPELESSNESS,H_SPELL_HOPELESSNESS));
-            }
-
             DoMeleeAttackIfReady();  
 
             return;
         }
     };
-    CreatureAI* GetAI(Creature* pCreature) const
-    {
-        return new boss_falricAI(pCreature);
-    }
+    
 };
 
 void AddSC_boss_falric()
