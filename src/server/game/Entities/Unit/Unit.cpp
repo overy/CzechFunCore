@@ -6547,6 +6547,15 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, AuraEffect* trigger
                     triggered_spell_id = 63975;
                     break;
                 }
+
+		 //TotT t10 2p bonus set - pouze + 15 energy, "no energy cost" nefunguje a nevim jak udelat O.o
+		case 70805:
+		{
+
+		        triggered_spell_id = 70804;						
+                         break;
+		}
+
                 // Deadly Throw Interrupt
                 case 32748:
                 {
