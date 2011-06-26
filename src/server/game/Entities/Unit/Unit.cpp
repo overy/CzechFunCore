@@ -5819,6 +5819,14 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, AuraEffect* trigger
             }
             switch(dummySpell->Id)
             {
+                //T10 2p bonus
+                case 70752:
+ 	         {
+ 	
+ 	          triggered_spell_id = 70753;            
+ 	                       break;
+ 	         }
+
                 // Glyph of Polymorph
                 case 56375:
                 {
@@ -6547,6 +6555,15 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, AuraEffect* trigger
                     triggered_spell_id = 63975;
                     break;
                 }
+
+		 //TotT t10 2p bonus set - pouze + 15 energy, "no energy cost" nefunguje a nevim jak udelat O.o
+		case 70805:
+		{
+
+		        triggered_spell_id = 70804;						
+                         break;
+		}
+
                 // Deadly Throw Interrupt
                 case 32748:
                 {
