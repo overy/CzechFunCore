@@ -122,7 +122,7 @@ public:
                 pInstance->SetData(DATA_BRUTALLUS_EVENT, NOT_STARTED);
         }
 
-        void EnterCombat(Unit * /*who*/)
+        void EnterCombat(Unit* /*who*/)
         {
             DoScriptText(YELL_AGGRO, me);
 

@@ -58,7 +58,7 @@ public:
             SetImmuneToDeathGrip();
         }
 
-        void EnterCombat(Unit * /*who*/)
+        void EnterCombat(Unit* /*who*/)
         {
             _EnterCombat();
             events.ScheduleEvent(EVENT_AURA, 10000);

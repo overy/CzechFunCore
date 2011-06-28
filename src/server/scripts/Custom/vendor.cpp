@@ -7,8 +7,8 @@
 #define mount_other     70                //    želva atp.
 #define mount_legend  70               //    celestial atp.
 #define noncmbt_pet   30              //    non-combat pet
-#define cena_rename   20             //    cena rename
-#define cena_custom   30            //    cena char. customizeru
+#define cena_rename   5             //    cena rename
+#define cena_custom   10            //    cena char. customizeru
 #define cena_frost    15           //    cena EoF
 #define cena_triumph  10          //    cena EoT
 #define cena_conq     5         //    cena EoC

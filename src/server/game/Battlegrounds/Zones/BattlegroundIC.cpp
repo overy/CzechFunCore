@@ -186,7 +186,7 @@ void BattlegroundIC::Update(uint32 diff)
                             siege->Respawn(true);
                     }
 
-                    // we need to confirm this, i am not sure if this every 3 minutes
+                    // we need to confirm if it is every 3 minutes
                     for (uint8 u = (nodePoint[i].faction == TEAM_ALLIANCE ? BG_IC_NPC_DEMOLISHER_1_A : BG_IC_NPC_DEMOLISHER_1_H); u < (nodePoint[i].faction == TEAM_ALLIANCE ? BG_IC_NPC_DEMOLISHER_4_A : BG_IC_NPC_DEMOLISHER_4_H); u++)
                     {
                         if (Creature* demolisher = GetBGCreature(u))
@@ -200,7 +200,7 @@ void BattlegroundIC::Update(uint32 diff)
             }
         }
 
-        // the point is waiting for a change on his banner
+        // the point is waiting for a change on its banner
         if (nodePoint[i].needChange)
         {
             if (nodePoint[i].timer <= diff)
@@ -310,13 +310,13 @@ void BattlegroundIC::AddPlayer(Player *plr)
     SendTransportInit(plr);
 }
 
-void BattlegroundIC::RemovePlayer(Player* plr, uint64 /*guid*/)
+void BattlegroundIC::RemovePlayer(Player* plr, uint64 /*guid*/, uint32 /*team*/)
 {
     plr->RemoveAura(SPELL_QUARRY);
     plr->RemoveAura(SPELL_OIL_REFINERY);
 }
 
-void BattlegroundIC::HandleAreaTrigger(Player * /*Source*/, uint32 /*Trigger*/)
+void BattlegroundIC::HandleAreaTrigger(Player* /*Source*/, uint32 /*Trigger*/)
 {
     // this is wrong way to implement these things. On official it done by gameobject spell cast.
     if (GetStatus() != STATUS_IN_PROGRESS)
@@ -425,7 +425,7 @@ bool BattlegroundIC::SetupBattleground()
     return true;
 }
 
-void BattlegroundIC::HandleKillUnit(Creature *unit, Player* killer)
+void BattlegroundIC::HandleKillUnit(Creature* unit, Player* killer)
 {
     if (GetStatus() != STATUS_IN_PROGRESS)
        return;
@@ -631,7 +631,7 @@ void BattlegroundIC::HandleContestedNodes(ICNodePoint* nodePoint)
 
 void BattlegroundIC::HandleCapturedNodes(ICNodePoint* nodePoint, bool recapture)
 {
-    if(nodePoint->nodeType != NODE_TYPE_REFINERY && nodePoint->nodeType != NODE_TYPE_QUARRY)
+    if (nodePoint->nodeType != NODE_TYPE_REFINERY && nodePoint->nodeType != NODE_TYPE_QUARRY)
     {
         if (!AddSpiritGuide(BG_IC_NPC_SPIRIT_GUIDE_1+nodePoint->nodeType-2,
             BG_IC_SpiritGuidePos[nodePoint->nodeType][0], BG_IC_SpiritGuidePos[nodePoint->nodeType][1],

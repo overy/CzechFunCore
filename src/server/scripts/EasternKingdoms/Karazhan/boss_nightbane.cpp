@@ -145,7 +145,7 @@ public:
             }
         }
 
-        void EnterCombat(Unit * /*who*/)
+        void EnterCombat(Unit* /*who*/)
         {
             HandleTerraceDoors(false);
             me->MonsterYell(YELL_AGGRO, LANG_UNIVERSAL, 0);

@@ -307,7 +307,7 @@ public:
                 pInstance->SetData(DATA_EREDAR_TWINS_EVENT, NOT_STARTED);
         }
 
-        void EnterCombat(Unit * who)
+        void EnterCombat(Unit* who)
         {
             boss_eredar_twinAI::EnterCombat(who);
 
@@ -322,7 +322,7 @@ public:
                 pInstance->SetData(DATA_EREDAR_TWINS_EVENT, IN_PROGRESS);
         }
 
-        void KilledUnit(Unit * /*victim*/)
+        void KilledUnit(Unit* /*victim*/)
         {
             if(rand()%4 == 0)
             {
@@ -541,7 +541,7 @@ public:
                 pInstance->SetData(DATA_EREDAR_TWINS_EVENT, NOT_STARTED);
         }
 
-        void EnterCombat(Unit * who)
+        void EnterCombat(Unit* who)
         {
             boss_eredar_twinAI::EnterCombat(who);
 
@@ -586,7 +586,7 @@ public:
             }
         }
 
-        void KilledUnit(Unit * /*victim*/)
+        void KilledUnit(Unit* /*victim*/)
         {
             if(rand()%4 == 0)
             {
@@ -777,7 +777,7 @@ public:
             KillTimer = 15000;
         }
 
-        void EnterCombat(Unit * /*who*/){}
+        void EnterCombat(Unit* /*who*/){}
 
         void SpellHitTarget(Unit* target,const SpellEntry* spell)
         {

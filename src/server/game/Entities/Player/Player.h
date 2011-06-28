@@ -52,9 +52,6 @@ class PlayerSocial;
 class SpellCastTargets;
 class UpdateMask;
 
-//Playerbot mod
-class PlayerbotAI;
-
 typedef std::deque<Mail*> PlayerMails;
 
 #define PLAYER_MAX_SKILLS           127
@@ -313,7 +310,7 @@ struct RuneInfo
     uint8 BaseRune;
     uint8 CurrentRune;
     uint32 Cooldown;
-    AuraEffect const * ConvertAura;
+    AuraEffect const* ConvertAura;
 };
 
 struct Runes
@@ -334,10 +331,10 @@ struct Runes
 struct EnchantDuration
 {
     EnchantDuration() : item(NULL), slot(MAX_ENCHANTMENT_SLOT), leftduration(0) {};
-    EnchantDuration(Item * _item, EnchantmentSlot _slot, uint32 _leftduration) : item(_item), slot(_slot),
+    EnchantDuration(Item* _item, EnchantmentSlot _slot, uint32 _leftduration) : item(_item), slot(_slot),
         leftduration(_leftduration){ ASSERT(item); };
 
-    Item * item;
+    Item* item;
     EnchantmentSlot slot;
     uint32 leftduration;
 };
@@ -1069,8 +1066,8 @@ typedef std::vector<WowarmoryFeedEntry> WowarmoryFeeds;
 class Player : public Unit, public GridObject<Player>
 {
     friend class WorldSession;
-    friend void Item::AddToUpdateQueueOf(Player *player);
-    friend void Item::RemoveFromUpdateQueueOf(Player *player);
+    friend void Item::AddToUpdateQueueOf(Player* player);
+    friend void Item::RemoveFromUpdateQueueOf(Player* player);
     public:
         explicit Player (WorldSession *session);
         ~Player ();
@@ -1105,7 +1102,7 @@ class Player : public Unit, public GridObject<Player>
         }
         void SummonIfPossible(bool agree);
 
-        bool Create(uint32 guidlow, const std::string& name, uint8 race, uint8 class_, uint8 gender, uint8 skin, uint8 face, uint8 hairStyle, uint8 hairColor, uint8 facialHair, uint8 outfitId);
+        bool Create(uint32 guidlow, CharacterCreateInfo* createInfo);
 
         void Update(uint32 time);
 
@@ -1122,6 +1119,7 @@ class Player : public Unit, public GridObject<Player>
         void SendTransferAborted(uint32 mapid, TransferAbortReason reason, uint8 arg = 0);
         void SendInstanceResetWarning(uint32 mapid, Difficulty difficulty, uint32 time);
 
+        bool CanInteractWithQuestGiver(Object* questGiver);
         Creature* GetNPCIfCanInteractWith(uint64 guid, uint32 npcflagmask);
         GameObject* GetGameObjectIfCanInteractWith(uint64 guid, GameobjectTypes type) const;
 
@@ -1290,7 +1288,7 @@ class Player : public Unit, public GridObject<Player>
         void AddRefundReference(uint32 it);
         void DeleteRefundReference(uint32 it);
 
-        void ApplyEquipCooldown(Item * pItem);
+        void ApplyEquipCooldown(Item* pItem);
         void SetAmmo(uint32 item);
         void RemoveAmmo();
         float GetAmmoDPS() const { return m_ammoDPS; }
@@ -1308,7 +1306,7 @@ class Player : public Unit, public GridObject<Player>
                                                             // in trade, auction, guild bank, mail....
         void MoveItemToInventory(ItemPosCountVec const& dest, Item* pItem, bool update, bool in_characterInventoryDB = false);
                                                             // in trade, guild bank, mail....
-        void RemoveItemDependentAurasAndCasts(Item * pItem);
+        void RemoveItemDependentAurasAndCasts(Item* pItem);
         void DestroyItem(uint8 bag, uint8 slot, bool update);
         void DestroyItemCount(uint32 item, uint32 count, bool update, bool unequip_check = false);
         void DestroyItemCount(Item* item, uint32& count, bool update);
@@ -1379,8 +1377,8 @@ class Player : public Unit, public GridObject<Player>
         void OnGossipSelect(WorldObject* source, uint32 gossipListId, uint32 menuId);
 
         uint32 GetGossipTextId(uint32 menuId);
-        uint32 GetGossipTextId(WorldObject *pSource);
-        uint32 GetDefaultGossipMenuForSource(WorldObject *pSource);
+        uint32 GetGossipTextId(WorldObject* source);
+        static uint32 GetDefaultGossipMenuForSource(WorldObject* source);
 
         /*********************************************************/
         /***                    QUEST SYSTEM                   ***/
@@ -1419,7 +1417,7 @@ class Player : public Unit, public GridObject<Player>
         bool SatisfyQuestDay(Quest const* qInfo, bool msg);
         bool SatisfyQuestWeek(Quest const* qInfo, bool msg);
         bool GiveQuestSourceItem(Quest const *pQuest);
-        bool TakeQuestSourceItem(uint32 quest_id, bool msg);
+        bool TakeQuestSourceItem(uint32 questId, bool msg);
         bool GetQuestRewardStatus(uint32 quest_id) const;
         QuestStatus GetQuestStatus(uint32 quest_id) const;
         void SetQuestStatus(uint32 quest_id, QuestStatus status);
@@ -1547,13 +1545,7 @@ class Player : public Unit, public GridObject<Player>
         void RegenerateHealth();
         void setRegenTimerCount(uint32 time) {m_regenTimerCount = time;}
         void setWeaponChangeTimer(uint32 time) {m_weaponChangeTimer = time;}
-        void RefreshBot(uint32 p_time);
-        void CreateBot(uint32 botentry, uint8 botrace, uint8 botclass);
-        void CreatePlayerBot(std::string name);
-        uint8 GetMaxPlayerBot();
-        //bool isTradeAccepted () {return getTradeData()->IsAccepted();}
-        void GetBotLevelInfo(uint32 race, uint32 class_,uint32 level, PlayerLevelInfo* info) const;
-        std::list<std::string> *GetCharacterList();
+
         uint32 GetMoney() const { return GetUInt32Value (PLAYER_FIELD_COINAGE); }
         void ModifyMoney(int32 d);
         bool HasEnoughMoney(uint32 amount) const { return (GetMoney() >= amount); }
@@ -1582,7 +1574,7 @@ class Player : public Unit, public GridObject<Player>
         uint8 GetComboPoints() { return m_comboPoints; }
         const uint64& GetComboTarget() const { return m_comboTarget; }
 
-        void AddComboPoints(Unit* target, int8 count, Spell * spell = NULL);
+        void AddComboPoints(Unit* target, int8 count, Spell* spell = NULL);
         void GainSpellComboPoints(int8 count);
         void ClearComboPoints();
         void SendComboPoints();
@@ -1644,7 +1636,7 @@ class Player : public Unit, public GridObject<Player>
 
         void SendProficiency(ItemClass itemClass, uint32 itemSubclassMask);
         void SendInitialSpells();
-        bool addSpell(uint32 spell_id, bool active, bool learning, bool dependent, bool disabled);
+        bool addSpell(uint32 spell_id, bool active, bool learning, bool dependent, bool disabled, bool loading = false);
         void learnSpell(uint32 spell_id, bool dependent);
         void removeSpell(uint32 spell_id, bool disabled = false, bool learn_low_rank = true);
         void resetSpells(bool myClassOnly = false);
@@ -1701,11 +1693,12 @@ class Player : public Unit, public GridObject<Player>
         SpellCooldowns const& GetSpellCooldownMap() const { return m_spellCooldowns; }
 
         void AddSpellMod(SpellModifier* mod, bool apply);
-        bool IsAffectedBySpellmod(SpellEntry const *spellInfo, SpellModifier *mod, Spell * spell = NULL);
-        template <class T> T ApplySpellMod(uint32 spellId, SpellModOp op, T &basevalue, Spell * spell = NULL);
-        void RemoveSpellMods(Spell * spell);
-        void RestoreSpellMods(Spell *spell, uint32 ownerAuraId=0);
-        void DropModCharge(SpellModifier * mod, Spell * spell);
+        bool IsAffectedBySpellmod(SpellEntry const *spellInfo, SpellModifier *mod, Spell* spell = NULL);
+        template <class T> T ApplySpellMod(uint32 spellId, SpellModOp op, T &basevalue, Spell* spell = NULL);
+        void RemoveSpellMods(Spell* spell);
+        void RestoreSpellMods(Spell* spell, uint32 ownerAuraId = 0, Aura* aura = NULL);
+        void RestoreAllSpellMods(uint32 ownerAuraId = 0, Aura* aura = NULL);
+        void DropModCharge(SpellModifier* mod, Spell* spell);
         void SetSpellModTakingSpell(Spell* spell, bool apply);
 
         static uint32 const infinityCooldownDelay = MONTH;  // used for set "infinity cooldowns" for spells and check
@@ -1740,7 +1733,7 @@ class Player : public Unit, public GridObject<Player>
         void UpdatePotionCooldown(Spell* spell = NULL);
 
         // global cooldown
-        void AddGlobalCooldown(SpellEntry const *spellInfo, Spell *spell);
+        void AddGlobalCooldown(SpellEntry const *spellInfo, Spell* spell);
         bool HasGlobalCooldown(SpellEntry const *spellInfo) const;
         void RemoveGlobalCooldown(SpellEntry const *spellInfo);
 
@@ -1931,7 +1924,7 @@ class Player : public Unit, public GridObject<Player>
         void SendAttackSwingDeadTarget();
         void SendAttackSwingNotInRange();
         void SendAttackSwingBadFacingAttack();
-        void SendAutoRepeatCancel(Unit *target);
+        void SendAutoRepeatCancel(Unit* target);
         void SendExplorationExperience(uint32 Area, uint32 Experience);
 
         void SendDungeonDifficulty(bool IsInGroup);
@@ -2004,71 +1997,7 @@ class Player : public Unit, public GridObject<Player>
         uint16 GetSkillStep(uint16 skill) const;            // 0...6
         bool HasSkill(uint32 skill) const;
         void learnSkillRewardedSpells(uint32 id, uint32 value);
-        /*********************************************************/
-        /***                     BOT SYSTEM                    ***/
-        /*********************************************************/
-        bool HaveBot(){ if(m_bot == NULL) return false; else return true; }
-        //CreatureInfo const *GetBotInfo();
-        Player *GetObjPlayer(uint64 guid);
-        Creature *GetBot(){ return m_bot; }
-        void SetBot(Creature *bot){ m_bot = bot; }
-        CommandStates GetBotCommandState() { return m_botCommandState; }
-        void SetBotCommandState(CommandStates st)
-        {
-            m_botCommandState = st;
-            switch(st)
-            {
-                case COMMAND_STAY:
-                    //m_bot->MonsterSay("Standing still.", LANG_UNIVERSAL, NULL);
-                    m_bot->StopMoving();
-                    m_bot->GetMotionMaster()->Clear();
-                    m_bot->GetMotionMaster()->MoveIdle();
-                    m_bot->GetCharmInfo()->SetCommandState (COMMAND_STAY);
-                    break;
-                case COMMAND_FOLLOW:
-                    //m_bot->MonsterSay("Following.", LANG_UNIVERSAL, NULL);
-                    m_bot->GetMotionMaster()->MoveFollow(this, PET_FOLLOW_DIST*urand(1, 2), PET_FOLLOW_ANGLE);
-                    m_bot->GetCharmInfo()->SetCommandState(COMMAND_FOLLOW);
-                    m_bot->RemoveFlag (UNIT_FIELD_FLAGS, UNIT_FLAG_IN_COMBAT);
-                    break;
-            }
 
-        }
-        void SetBotReactState(ReactStates st){ m_bot->SetReactState(st); }
-        void RemoveBot();
-        void SetBotAI(CreatureAI *ai){ m_bot_ai = ai; }
-        Creature *GetBotsPet (uint32 entry);
-        void SetBotsPetDied();
-        bool m_botHasPet;
-        Creature *m_botsPet;
-        CreatureAI *GetBotAI(){ return m_bot_ai; }
-        //void SetAmIABot(){m_bot_am_i = true; }
-        //bool AmIABot(){ return (m_bot_ai != NULL); }
-        uint8 GetBotClass(){ return m_bot_class; }
-        uint8 GetBotRace(){ return m_bot_race; }
-        bool GetBotMustBeCreated(){ return m_bot_must_be_created; }
-        bool GetBotMustDie(){ return m_bot_must_die; }
-        uint32 GetBotForm(){ return m_bot_form; }
-
-        void SetBotClass(uint8 botclass){ m_bot_class = botclass; }
-        void SetBotRace(uint8 botrace){ m_bot_race = botrace; }
-        void SetBotMustBeCreated(uint32 m_entry, uint8 m_race, uint8 m_class)
-        {
-            m_bot_must_be_created = true;
-            m_bot_entry_must_be_created = m_entry;
-            m_bot_class_must_be_created = m_class;
-            m_bot_race_must_be_created = m_race;
-            m_bot_ai = NULL;
-        }
-        void SetBotMustDie(){ m_bot_must_die = true; }
-        void SetBotForm(uint32 form){ m_bot_form = form; }
-        void SetBotMustWaitForSpell1(uint32 wait){ m_bot_must_wait_for_spell_1 = wait; }
-        uint32 GetBotMustWaitForSpell1(){ return m_bot_must_wait_for_spell_1; }
-        void SetBotMustWaitForSpell2(uint32 wait){ m_bot_must_wait_for_spell_2 = wait; }
-        uint32 GetBotMustWaitForSpell2(){ return m_bot_must_wait_for_spell_2; }
-        void SetBotMustWaitForSpell3(uint32 wait){ m_bot_must_wait_for_spell_3 = wait; }
-        uint32 GetBotMustWaitForSpell3(){ return m_bot_must_wait_for_spell_3; }
-// end Bot System
         WorldLocation& GetTeleportDest() { return m_teleport_dest; }
         bool IsBeingTeleported() const { return mSemaphoreTeleport_Near || mSemaphoreTeleport_Far; }
         bool IsBeingTeleportedNear() const { return mSemaphoreTeleport_Near; }
@@ -2153,8 +2082,8 @@ class Player : public Unit, public GridObject<Player>
         void ResetAllPowers();
 
         void _ApplyWeaponDependentAuraMods(Item *item, WeaponAttackType attackType, bool apply);
-        void _ApplyWeaponDependentAuraCritMod(Item *item, WeaponAttackType attackType, AuraEffect const * aura, bool apply);
-        void _ApplyWeaponDependentAuraDamageMod(Item *item, WeaponAttackType attackType, AuraEffect const * aura, bool apply);
+        void _ApplyWeaponDependentAuraCritMod(Item *item, WeaponAttackType attackType, AuraEffect const* aura, bool apply);
+        void _ApplyWeaponDependentAuraDamageMod(Item *item, WeaponAttackType attackType, AuraEffect const* aura, bool apply);
 
         void _ApplyItemMods(Item *item, uint8 slot, bool apply);
         void _RemoveAllItemMods();
@@ -2171,9 +2100,9 @@ class Player : public Unit, public GridObject<Player>
         void ApplyItemEquipSpell(Item *item, bool apply, bool form_change = false);
         void ApplyEquipSpell(SpellEntry const* spellInfo, Item* item, bool apply, bool form_change = false);
         void UpdateEquipSpellsAtFormChange();
-        void CastItemCombatSpell(Unit *target, WeaponAttackType attType, uint32 procVictim, uint32 procEx);
+        void CastItemCombatSpell(Unit* target, WeaponAttackType attType, uint32 procVictim, uint32 procEx);
         void CastItemUseSpell(Item *item, SpellCastTargets const& targets, uint8 cast_count, uint32 glyphIndex);
-        void CastItemCombatSpell(Unit *target, WeaponAttackType attType, uint32 procVictim, uint32 procEx, Item *item, ItemTemplate const * proto);
+        void CastItemCombatSpell(Unit* target, WeaponAttackType attType, uint32 procVictim, uint32 procEx, Item *item, ItemTemplate const* proto);
 
         void SendEquipmentSetList();
         void SetEquipmentSet(uint32 index, EquipmentSet eqset);
@@ -2184,7 +2113,7 @@ class Player : public Unit, public GridObject<Player>
         void SendDirectMessage(WorldPacket *data);
         void SendBGWeekendWorldStates();
 
-        void SendAurasForTarget(Unit *target);
+        void SendAurasForTarget(Unit* target);
 
         PlayerMenu* PlayerTalkClass;
         std::vector<ItemSetEffect *> ItemSetEff;
@@ -2476,7 +2405,7 @@ class Player : public Unit, public GridObject<Player>
         bool HasPendingBind() const { return _pendingBind != NULL; }
         void SendRaidInfo();
         void SendSavedInstances();
-        static void ConvertInstancesToGroup(Player *player, Group *group, bool switchLeader);
+        static void ConvertInstancesToGroup(Player* player, Group* group, bool switchLeader);
         bool Satisfy(AccessRequirement const* ar, uint32 target_map, bool report = false);
         bool CheckInstanceLoginValid();
         bool CheckInstanceCount(uint32 instanceId) const
@@ -2501,11 +2430,11 @@ class Player : public Unit, public GridObject<Player>
         /*********************************************************/
 
         Group * GetGroupInvite() { return m_groupInvite; }
-        void SetGroupInvite(Group *group) { m_groupInvite = group; }
+        void SetGroupInvite(Group* group) { m_groupInvite = group; }
         Group * GetGroup() { return m_group.getTarget(); }
         const Group * GetGroup() const { return (const Group*)m_group.getTarget(); }
         GroupReference& GetGroupRef() { return m_group; }
-        void SetGroup(Group *group, int8 subgroup = -1);
+        void SetGroup(Group* group, int8 subgroup = -1);
         uint8 GetSubGroup() const { return m_group.getSubGroup(); }
         uint32 GetGroupUpdateFlag() const { return m_groupUpdateMask; }
         void SetGroupUpdateFlag(uint32 flag) { m_groupUpdateMask |= flag; }
@@ -2514,12 +2443,12 @@ class Player : public Unit, public GridObject<Player>
         Player* GetNextRandomRaidMember(float radius);
         PartyResult CanUninviteFromGroup() const;
         // Battleground Group System
-        void SetBattlegroundRaid(Group *group, int8 subgroup = -1);
+        void SetBattlegroundRaid(Group* group, int8 subgroup = -1);
         void RemoveFromBattlegroundRaid();
         Group * GetOriginalGroup() { return m_originalGroup.getTarget(); }
         GroupReference& GetOriginalGroupRef() { return m_originalGroup; }
         uint8 GetOriginalSubGroup() const { return m_originalGroup.getSubGroup(); }
-        void SetOriginalGroup(Group *group, int8 subgroup = -1);
+        void SetOriginalGroup(Group* group, int8 subgroup = -1);
 
         void SetPassOnGroupLoot(bool bPassOnGroupLoot) { m_bPassOnGroupLoot = bPassOnGroupLoot; }
         bool GetPassOnGroupLoot() const { return m_bPassOnGroupLoot; }
@@ -2544,9 +2473,9 @@ class Player : public Unit, public GridObject<Player>
         void SetBaseRune(uint8 index, RuneType baseRune) { m_runes->runes[index].BaseRune = baseRune; }
         void SetCurrentRune(uint8 index, RuneType currentRune) { m_runes->runes[index].CurrentRune = currentRune; }
         void SetRuneCooldown(uint8 index, uint32 cooldown) { m_runes->runes[index].Cooldown = cooldown; m_runes->SetRuneState(index, (cooldown == 0) ? true : false); }
-        void SetRuneConvertAura(uint8 index, AuraEffect const * aura) { m_runes->runes[index].ConvertAura = aura; }
-        void AddRuneByAuraEffect(uint8 index, RuneType newType, AuraEffect const * aura) { SetRuneConvertAura(index, aura); ConvertRune(index, newType); }
-        void RemoveRunesByAuraEffect(AuraEffect const * aura);
+        void SetRuneConvertAura(uint8 index, AuraEffect const* aura) { m_runes->runes[index].ConvertAura = aura; }
+        void AddRuneByAuraEffect(uint8 index, RuneType newType, AuraEffect const* aura) { SetRuneConvertAura(index, aura); ConvertRune(index, newType); }
+        void RemoveRunesByAuraEffect(AuraEffect const* aura);
         void RestoreBaseRune(uint8 index);
         void ConvertRune(uint8 index, RuneType newType);
         void ResyncRunes(uint8 count);
@@ -2563,17 +2492,12 @@ class Player : public Unit, public GridObject<Player>
         bool HasTitle(CharTitlesEntry const* title) { return HasTitle(title->bit_index); }
         void SetTitle(CharTitlesEntry const* title, bool lost = false);
 
-        //Playerbot mod:
-        void SetPlayerbotAI(PlayerbotAI *ai);
-        PlayerbotAI *GetPlayerbotAI(){ return m_playerbotAI; }
-        bool IsPlayerbot(){ return(GetSession()->GetRemoteAddress() == "bot"); }
-
         //bool isActiveObject() const { return true; }
         bool canSeeSpellClickOn(Creature const* creature) const;
 
         uint32 GetChampioningFaction() const { return m_ChampioningFaction; }
         void SetChampioningFaction(uint32 faction) { m_ChampioningFaction = faction; }
-        Spell * m_spellModTakingSpell;
+        Spell* m_spellModTakingSpell;
 
         float GetAverageItemLevel();
         bool isDebugAreaTriggers;
@@ -2740,7 +2664,7 @@ class Player : public Unit, public GridObject<Player>
 
         SpellModList m_spellMods[MAX_SPELLMOD];
         //uint32 m_pad;
-//        Spell * m_spellModTakingSpell;  // Spell for which charges are dropped in spell::finish
+//        Spell* m_spellModTakingSpell;  // Spell for which charges are dropped in spell::finish
 
         EnchantDurationList m_enchantDuration;
         ItemDurationList m_itemDuration;
@@ -2831,35 +2755,6 @@ class Player : public Unit, public GridObject<Player>
 
         bool isAlwaysDetectableFor(WorldObject const* seer) const;
     private:
-        /*********************************************************/
-        /***                     BOT SYSTEM                    ***/
-        /*********************************************************/
-
-        Creature *m_bot;
-        uint8 m_bot_class;
-        uint8 m_bot_race;
-        uint8 m_MaxPlayerbots;
-        uint8 m_SaveOrgLocation;
-        CommandStates m_botCommandState;
-
-        //bool m_bot_am_I; //am I a bot?
-        bool m_bot_must_be_created;
-        bool m_bot_must_die;
-        uint32 m_bot_entry_must_be_created;
-        uint8 m_bot_class_must_be_created;
-        uint8 m_bot_race_must_be_created;
-        CreatureAI *m_bot_ai;
-
-        uint32 m_bot_form; //Only for Druid
-        uint32 m_bot_must_wait_for_spell_1; //in ms
-        uint32 m_bot_must_wait_for_spell_2; //in ms
-        uint32 m_bot_must_wait_for_spell_3; //in ms
-        uint32 m_botTimer;
-        uint32 m_bot_entry;
-        uint8 newbotclass;
-        uint8 newbotrace;
-        bool m_bot_died;
-// end Bot System
         // internal common parts for CanStore/StoreItem functions
         InventoryResult _CanStoreItem_InSpecificSlot(uint8 bag, uint8 slot, ItemPosCountVec& dest, ItemTemplate const *pProto, uint32& count, bool swap, Item *pSrcItem) const;
         InventoryResult _CanStoreItem_InBag(uint8 bag, ItemPosCountVec& dest, ItemTemplate const *pProto, uint32& count, bool merge, bool non_specialized, Item *pSrcItem, uint8 skip_bag, uint8 skip_slot) const;
@@ -2891,9 +2786,6 @@ class Player : public Unit, public GridObject<Player>
         MapReference m_mapRef;
 
         void UpdateCharmedAI();
-
-        // Playerbot mod
-        PlayerbotAI *m_playerbotAI;
 
         uint32 m_lastFallTime;
         float  m_lastFallZ;

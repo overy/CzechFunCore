@@ -78,7 +78,7 @@ bool VendorItemData::RemoveItem(uint32 item_id)
 VendorItem const* VendorItemData::FindItemCostPair(uint32 item_id, uint32 extendedCost) const
 {
     for (VendorItemList::const_iterator i = m_items.begin(); i != m_items.end(); ++i)
-        if((*i)->item == item_id && (*i)->ExtendedCost == extendedCost)
+        if ((*i)->item == item_id && (*i)->ExtendedCost == extendedCost)
             return *i;
     return NULL;
 }
@@ -142,18 +142,14 @@ lootForPickPocketed(false), lootForBody(false), m_groupLootTimer(0), lootingGrou
 m_PlayerDamageReq(0), m_lootMoney(0), m_lootRecipient(0), m_lootRecipientGroup(0), m_corpseRemoveTime(0), m_respawnTime(0),
 m_respawnDelay(300), m_corpseDelay(60), m_respawnradius(0.0f), m_reactState(REACT_AGGRESSIVE),
 m_defaultMovementType(IDLE_MOTION_TYPE), m_DBTableGuid(0), m_equipmentId(0), m_AlreadyCallAssistance(false),
-m_AlreadySearchedAssistance(false), m_regenHealth(true), m_AI_locked(false), m_isDeadByDefault(false),
-m_meleeDamageSchoolMask(SPELL_SCHOOL_MASK_NORMAL), m_creatureInfo(NULL), m_creatureData(NULL),
-m_formation(NULL)
+m_AlreadySearchedAssistance(false), m_regenHealth(true), m_AI_locked(false), m_meleeDamageSchoolMask(SPELL_SCHOOL_MASK_NORMAL),
+m_creatureInfo(NULL), m_creatureData(NULL), m_formation(NULL)
 {
     m_regenTimer = CREATURE_REGEN_INTERVAL;
     m_valuesCount = UNIT_END;
 
     for (uint8 i = 0; i < CREATURE_MAX_SPELLS; ++i)
         m_spells[i] = 0;
-
-    is_a_bot = false;
-    bot_AI = NULL;
 
     m_CreatureSpellCooldowns.clear();
     m_CreatureCategoryCooldowns.clear();
@@ -232,7 +228,7 @@ void Creature::SearchFormation()
 
 void Creature::RemoveCorpse(bool setSpawnTime)
 {
-    if ((getDeathState() != CORPSE && !m_isDeadByDefault) || (getDeathState() != ALIVE && m_isDeadByDefault))
+    if (getDeathState() != CORPSE)
         return;
 
     m_corpseRemoveTime = time(NULL);
@@ -244,7 +240,7 @@ void Creature::RemoveCorpse(bool setSpawnTime)
         AI()->CorpseRemoved(respawnDelay);
 
     // Should get removed later, just keep "compatibility" with scripts
-    if(setSpawnTime)
+    if (setSpawnTime)
         m_respawnTime = time(NULL) + respawnDelay;
 
     float x, y, z, o;
@@ -474,9 +470,6 @@ void Creature::Update(uint32 diff)
         }
         case CORPSE:
         {
-            if (m_isDeadByDefault)
-                break;
-
             if (m_groupLootTimer && lootingGroupLowGUID)
             {
                 // for delayed spells
@@ -507,15 +500,6 @@ void Creature::Update(uint32 diff)
         }
         case ALIVE:
         {
-            if (m_isDeadByDefault)
-            {
-                if (m_corpseRemoveTime <= time(NULL))
-                {
-                    RemoveCorpse(false);
-                    sLog->outStaticDebug("Removing alive corpse... %u ", GetUInt32Value(OBJECT_FIELD_ENTRY));
-                }
-            }
-
             Unit::Update(diff);
 
             // creature can be dead after Unit::Update call
@@ -1006,14 +990,14 @@ void Creature::SetLootRecipient(Unit *unit)
         return;
 
     m_lootRecipient = player->GetGUID();
-    if (Group *group = player->GetGroup())
+    if (Group* group = player->GetGroup())
         m_lootRecipientGroup = group->GetLowGUID();
 
     SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_TAPPED);
 }
 
 // return true if this creature is tapped by the player or by a member of his group.
-bool Creature::isTappedBy(Player *player) const
+bool Creature::isTappedBy(Player* player) const
 {
     if (player->GetGUID() == m_lootRecipient)
         return true;
@@ -1085,7 +1069,6 @@ void Creature::SaveToDB(uint32 mapid, uint8 spawnMask, uint32 phaseMask)
     data.currentwaypoint = 0;
     data.curhealth = GetHealth();
     data.curmana = GetPower(POWER_MANA);
-    data.is_dead = m_isDeadByDefault;
     // prevent add data integrity problems
     data.movementType = !m_respawnradius && GetDefaultMovementType() == RANDOM_MOTION_TYPE
         ? IDLE_MOTION_TYPE : GetDefaultMovementType();
@@ -1117,7 +1100,6 @@ void Creature::SaveToDB(uint32 mapid, uint8 spawnMask, uint32 phaseMask)
         << (uint32) (0) << ", "                              //currentwaypoint
         << GetHealth() << ", "                               //curhealth
         << GetPower(POWER_MANA) << ", "                      //curmana
-        << (m_isDeadByDefault ? 1 : 0) << ", "               //is_dead
         << GetDefaultMovementType() << ", "                  //default movement generator type
         << npcflag << ", "
         << unit_flags << ", "
@@ -1295,8 +1277,7 @@ bool Creature::LoadFromDB(uint32 guid, Map *map)
     m_respawnradius = data->spawndist;
 
     m_respawnDelay = data->spawntimesecs;
-    m_isDeadByDefault = data->is_dead;
-    m_deathState = m_isDeadByDefault ? DEAD : ALIVE;
+    m_deathState = ALIVE;
 
     m_respawnTime  = sObjectMgr->GetCreatureRespawnTime(m_DBTableGuid, GetInstanceId());
     if (m_respawnTime)                          // respawn on Update
@@ -1407,7 +1388,7 @@ bool Creature::isVisibleForInState(WorldObject const* seer) const
     if (!Unit::isVisibleForInState(seer))
         return false;
 
-    if (isAlive() || (m_isDeadByDefault && m_deathState == CORPSE) || m_corpseRemoveTime > time(NULL))
+    if (isAlive() || m_corpseRemoveTime > time(NULL))
         return true;
 
     return false;
@@ -1444,7 +1425,7 @@ bool Creature::canStartAttack(Unit const* who, bool force) const
             return false;
 
         if (who->isInCombat())
-            if (Unit *victim = who->getAttackerForHelper())
+            if (Unit* victim = who->getAttackerForHelper())
                 if (IsWithinDistInMap(victim, sWorld->getFloatConfig(CONFIG_CREATURE_FAMILY_ASSISTANCE_RADIUS)))
                     force = true;
 
@@ -1498,7 +1479,9 @@ float Creature::GetAttackDistance(Unit const* pl) const
 
 void Creature::setDeathState(DeathState s)
 {
-    if ((s == JUST_DIED && !m_isDeadByDefault)||(s == JUST_ALIVED && m_isDeadByDefault))
+    Unit::setDeathState(s);
+
+    if (s == JUST_DIED)
     {
         m_corpseRemoveTime = time(NULL) + m_corpseDelay;
         m_respawnTime = time(NULL) + m_respawnDelay + m_corpseDelay;
@@ -1506,11 +1489,7 @@ void Creature::setDeathState(DeathState s)
         // always save boss respawn time at death to prevent crash cheating
         if (sWorld->getBoolConfig(CONFIG_SAVE_RESPAWN_TIME_IMMEDIATELY) || isWorldBoss())
             SaveRespawnTime();
-    }
-    Unit::setDeathState(s);
 
-    if (s == JUST_DIED)
-    {
         SetUInt64Value(UNIT_FIELD_TARGET, 0);                // remove target selection in any cases (can be set at aura remove in Unit::setDeathState)
         SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
 
@@ -1611,15 +1590,7 @@ void Creature::Respawn(bool force)
         CreatureTemplate const *cinfo = GetCreatureInfo();
         SelectLevel(cinfo);
 
-        if (m_isDeadByDefault)
-        {
-            setDeathState(JUST_DIED);
-            i_motionMaster.Clear();
-            ClearUnitState(uint32(UNIT_STAT_ALL_STATE));
-            LoadCreaturesAddon(true);
-        }
-        else
-            setDeathState(JUST_ALIVED);
+        setDeathState(JUST_ALIVED);
 
         uint32 displayID = GetNativeDisplayId();
         CreatureModelInfo const *minfo = sObjectMgr->GetCreatureModelRandomGender(&displayID);
@@ -1797,7 +1768,7 @@ Unit* Creature::SelectNearestTarget(float dist) const
     cell.data.Part.reserved = ALL_DISTRICT;
     cell.SetNoCreate();
 
-    Unit *target = NULL;
+    Unit* target = NULL;
 
     {
         if (dist == 0.0f)
@@ -1824,10 +1795,13 @@ Unit* Creature::SelectNearestTargetInAttackDistance(float dist) const
     cell.data.Part.reserved = ALL_DISTRICT;
     cell.SetNoCreate();
 
-    Unit *target = NULL;
+    Unit* target = NULL;
 
-    if (dist > ATTACK_DISTANCE)
-        sLog->outError("Creature (GUID: %u Entry: %u) SelectNearestTargetInAttackDistance called with dist > ATTACK_DISTANCE. Extra distance ignored.", GetGUIDLow(), GetEntry());
+    if (dist > MAX_VISIBILITY_DISTANCE)
+    {
+        sLog->outError("Creature (GUID: %u Entry: %u) SelectNearestTargetInAttackDistance called with dist > MAX_VISIBILITY_DISTANCE. Distance set to ATTACK_DISTANCE.", GetGUIDLow(), GetEntry());
+        dist = ATTACK_DISTANCE;
+    }
 
     {
         Trinity::NearestHostileUnitInAttackDistanceCheck u_check(this, dist);
@@ -1836,8 +1810,8 @@ Unit* Creature::SelectNearestTargetInAttackDistance(float dist) const
         TypeContainerVisitor<Trinity::UnitLastSearcher<Trinity::NearestHostileUnitInAttackDistanceCheck>, WorldTypeMapContainer > world_unit_searcher(searcher);
         TypeContainerVisitor<Trinity::UnitLastSearcher<Trinity::NearestHostileUnitInAttackDistanceCheck>, GridTypeMapContainer >  grid_unit_searcher(searcher);
 
-        cell.Visit(p, world_unit_searcher, *GetMap(), *this, ATTACK_DISTANCE);
-        cell.Visit(p, grid_unit_searcher, *GetMap(), *this, ATTACK_DISTANCE);
+        cell.Visit(p, world_unit_searcher, *GetMap(), *this, ATTACK_DISTANCE > dist ? ATTACK_DISTANCE : dist);
+        cell.Visit(p, grid_unit_searcher, *GetMap(), *this, ATTACK_DISTANCE > dist ? ATTACK_DISTANCE : dist);
     }
 
     return target;
@@ -1960,7 +1934,7 @@ bool Creature::CanAssistTo(const Unit* u, const Unit* enemy, bool checkfaction /
 
 // use this function to avoid having hostile creatures attack
 // friendlies and other mobs they shouldn't attack
-bool Creature::_IsTargetAcceptable(const Unit *target) const
+bool Creature::_IsTargetAcceptable(const Unit* target) const
 {
     ASSERT(target);
 
@@ -1980,7 +1954,7 @@ bool Creature::_IsTargetAcceptable(const Unit *target) const
     }
 
     const Unit *myVictim = getAttackerForHelper();
-    const Unit *targetVictim = target->getAttackerForHelper();
+    const Unit* targetVictim = target->getAttackerForHelper();
 
     // if I'm already fighting target, or I'm hostile towards the target, the target is acceptable
     if (myVictim == target || targetVictim == this || IsHostileTo(target))
@@ -2255,7 +2229,7 @@ void Creature::AllLootRemovedFromCorpse()
     if (!HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE))
     {
         time_t now = time(NULL);
-        if(m_corpseRemoveTime <= now)
+        if (m_corpseRemoveTime <= now)
             return;
 
         float decayRate;

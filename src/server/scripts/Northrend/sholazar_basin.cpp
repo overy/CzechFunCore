@@ -172,7 +172,7 @@ public:
         return true;
     }
 
-    bool OnQuestAccept(Player* /*pPlayer*/, Creature* pCreature, Quest const * /*_Quest*/)
+    bool OnQuestAccept(Player* /*pPlayer*/, Creature* pCreature, Quest const* /*_Quest*/)
     {
         DoScriptText(SAY_QUEST_ACCEPT_IRO, pCreature);
         return false;
@@ -593,7 +593,9 @@ enum trigger_stuff
     NPC_ORACLE_MOODLE_ID = 28122,
     NPC_ORACLE_JALOOT_ID = 28121,
     NPC_ORACLE_LAFOO_ID = 28120,
-    TRIGGER_SIGHT_DIST = 15
+    TRIGGER_SIGHT_DIST = 15,
+    DATA_CHANGEFORCEAURAREMOVE = 666,
+    DATA_CHANGEFORCEDESPAWN = 667
 };
 
 class npc_generic_oracle_treasure_trigger : public CreatureScript
@@ -607,12 +609,14 @@ public:
         {
             initial_cast = true;
             AuraTimer = 3000;
+            bForceAuraRemove = false;
+            bForceDespawn = false;
         }
 
         bool AuraRemoved;
         bool initial_cast;
-        bool ForceAuraRemove;
-        bool ForceDespawn;
+        bool bForceAuraRemove;
+        bool bForceDespawn;
         uint32 AuraTimer;
 
         void Reset() 
@@ -620,18 +624,27 @@ public:
             me->SetReactState(REACT_PASSIVE);
             me->SetDisplayId(17519); //Fix for future db changes, should be always invisible for Player
             AuraRemoved = false;
-            ForceAuraRemove = false;
-            ForceDespawn = false;
+            bForceAuraRemove = false;
+            bForceDespawn = false;
         }
 
         void ChangeForceAuraRemove(bool condition)
         {
-            ForceAuraRemove = condition;
+            bForceAuraRemove = condition;
         }
 
         void ChangeForceDespawn(bool despawn)
         {
-            ForceDespawn = despawn;
+            bForceDespawn = despawn;
+        }
+
+        void SetData(uint32 data, uint32 value)
+        {
+            if(data == DATA_CHANGEFORCEAURAREMOVE)
+                ChangeForceAuraRemove(value == 1);
+
+            if(data == DATA_CHANGEFORCEDESPAWN)
+                ChangeForceDespawn(value == 1);
         }
 
         Player* GetNearPlayer()
@@ -651,10 +664,10 @@ public:
                 initial_cast = false;
             }
 
-            if (ForceDespawn)
+            if (bForceDespawn)
                 me->DespawnOrUnsummon(0);
 
-            if (!ForceAuraRemove)
+            if (!bForceAuraRemove)
             {
                 if (AuraTimer <= diff)
                 {
@@ -824,8 +837,9 @@ public:
                         if (me->GetOwner() && Unit::GetPlayer(*me,me->GetOwner()->GetGUID()) && Unit::GetPlayer(*me,me->GetOwner()->GetGUID())->GetQuestStatus(QUEST_APPEASING_THE_GREAT_RAIN_STONE) == QUEST_STATUS_INCOMPLETE
                                 || Unit::GetPlayer(*me,me->GetOwner()->GetGUID())->GetQuestStatus(QUEST_GODS_LIKE_SHINEY_THINGS) == QUEST_STATUS_INCOMPLETE)
                         {
-                            if (Creature *OracleTrigger = me->FindNearestCreature(TRIGGER_ID, TRIGGER_SEARCH_DIST)) {
-                                CAST_AI(npc_generic_oracle_treasure_trigger::npc_generic_oracle_treasure_triggerAI, OracleTrigger->AI())->ChangeForceAuraRemove(true);
+                            if (Creature *OracleTrigger = me->FindNearestCreature(TRIGGER_ID, TRIGGER_SEARCH_DIST)) 
+                            {
+                                OracleTrigger->AI()->SetData(DATA_CHANGEFORCEAURAREMOVE,1);
                                 SetFollowPaused(true);
                                 if (HasFollowState(STATE_FOLLOW_PAUSED))
                                 {
@@ -881,7 +895,7 @@ public:
                         if (SearchCount > 4)
                         {
                             if (Creature *OracleTrigger = me->FindNearestCreature(TRIGGER_ID, TRIGGER_SEARCH_DIST-8))
-                                CAST_AI(npc_generic_oracle_treasure_trigger::npc_generic_oracle_treasure_triggerAI, OracleTrigger->AI())->ChangeForceDespawn(true);
+                                OracleTrigger->AI()->SetData(DATA_CHANGEFORCEDESPAWN,1);
                             Reset();
                         }
 

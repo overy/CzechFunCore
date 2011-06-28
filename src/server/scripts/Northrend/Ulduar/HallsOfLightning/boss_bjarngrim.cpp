@@ -74,9 +74,7 @@ enum eEnums
 
     STANCE_DEFENSIVE                        = 0,
     STANCE_BERSERKER                        = 1,
-    STANCE_BATTLE                           = 2,
-
-    MAX_DISTANCE_CHARGE                     = 8
+    STANCE_BATTLE                           = 2
 };
 
 /*######
@@ -174,7 +172,7 @@ public:
             DoScriptText(SAY_AGGRO, me);
 
             //must get both lieutenants here and make sure they are with him
-        me->CallForHelp(40.0f);
+            me->CallForHelp(30.0f);
 
             if (m_pInstance)
                 m_pInstance->SetData(TYPE_BJARNGRIM, IN_PROGRESS);
@@ -300,10 +298,11 @@ public:
                 }
                 case STANCE_BERSERKER:
                 {
-                float fDist = me->GetExactDist(me->getVictim()->GetPositionX(), me->getVictim()->GetPositionY(), me->getVictim()->GetPositionZ());
-                if (fDist>=8 && fDist<=25)
+                    if (m_uiIntercept_Timer <= uiDiff)
                     {
-                    DoCastVictim(SPELL_INTERCEPT);
+                        //not much point is this, better random target and more often?
+                        DoCast(me->getVictim(), SPELL_INTERCEPT);
+                        m_uiIntercept_Timer = 45000 + rand()%1000;
                     }
                     else
                         m_uiIntercept_Timer -= uiDiff;
@@ -419,7 +418,7 @@ public:
                     if (Creature* pBjarngrim = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_BJARNGRIM)))
                     {
                         if (pBjarngrim->isAlive())
-                        DoCast(pBjarngrim, DUNGEON_MODE(SPELL_RENEW_STEEL_N,SPELL_RENEW_STEEL_H));
+                            DoCast(pBjarngrim, SPELL_RENEW_STEEL_N);
                     }
                 }
                 m_uiRenewSteel_Timer = 10000 + rand()%4000;

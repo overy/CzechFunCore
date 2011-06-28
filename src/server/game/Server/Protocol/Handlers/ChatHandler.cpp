@@ -39,8 +39,6 @@
 #include "SpellAuraEffects.h"
 #include "Util.h"
 #include "ScriptMgr.h"
-//Playerbot mod
-#include "PlayerbotAI.h"
 
 bool WorldSession::processChatmessageFurtherAfterSecurityChecks(std::string& msg, uint32 lang)
 {
@@ -264,7 +262,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
                 break;
             }
 
-            Player *player = sObjectMgr->GetPlayer(to.c_str());
+            Player* player = sObjectMgr->GetPlayer(to.c_str());
             uint32 tSecurity = GetSecurity();
             uint32 pSecurity = player ? player->GetSession()->GetSecurity() : SEC_PLAYER;
             if (!player || (tSecurity == SEC_PLAYER && pSecurity > SEC_PLAYER && !player->isAcceptWhispers()))
@@ -290,23 +288,13 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
                 return;
             }
 
-            //Playerbot mod: handle whispered command to bot
-            if(player->GetPlayerbotAI())
-            {
-                player->GetPlayerbotAI()->HandleCommand(msg, *GetPlayer());
-                GetPlayer()->m_speakTime = 0;
-                GetPlayer()->m_speakCount = 0;
-            }
-            else {
-            //end Playerbot mod
-                GetPlayer()->Whisper(msg, lang, player->GetGUID());
-            }
+            GetPlayer()->Whisper(msg, lang, player->GetGUID());
         } break;
         case CHAT_MSG_PARTY:
         case CHAT_MSG_PARTY_LEADER:
         {
             // if player is in battleground, he cannot say to battleground members by /p
-            Group *group = GetPlayer()->GetOriginalGroup();
+            Group* group = GetPlayer()->GetOriginalGroup();
             if (!group)
             {
                 group = _player->GetGroup();
@@ -319,20 +307,6 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
 
             sScriptMgr->OnPlayerChat(GetPlayer(), type, lang, msg, group);
 
-            //Playerbot mod: broadcast message to bot members
-            Player *player;
-            for(GroupReference *itr = group->GetFirstMember(); itr != NULL; itr = itr->next())
-            {
-                player = itr->getSource();
-                if(player && player->GetPlayerbotAI())
-                {
-                    player->GetPlayerbotAI()->HandleCommand(msg, *GetPlayer());
-                    GetPlayer()->m_speakTime = 0;
-                    GetPlayer()->m_speakCount = 0;
-                }
-            }
-//end Playerbot mod
-
             WorldPacket data;
             ChatHandler::FillMessageData(&data, this, uint8(type), lang, NULL, 0, msg.c_str(), NULL);
             group->BroadcastPacket(&data, false, group->GetMemberGroup(GetPlayer()->GetGUID()));
@@ -341,7 +315,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
         {
             if (GetPlayer()->GetGuildId())
             {
-                if (Guild *guild = sGuildMgr->GetGuildById(GetPlayer()->GetGuildId()))
+                if (Guild* guild = sGuildMgr->GetGuildById(GetPlayer()->GetGuildId()))
                 {
                     sScriptMgr->OnPlayerChat(GetPlayer(), type, lang, msg, guild);
 
@@ -353,7 +327,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
         {
             if (GetPlayer()->GetGuildId())
             {
-                if (Guild *guild = sGuildMgr->GetGuildById(GetPlayer()->GetGuildId()))
+                if (Guild* guild = sGuildMgr->GetGuildById(GetPlayer()->GetGuildId()))
                 {
                     sScriptMgr->OnPlayerChat(GetPlayer(), type, lang, msg, guild);
 
@@ -364,7 +338,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
         case CHAT_MSG_RAID:
         {
             // if player is in battleground, he cannot say to battleground members by /ra
-            Group *group = GetPlayer()->GetOriginalGroup();
+            Group* group = GetPlayer()->GetOriginalGroup();
             if (!group)
             {
                 group = GetPlayer()->GetGroup();
@@ -381,7 +355,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
         case CHAT_MSG_RAID_LEADER:
         {
             // if player is in battleground, he cannot say to battleground members by /ra
-            Group *group = GetPlayer()->GetOriginalGroup();
+            Group* group = GetPlayer()->GetOriginalGroup();
             if (!group)
             {
                 group = GetPlayer()->GetGroup();
@@ -397,7 +371,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
         } break;
         case CHAT_MSG_RAID_WARNING:
         {
-            Group *group = GetPlayer()->GetGroup();
+            Group* group = GetPlayer()->GetGroup();
             if (!group || !group->isRaidGroup() || !(group->IsLeader(GetPlayer()->GetGUID()) || group->IsAssistant(GetPlayer()->GetGUID())) || group->isBGGroup())
                 return;
 
@@ -411,7 +385,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
         case CHAT_MSG_BATTLEGROUND:
         {
             //battleground raid is always in Player->GetGroup(), never in GetOriginalGroup()
-            Group *group = GetPlayer()->GetGroup();
+            Group* group = GetPlayer()->GetGroup();
             if (!group || !group->isBGGroup())
                 return;
 
@@ -424,7 +398,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
         case CHAT_MSG_BATTLEGROUND_LEADER:
         {
             // battleground raid is always in Player->GetGroup(), never in GetOriginalGroup()
-            Group *group = GetPlayer()->GetGroup();
+            Group* group = GetPlayer()->GetGroup();
             if (!group || !group->isBGGroup() || !group->IsLeader(GetPlayer()->GetGUID()))
                 return;
 
@@ -610,7 +584,7 @@ void WorldSession::HandleChatIgnoredOpcode(WorldPacket& recv_data)
     recv_data >> iguid;
     recv_data >> unk;                                       // probably related to spam reporting
 
-    Player *player = sObjectMgr->GetPlayer(iguid);
+    Player* player = sObjectMgr->GetPlayer(iguid);
     if (!player || !player->GetSession())
         return;
 

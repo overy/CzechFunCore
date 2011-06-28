@@ -481,7 +481,7 @@ class BattlegroundSA : public Battleground
         void EndBattleground(uint32 winner);
 
         /// CAlled when a player leave battleground
-        void RemovePlayer(Player *plr, uint64 guid);
+        void RemovePlayer(Player *plr, uint64 guid, uint32 team);
         void HandleAreaTrigger(Player *Source, uint32 Trigger);
 
         /* Scorekeeping */
@@ -536,9 +536,9 @@ class BattlegroundSA : public Battleground
         void UpdateDemolisherSpawns();
 
         /// Send packet to player for create boats (client part)
-        void SendTransportInit(Player *player);
+        void SendTransportInit(Player* player);
         /// Send packet to player for destroy boats (client part)
-        void SendTransportsRemove(Player * player);
+        void SendTransportsRemove(Player* player);
 
         /// Id of attacker team
         TeamId Attackers;

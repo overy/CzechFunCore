@@ -663,6 +663,7 @@ public:
             uiRandomYell_Timer = urand(10000,20000);
 
             bUsedMindcontroll = false;
+            uiAmountKeeperActive = -1;
         }
 
         void JustDied(Unit *killer)
@@ -714,7 +715,6 @@ public:
             if(m_pInstance)
                 m_pInstance->SetBossState(TYPE_YOGGSARON,IN_PROGRESS);
 
-            uiAmountKeeperActive = CountKeepersActive();
             lastBrainAction = Actions(0);
         }
 
@@ -722,7 +722,7 @@ public:
         {
             if(m_Phase >= PHASE_BRAIN)
             {
-                if(emote == TEXTEMOTE_KISS)
+                if(emote == TEXT_EMOTE_KISS)
                 {
                     if(pPlayer->HasAchieved(RAID_MODE(ACHIEVMENT_KISS_AND_MAKE_UP_10,ACHIEVMENT_KISS_AND_MAKE_UP_25)))
                         return;
@@ -854,9 +854,9 @@ public:
                 case 1:
                     m_pInstance->DoCompleteAchievement(RAID_MODE(ACHIEVMENT_ONE_LIGHTS_IN_THE_DARKNESS_10,ACHIEVMENT_ONE_LIGHTS_IN_THE_DARKNESS_25));
                 case 2:
-                    m_pInstance->DoCompleteAchievement(RAID_MODE(ACHIEVMENT_ONE_LIGHTS_IN_THE_DARKNESS_10,ACHIEVMENT_ONE_LIGHTS_IN_THE_DARKNESS_25));
+                    m_pInstance->DoCompleteAchievement(RAID_MODE(ACHIEVMENT_TWO_LIGHTS_IN_THE_DARKNESS_10,ACHIEVMENT_TWO_LIGHTS_IN_THE_DARKNESS_25));
                 case 3:
-                    m_pInstance->DoCompleteAchievement(RAID_MODE(ACHIEVMENT_ONE_LIGHTS_IN_THE_DARKNESS_10,ACHIEVMENT_ONE_LIGHTS_IN_THE_DARKNESS_25));
+                    m_pInstance->DoCompleteAchievement(RAID_MODE(ACHIEVMENT_THREE_LIGHTS_IN_THE_DARKNESS_10,ACHIEVMENT_THREE_LIGHTS_IN_THE_DARKNESS_25));
                     break;
                 default: break;
                 }
@@ -889,6 +889,7 @@ public:
             case PHASE_SARA:
                 DoSpawnKeeperForSupport();
                 SetSanityAura();
+                uiAmountKeeperActive = CountKeepersActive();
                 break;
             case PHASE_BRAIN:
                 me->SetHealth(me->GetMaxHealth());
@@ -1014,7 +1015,7 @@ public:
             case ENTRY_DEATHSWORN_ZEALOT:
             case ENTRY_SUIT_OF_ARMOR:
                 pSummoned->SetReactState(REACT_DEFENSIVE);
-                pSummoned->setFaction(4);
+                pSummoned->setFaction(15);
                 break;
             case ENTRY_KEEPER_FREYA:
             case ENTRY_KEEPER_HODIR:
@@ -1494,7 +1495,7 @@ public:
                                             yogg->CastSpell(yogg,SPELL_SUMMON_CURRUPTOR_TENTACLE,true);
                                     }
                                 }
-                                uiTentacle_Timer =  uiBrainEvents_Count < 4 ? urand(10000,20000) : urand(5000,10000);
+                                uiTentacle_Timer =  uiBrainEvents_Count < 4 ? urand(5000,10000) : urand(2000,5000);
                             }else uiTentacle_Timer -= diff;
                         }else
                         {
@@ -2231,7 +2232,6 @@ public:
         npc_influence_tentacleAI(Creature *c) : Scripted_NoMovementAI(c)
         {
             me->SetReactState(REACT_DEFENSIVE);
-            me->setFaction(7);
         }
 
         void JustDied(Unit* /*killer*/)
@@ -2239,13 +2239,27 @@ public:
             me->RemoveAurasDueToSpell(SPELL_TENTACLE_VOID_ZONE);
         }
 
+        void Reset()
+        {
+        }
+
+        void DamageTaken(Unit* attacker, uint32 &damage)
+        {
+            if(attacker->ToPlayer())
+                me->CastCustomSpell(SPELL_GRIM_REPRISAL_DAMAGE, SPELLVALUE_BASE_POINT0, int32(damage *0.60), attacker,true);
+        }
+
         void EnterCombat(Unit* attacker)
         {
-            me->UpdateEntry(ENTRY_INFULENCE_TENTACLE);
-            me->setFaction(14);
-            DoCast(SPELL_GRIM_REPRISAL);
+            if(me->GetEntry() != ENTRY_INFULENCE_TENTACLE)
+            {
+                me->UpdateEntry(ENTRY_INFULENCE_TENTACLE);
+                me->setFaction(14);
+                me->setRegeneratingHealth(false);
+                DoCast(SPELL_GRIM_REPRISAL);
 
-            DoCast(me,SPELL_TENTACLE_VOID_ZONE,true);
+                DoCast(me,SPELL_TENTACLE_VOID_ZONE,true);
+            }
         }
     };
 };
@@ -3012,9 +3026,10 @@ class spell_summon_tentacle_position : public SpellScriptLoader
 
             void ChangeSummonPos(SpellEffIndex /*effIndex*/)
             {
-                WorldLocation* summonPos = GetTargetDest();
-                if(Unit* caster = GetCaster())
-                    summonPos->m_positionZ = caster->GetMap()->GetHeight(summonPos->GetPositionX(),summonPos->GetPositionY(),summonPos->GetPositionZ(),true,50.0f);
+                WorldLocation summonPos = *GetTargetDest();
+                Position offset = {0.0f, 0.0f, 20.0f, 0.0f};
+                summonPos.RelocateOffset(offset);
+                SetTargetDest(summonPos);
             }
 
             void Register()
@@ -3218,6 +3233,7 @@ public:
         npc_keeper_helpAI(Creature *c) : Scripted_NoMovementAI(c)
         {
             m_pInstance = c->GetInstanceScript();
+            me->setFaction(35);
         }
 
         InstanceScript* m_pInstance;
@@ -3297,6 +3313,7 @@ UPDATE creature_template SET modelid1 = 17612, modelid2 = 17612 WHERE entry = 33
 UPDATE creature_template SET minlevel = 80, maxlevel = 80, scriptname = 'npc_laughting_skull' WHERE entry = 33990;
 UPDATE creature_template SET modelid1 = 15880, modelid2 = 15880 WHERE entry = 33990;
 UPDATE creature_template SET scriptname = 'npc_keeper_help' WHERE entry IN(33241,33244,33242,33213);
+UPDATE `creature_template` SET `minlevel`=80  , `maxlevel`=80 WHERE `entry` = 33943;
 
 UPDATE gameobject_template SET scriptname = 'go_flee_to_surface' WHERE entry = 194625;
 UPDATE item_template SET scriptname = 'item_unbound_fragments_of_valanyr' WHERE entry = 45896;

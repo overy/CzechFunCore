@@ -57,16 +57,14 @@ enum Creatures
     NPC_JEDOGA_CONTROLLER                         = 30181
 };
 
-enum Achievements
-{
-    ACHIEV_VOLUNTEER_WORK                         = 2056
-};
-
 const Position JedogaPosition[2] =
 {
     {372.330994f, -705.278015f, -0.624178f,  5.427970f},
     {372.330994f, -705.278015f, -16.179716f, 5.427970f}
 };
+
+#define ACTION_INITIAND_KILLED                    1
+#define DATA_VOLUNTEER_WORK                       2
 
 class boss_jedoga_shadowseeker : public CreatureScript
 {
@@ -84,32 +82,32 @@ public:
 
         InstanceScript* pInstance;
 
+        uint32 uiOpFerTimer;
         uint32 uiCycloneTimer;
         uint32 uiBoltTimer;
         uint32 uiThunderTimer;
-        uint32 uiHealthAmountModifier;
 
         bool bPreDone;
         bool bOpFerok;
         bool bOnGround;
         bool bOpFerokFail;
         bool bCanDown;
-        bool bAchiev;
-
+        bool volunteerWork;
         bool bFirstTime;
 
         void Reset()
         {
+            uiOpFerTimer = urand(15*IN_MILLISECONDS, 20*IN_MILLISECONDS);
+
             uiCycloneTimer = 3*IN_MILLISECONDS;
             uiBoltTimer = 7*IN_MILLISECONDS;
             uiThunderTimer = 12*IN_MILLISECONDS;
-            uiHealthAmountModifier = 1;
 
             bOpFerok = false;
             bOpFerokFail = false;
             bOnGround = false;
             bCanDown = false;
-            bAchiev = true;
+            volunteerWork = true;
 
             if (pInstance)
             {
@@ -120,7 +118,6 @@ public:
                 pInstance->SetData64(DATA_ADD_JEDOGA_OPFER, 0);
                 pInstance->SetData(DATA_JEDOGA_RESET_INITIANDS, 0);
             }
-
             MoveUp();
 
             bFirstTime = false;
@@ -156,12 +153,21 @@ public:
         {
             DoScriptText(TEXT_DEATH, me);
             if (pInstance)
-            {
                 pInstance->SetData(DATA_JEDOGA_SHADOWSEEKER_EVENT, DONE);
+        }
 
-                if (IsHeroic() && bAchiev)
-                    pInstance->DoCompleteAchievement(ACHIEV_VOLUNTEER_WORK);
-            }
+        void DoAction(int32 const action)
+        {
+            if (action == ACTION_INITIAND_KILLED)
+                volunteerWork = false;
+        }
+
+        uint32 GetData(uint32 type)
+        {
+            if (type == DATA_VOLUNTEER_WORK)
+                return volunteerWork ? 1 : 0;
+
+            return 0;
         }
 
         void MoveInLineOfSight(Unit* who)
@@ -248,10 +254,10 @@ public:
             me->GetMotionMaster()->MovePoint(0, JedogaPosition[0]);
 
             pInstance->SetData(DATA_JEDOGA_TRIGGER_SWITCH, 1);
-            if (pInstance->GetData(DATA_JEDOGA_SHADOWSEEKER_EVENT) == IN_PROGRESS) 
-                OpferRufen();
+            if (pInstance->GetData(DATA_JEDOGA_SHADOWSEEKER_EVENT) == IN_PROGRESS) OpferRufen();
 
             bOnGround = false;
+            uiOpFerTimer = urand(15*IN_MILLISECONDS, 30*IN_MILLISECONDS);
         }
 
         void OpferRufen()
@@ -278,7 +284,6 @@ public:
 
             bOpFerok = false;
             bCanDown = true;
-            bAchiev = false;
         }
 
         void UpdateAI(const uint32 diff)
@@ -289,8 +294,7 @@ public:
             if (pInstance->GetData(DATA_JEDOGA_SHADOWSEEKER_EVENT) != IN_PROGRESS && pInstance->GetData(DATA_ALL_INITIAND_DEAD))
                 MoveDown();
 
-            if (bOpFerok && !bOnGround && !bCanDown) 
-                Opfern();
+            if (bOpFerok && !bOnGround && !bCanDown) Opfern();
 
             if (bOpFerokFail && !bOnGround && !bCanDown)
                 bCanDown = true;
@@ -308,40 +312,30 @@ public:
 
                 if (uiCycloneTimer <= diff)
                 {
-                    if(!me->IsNonMeleeSpellCasted(false))
-                    {
-                        DoCast(me, DUNGEON_MODE(SPELL_CYCLONE_STRIKE, SPELL_CYCLONE_STRIKE_H), false);
-                        uiCycloneTimer = urand(10*IN_MILLISECONDS, 15*IN_MILLISECONDS);
-                    }
+                    DoCast(me, SPELL_CYCLONE_STRIKE, false);
+                    uiCycloneTimer = urand(15*IN_MILLISECONDS, 30*IN_MILLISECONDS);
                 } else uiCycloneTimer -= diff;
 
                 if (uiBoltTimer <= diff)
                 {
-                    if(!me->IsNonMeleeSpellCasted(false))
-                    {
-                        if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, -5, true))
-                            me->CastSpell(pTarget, DUNGEON_MODE(SPELL_LIGHTNING_BOLT, SPELL_LIGHTNING_BOLT_H), false);
+                    if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                        me->CastSpell(pTarget, DUNGEON_MODE(SPELL_LIGHTNING_BOLT, SPELL_LIGHTNING_BOLT_H), false);
 
-                        uiBoltTimer = urand(8*IN_MILLISECONDS, 12*IN_MILLISECONDS);
-                    }
+                    uiBoltTimer = urand(15*IN_MILLISECONDS, 30*IN_MILLISECONDS);
                 } else uiBoltTimer -= diff;
 
                 if (uiThunderTimer <= diff)
                 {
-                    if(!me->IsNonMeleeSpellCasted(false))
-                    {
-                        if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
-                            me->CastSpell(pTarget, DUNGEON_MODE(SPELL_THUNDERSHOCK, SPELL_THUNDERSHOCK_H), false);
+                    if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                        me->CastSpell(pTarget, DUNGEON_MODE(SPELL_THUNDERSHOCK, SPELL_THUNDERSHOCK_H), false);
 
-                        uiThunderTimer = urand(15*IN_MILLISECONDS, 20*IN_MILLISECONDS);
-                    }
+                    uiThunderTimer = urand(15*IN_MILLISECONDS, 30*IN_MILLISECONDS);
                 } else uiThunderTimer -= diff;
 
-                if (me->HealthBelowPct(100 - 25 * uiHealthAmountModifier))
-                {
-                    ++uiHealthAmountModifier;
+                if (uiOpFerTimer <= diff)
                     MoveUp();
-                }
+                else
+                    uiOpFerTimer -= diff;
 
                 DoMeleeAttackIfReady();
             }
@@ -398,43 +392,53 @@ public:
 
         void JustDied(Unit* Killer)
         {
-            if (!Killer || !pInstance) return;
+            if (!Killer || !pInstance)
+                return;
 
             if (bWalking)
             {
-                Creature* boss = me->GetMap()->GetCreature(pInstance->GetData64(DATA_JEDOGA_SHADOWSEEKER));
-                if (boss && !CAST_AI(boss_jedoga_shadowseeker::boss_jedoga_shadowseekerAI, boss->AI())->bOpFerok) CAST_AI(boss_jedoga_shadowseeker::boss_jedoga_shadowseekerAI, boss->AI())->bOpFerokFail = true;
+                if (Creature* boss = ObjectAccessor::GetCreature(*me, pInstance->GetData64(DATA_JEDOGA_SHADOWSEEKER)))
+                {
+                    if (!CAST_AI(boss_jedoga_shadowseeker::boss_jedoga_shadowseekerAI, boss->AI())->bOpFerok)
+                        CAST_AI(boss_jedoga_shadowseeker::boss_jedoga_shadowseekerAI, boss->AI())->bOpFerokFail = true;
 
-                if (Killer->GetTypeId() == TYPEID_PLAYER) pInstance->SetData(DATA_INITIAND_KILLED, 1);
+                    boss->AI()->DoAction(ACTION_INITIAND_KILLED);
+                }
+
                 pInstance->SetData64(DATA_ADD_JEDOGA_OPFER, 0);
 
                 bWalking = false;
             }
-            if (Killer->GetTypeId() == TYPEID_PLAYER) pInstance->SetData64(DATA_PL_JEDOGA_TARGET, Killer->GetGUID());
+            if (Killer->GetTypeId() == TYPEID_PLAYER)
+                pInstance->SetData64(DATA_PL_JEDOGA_TARGET, Killer->GetGUID());
         }
 
         void EnterCombat(Unit* who)
         {
-            if ((pInstance && pInstance->GetData(DATA_JEDOGA_SHADOWSEEKER_EVENT) == IN_PROGRESS) || !who) return;
+            if ((pInstance && pInstance->GetData(DATA_JEDOGA_SHADOWSEEKER_EVENT) == IN_PROGRESS) || !who)
+                return;
         }
 
         void AttackStart(Unit* victim)
         {
-            if ((pInstance && pInstance->GetData(DATA_JEDOGA_SHADOWSEEKER_EVENT) == IN_PROGRESS) || !victim) return;
+            if ((pInstance && pInstance->GetData(DATA_JEDOGA_SHADOWSEEKER_EVENT) == IN_PROGRESS) || !victim)
+                return;
 
             ScriptedAI::AttackStart(victim);
         }
 
         void MoveInLineOfSight(Unit* who)
         {
-            if ((pInstance && pInstance->GetData(DATA_JEDOGA_SHADOWSEEKER_EVENT) == IN_PROGRESS) || !who) return;
+            if ((pInstance && pInstance->GetData(DATA_JEDOGA_SHADOWSEEKER_EVENT) == IN_PROGRESS) || !who)
+                return;
 
             ScriptedAI::MoveInLineOfSight(who);
         }
 
         void MovementInform(uint32 uiType, uint32 uiPointId)
         {
-            if (uiType != POINT_MOTION_TYPE || !pInstance) return;
+            if (uiType != POINT_MOTION_TYPE || !pInstance)
+                return;
 
             switch(uiPointId)
             {
@@ -458,8 +462,6 @@ public:
             {
                 if (me->GetGUID() == pInstance->GetData64(DATA_ADD_JEDOGA_OPFER) && !bWalking)
                 {
-                    me->SetMaxHealth(DUNGEON_MODE(25705, 58648));        //TODO: implement npc entry 30385
-                    me->SetHealth(DUNGEON_MODE(25705, 58648));
                     me->RemoveAurasDueToSpell(SPELL_SPHERE_VISUAL);
                     me->ApplySpellImmune(0, IMMUNITY_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, false);
                     me->ApplySpellImmune(0, IMMUNITY_DAMAGE, SPELL_SCHOOL_MASK_MAGIC, false);
@@ -530,7 +532,6 @@ public:
     {
         npc_jedogas_aufseher_triggerAI(Creature* c) : Scripted_NoMovementAI(c)
         {
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE); //database?
             pInstance = c->GetInstanceScript();
             bRemoved = false;
             bRemoved2 = false;
@@ -596,9 +597,30 @@ public:
     }
 };
 
+class achievement_volunteer_work : public AchievementCriteriaScript
+{
+    public:
+        achievement_volunteer_work() : AchievementCriteriaScript("achievement_volunteer_work")
+        {
+        }
+
+        bool OnCheck(Player* /*player*/, Unit* target)
+        {
+            if (!target)
+                return false;
+
+            if (Creature* Jedoga = target->ToCreature())
+                if (Jedoga->AI()->GetData(DATA_VOLUNTEER_WORK))
+                    return true;
+
+            return false;
+        }
+};
+
 void AddSC_boss_jedoga_shadowseeker()
 {
-    new boss_jedoga_shadowseeker;
-    new mob_jedoga_initiand;
-    new npc_jedogas_aufseher_trigger;
+    new boss_jedoga_shadowseeker();
+    new mob_jedoga_initiand();
+    new npc_jedogas_aufseher_trigger();
+    new achievement_volunteer_work();
 }

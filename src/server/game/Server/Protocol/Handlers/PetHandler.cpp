@@ -319,7 +319,7 @@ void WorldSession::HandlePetActionHelper(Unit *pet, uint64 guid1, uint16 spellid
                 pet->GetCharmInfo()->SetIsFollowing(false);
             }
 
-            Spell *spell = new Spell(pet, spellInfo, false);
+            Spell* spell = new Spell(pet, spellInfo, false);
 
             SpellCastResult result = spell->CheckPetCast(unit_target);
 
@@ -332,7 +332,7 @@ void WorldSession::HandlePetActionHelper(Unit *pet, uint64 guid1, uint16 spellid
                     if (unit_target->GetTypeId() == TYPEID_PLAYER)
                         pet->SendUpdateToPlayer((Player*)unit_target);
                 }
-                else if (Unit *unit_target2 = spell->m_targets.getUnitTarget())
+                else if (Unit *unit_target2 = spell->m_targets.GetUnitTarget())
                 {
                     pet->SetInFront(unit_target2);
                     if (unit_target2->GetTypeId() == TYPEID_PLAYER)
@@ -348,7 +348,7 @@ void WorldSession::HandlePetActionHelper(Unit *pet, uint64 guid1, uint16 spellid
             {
                 pet->ToCreature()->AddCreatureSpellCooldown(spellid);
 
-                unit_target = spell->m_targets.getUnitTarget();
+                unit_target = spell->m_targets.GetUnitTarget();
 
                 //10% chance to play special pet attack talk, else growl
                 //actually this only seems to happen on special spells, fire shield for imp, torment for voidwalker, but it's stupid to check every spell
@@ -769,12 +769,12 @@ void WorldSession::HandlePetCastSpellOpcode(WorldPacket& recvPacket)
         return;
 
     SpellCastTargets targets;
-    targets.read(recvPacket, caster);
+    targets.Read(recvPacket, caster);
     HandleClientCastFlags(recvPacket, castFlags, targets);
 
     caster->ClearUnitState(UNIT_STAT_FOLLOW);
 
-    Spell *spell = new Spell(caster, spellInfo, false);
+    Spell* spell = new Spell(caster, spellInfo, false);
     spell->m_cast_count = castCount;                    // probably pending spell cast
     spell->m_targets = targets;
 

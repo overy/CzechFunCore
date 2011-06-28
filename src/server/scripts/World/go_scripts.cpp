@@ -65,7 +65,7 @@ class go_cat_figurine : public GameObjectScript
 public:
     go_cat_figurine() : GameObjectScript("go_cat_figurine") { }
 
-    bool OnGossipHello(Player *pPlayer, GameObject * /*pGO*/)
+    bool OnGossipHello(Player *pPlayer, GameObject* /*pGO*/)
     {
         pPlayer->CastSpell(pPlayer, SPELL_SUMMON_GHOST_SABER, true);
         return false;
@@ -144,7 +144,7 @@ class go_barov_journal : public GameObjectScript
 public:
     go_barov_journal() : GameObjectScript("go_barov_journal") { }
 
-    bool OnGossipHello(Player *pPlayer, GameObject * /*pGO*/)
+    bool OnGossipHello(Player *pPlayer, GameObject* /*pGO*/)
     {
         if (pPlayer->HasSkill(SKILL_TAILORING) && pPlayer->GetBaseSkillValue(SKILL_TAILORING) >= 280 && !pPlayer->HasSpell(26086))
         {
@@ -163,7 +163,7 @@ class go_field_repair_bot_74A : public GameObjectScript
 public:
     go_field_repair_bot_74A() : GameObjectScript("go_field_repair_bot_74A") { }
 
-    bool OnGossipHello(Player *pPlayer, GameObject * /*pGO*/)
+    bool OnGossipHello(Player *pPlayer, GameObject* /*pGO*/)
     {
         if (pPlayer->HasSkill(SKILL_ENGINERING) && pPlayer->GetBaseSkillValue(SKILL_ENGINERING) >= 300 && !pPlayer->HasSpell(22704))
         {
@@ -210,7 +210,7 @@ class go_orb_of_command : public GameObjectScript
 public:
     go_orb_of_command() : GameObjectScript("go_orb_of_command") { }
 
-    bool OnGossipHello(Player *pPlayer, GameObject * /*pGO*/)
+    bool OnGossipHello(Player *pPlayer, GameObject* /*pGO*/)
     {
         if (pPlayer->GetQuestRewardStatus(7761))
             pPlayer->CastSpell(pPlayer, 23460, true);
@@ -228,7 +228,7 @@ class go_tablet_of_madness : public GameObjectScript
 public:
     go_tablet_of_madness() : GameObjectScript("go_tablet_of_madness") { }
 
-    bool OnGossipHello(Player *pPlayer, GameObject * /*pGO*/)
+    bool OnGossipHello(Player *pPlayer, GameObject* /*pGO*/)
     {
         if (pPlayer->HasSkill(SKILL_ALCHEMY) && pPlayer->GetSkillValue(SKILL_ALCHEMY) >= 300 && !pPlayer->HasSpell(24266))
         {
@@ -269,7 +269,7 @@ class go_jump_a_tron : public GameObjectScript
 public:
     go_jump_a_tron() : GameObjectScript("go_jump_a_tron") { }
 
-    bool OnGossipHello(Player *pPlayer, GameObject * /*pGO*/)
+    bool OnGossipHello(Player *pPlayer, GameObject* /*pGO*/)
     {
         if (pPlayer->GetQuestStatus(10111) == QUEST_STATUS_INCOMPLETE)
          pPlayer->CastSpell(pPlayer, 33382, true);
@@ -379,7 +379,7 @@ class go_resonite_cask : public GameObjectScript
 public:
     go_resonite_cask() : GameObjectScript("go_resonite_cask") { }
 
-    bool OnGossipHello(Player * /*pPlayer*/, GameObject *pGO)
+    bool OnGossipHello(Player* /*pPlayer*/, GameObject *pGO)
     {
         if (pGO->GetGoType() == GAMEOBJECT_TYPE_GOOBER)
             pGO->SummonCreature(NPC_GOGGEROC, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 300000);
@@ -470,7 +470,7 @@ class go_southfury_moonstone : public GameObjectScript
 public:
     go_southfury_moonstone() : GameObjectScript("go_southfury_moonstone") { }
 
-    bool OnGossipHello(Player *pPlayer, GameObject * /*pGO*/)
+    bool OnGossipHello(Player *pPlayer, GameObject* /*pGO*/)
     {
         //implicitTarget=48 not implemented as of writing this code, and manual summon may be just ok for our purpose
         //pPlayer->CastSpell(pPlayer, SPELL_SUMMON_RIZZLE, false);
@@ -498,7 +498,7 @@ class go_tele_to_dalaran_crystal : public GameObjectScript
 public:
     go_tele_to_dalaran_crystal() : GameObjectScript("go_tele_to_dalaran_crystal") { }
 
-    bool OnGossipHello(Player *pPlayer, GameObject * /*pGO*/)
+    bool OnGossipHello(Player *pPlayer, GameObject* /*pGO*/)
     {
         if (pPlayer->GetQuestRewardStatus(QUEST_TELE_CRYSTAL_FLAG))
         {
@@ -520,7 +520,7 @@ class go_tele_to_violet_stand : public GameObjectScript
 public:
     go_tele_to_violet_stand() : GameObjectScript("go_tele_to_violet_stand") { }
 
-    bool OnGossipHello(Player *pPlayer, GameObject * /*pGO*/)
+    bool OnGossipHello(Player *pPlayer, GameObject* /*pGO*/)
     {
         if (pPlayer->GetQuestRewardStatus(QUEST_LEARN_LEAVE_RETURN) || pPlayer->GetQuestStatus(QUEST_LEARN_LEAVE_RETURN) == QUEST_STATUS_INCOMPLETE)
             return false;
@@ -1186,42 +1186,87 @@ public:
     }
 };
 
+/*######
+## Quest 12557: Lab Work
+######*/
+
+enum eLabWorkReagents
+{
+    QUEST_LAB_WORK                          = 12557,
+
+    SPELL_WIRHERED_BATWING_KILL_CREDIT      = 51226,
+    SPELL_MUDDY_MIRE_MAGGOT_KILL_CREDIT     = 51227,
+    SPELL_AMBERSEED_KILL_CREDIT             = 51228,
+    SPELL_CHILLED_SERPENT_MUCUS_KILL_CREDIT = 51229,
+
+    GO_AMBERSEED                            = 190459,
+    GO_CHILLED_SERPENT_MUCUS                = 190462,
+    GO_WITHERED_BATWING                     = 190473,
+    GO_MUDDY_MIRE_MAGGOTS                   = 190478
+};
+
+class go_lab_work_reagents : public GameObjectScript
+{
+public:
+    go_lab_work_reagents() : GameObjectScript("go_lab_work_reagents") { }
+
+    bool OnGossipHello(Player* pPlayer, GameObject* pGo)
+    {
+        if (pPlayer->GetQuestStatus(QUEST_LAB_WORK) == QUEST_STATUS_INCOMPLETE)
+        {
+            uint32 uiCreditSpellId = 0;
+            switch (pGo->GetEntry())
+            {
+                case GO_AMBERSEED:              uiCreditSpellId = SPELL_AMBERSEED_KILL_CREDIT; break;
+                case GO_CHILLED_SERPENT_MUCUS:  uiCreditSpellId = SPELL_CHILLED_SERPENT_MUCUS_KILL_CREDIT; break;
+                case GO_WITHERED_BATWING:       uiCreditSpellId = SPELL_WIRHERED_BATWING_KILL_CREDIT; break;
+                case GO_MUDDY_MIRE_MAGGOTS:     uiCreditSpellId = SPELL_MUDDY_MIRE_MAGGOT_KILL_CREDIT; break;
+            }
+
+            if (uiCreditSpellId)
+                pPlayer->CastSpell(pPlayer, uiCreditSpellId, true);
+        }
+        return false;
+    }
+};
+
 void AddSC_go_scripts()
 {
-    new go_cat_figurine;
-    new go_northern_crystal_pylon;
-    new go_eastern_crystal_pylon;
-    new go_western_crystal_pylon;
-    new go_barov_journal;
-    new go_field_repair_bot_74A;
-    new go_gilded_brazier;
-    new go_orb_of_command;
-    new go_shrine_of_the_birds;
-    new go_southfury_moonstone;
-    new go_tablet_of_madness;
-    new go_tablet_of_the_seven;
-    new go_jump_a_tron;
-    new go_ethereum_prison;
-    new go_ethereum_stasis;
-    new go_resonite_cask;
-    new go_sacred_fire_of_life;
-    new go_tele_to_dalaran_crystal;
-    new go_tele_to_violet_stand;
-    new go_fel_crystalforge;
-    new go_bashir_crystalforge;
-    new go_matrix_punchograph;
-    new go_rusty_cage;
-    new go_scourge_cage;
-    new go_arcane_prison;
-    new go_blood_filled_orb;
-    new go_jotunheim_cage;
-    new go_table_theka;
-    new go_inconspicuous_landmark;
-    new go_soulwell;
-    new go_tadpole_cage;
-    new go_dragonflayer_cage;
-    new go_black_cage;
-    new go_amberpine_outhouse;
-    new go_hive_pod;
-    new go_massive_seaforium_charge;
+    new go_cat_figurine();
+    new go_northern_crystal_pylon();
+    new go_eastern_crystal_pylon();
+    new go_western_crystal_pylon();
+    new go_barov_journal();
+    new go_field_repair_bot_74A();
+    new go_gilded_brazier();
+    new go_orb_of_command();
+    new go_shrine_of_the_birds();
+    new go_southfury_moonstone();
+    new go_tablet_of_madness();
+    new go_tablet_of_the_seven();
+    new go_jump_a_tron();
+    new go_ethereum_prison();
+    new go_ethereum_stasis();
+    new go_resonite_cask();
+    new go_sacred_fire_of_life();
+    new go_tele_to_dalaran_crystal();
+    new go_tele_to_violet_stand();
+    new go_fel_crystalforge();
+    new go_bashir_crystalforge();
+    new go_matrix_punchograph();
+    new go_rusty_cage();
+    new go_scourge_cage();
+    new go_arcane_prison();
+    new go_blood_filled_orb();
+    new go_jotunheim_cage();
+    new go_table_theka();
+    new go_inconspicuous_landmark();
+    new go_soulwell();
+    new go_tadpole_cage();
+    new go_dragonflayer_cage();
+    new go_black_cage();
+    new go_amberpine_outhouse();
+    new go_hive_pod();
+    new go_massive_seaforium_charge();
+    new go_lab_work_reagents();
 }

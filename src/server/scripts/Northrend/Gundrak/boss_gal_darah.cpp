@@ -32,33 +32,21 @@ enum Spells
     SPELL_STAMPEDE                                = 55218,
     SPELL_WHIRLING_SLASH                          = 55250,
     H_SPELL_WHIRLING_SLASH                        = 59824,
-    SPELL_IMPALING_CHARGE_VEHICLE                 = 54958,
-    SPELL_ECK_RESIDUE                             = 55817,
-    //rhino spirit spells
-    SPELL_STAMPEDE_DMG                            = 55220,
-    H_SPELL_STAMPEDE_DMG                          = 59823
 };
 
 //Yells
 enum Yells
 {
-    SAY_AGGRO                                     = -1604019,
-    SAY_TRANSFORM_1                               = -1604020,
-    SAY_TRANSFORM_2                               = -1604021,
-    SAY_SUMMON_1                                  = -1604022,
-    SAY_SUMMON_2                                  = -1604023,
-    SAY_SUMMON_3                                  = -1604024,
-    SAY_SLAY_1                                    = -1604025,
-    SAY_SLAY_2                                    = -1604026,
-    SAY_SLAY_3                                    = -1604027,
-    SAY_DEATH                                     = -1604028
-
-};
-
-enum Achievements
-{
-    ACHIEV_WHAT_THE_ECK                           = 1864,
-    ACHIEV_SHARE_THE_LOVE                         = 2152
+    SAY_AGGRO                                     = -1604000,
+    SAY_SLAY_1                                    = -1604001,
+    SAY_SLAY_2                                    = -1604002,
+    SAY_SLAY_3                                    = -1604003,
+    SAY_DEATH                                     = -1604004,
+    SAY_SUMMON_RHINO_1                            = -1604005,
+    SAY_SUMMON_RHINO_2                            = -1604006,
+    SAY_SUMMON_RHINO_3                            = -1604007,
+    SAY_TRANSFORM_1                               = -1604008,  //Phase change
+    SAY_TRANSFORM_2                               = -1604009
 };
 
 enum Displays
@@ -72,6 +60,8 @@ enum CombatPhase
     TROLL,
     RHINO
 };
+
+#define DATA_SHARE_THE_LOVE                       1
 
 class boss_gal_darah : public CreatureScript
 {
@@ -97,32 +87,32 @@ public:
         uint32 uiImpalingChargeTimer;
         uint32 uiStompTimer;
         uint32 uiTransformationTimer;
-        std::set<uint64> lImpaledPlayers;
+        std::list<uint64> impaledList;
+        uint8 shareTheLove;
 
         CombatPhase Phase;
 
         uint8 uiPhaseCounter;
 
         bool bStartOfTransformation;
-        bool bTransformated;
 
         InstanceScript* pInstance;
 
         void Reset()
         {
             uiStampedeTimer = 10*IN_MILLISECONDS;
-            uiWhirlingSlashTimer = 20*IN_MILLISECONDS;
-            uiPunctureTimer = 5*IN_MILLISECONDS;
+            uiWhirlingSlashTimer = 21*IN_MILLISECONDS;
+            uiPunctureTimer = 10*IN_MILLISECONDS;
             uiEnrageTimer = 15*IN_MILLISECONDS;
-            uiImpalingChargeTimer = 20*IN_MILLISECONDS;
-            uiStompTimer = 10*IN_MILLISECONDS;
-            uiTransformationTimer = 6*IN_MILLISECONDS;
+            uiImpalingChargeTimer = 21*IN_MILLISECONDS;
+            uiStompTimer = 25*IN_MILLISECONDS;
+            uiTransformationTimer = 9*IN_MILLISECONDS;
             uiPhaseCounter = 0;
 
-            lImpaledPlayers.clear();
+            impaledList.clear();
+            shareTheLove = 0;
 
             bStartOfTransformation = true;
-            bTransformated = false;
 
             Phase = TROLL;
 
@@ -142,20 +132,13 @@ public:
 
         void UpdateAI(const uint32 diff)
         {
-            //Return since we have no target
             if (!UpdateVictim())
                 return;
-
-            if (!bTransformated && HealthBelowPct(50)) //transform at least once at 50% health
-            {
-                bTransformated = true;
-                uiPhaseCounter = 2;
-            }
 
             switch (Phase)
             {
                 case TROLL:
-                    if (uiPhaseCounter >= 2)
+                    if (uiPhaseCounter == 2)
                     {
                         if (uiTransformationTimer <= diff)
                         {
@@ -165,7 +148,6 @@ public:
                             DoScriptText(SAY_TRANSFORM_1, me);
                             uiTransformationTimer = 5*IN_MILLISECONDS;
                             bStartOfTransformation = true;
-                            bTransformated = true;
                             me->ClearUnitState(UNIT_STAT_STUNNED|UNIT_STAT_ROOT);
                             me->SetReactState(REACT_AGGRESSIVE);
                         }
@@ -186,20 +168,20 @@ public:
                         if (uiStampedeTimer <= diff)
                         {
                             DoCast(me, SPELL_STAMPEDE);
-                            DoScriptText(RAND(SAY_SUMMON_1,SAY_SUMMON_2,SAY_SUMMON_3),me);
-                            uiStampedeTimer = urand(10*IN_MILLISECONDS,15*IN_MILLISECONDS);
+                            DoScriptText(RAND(SAY_SUMMON_RHINO_1, SAY_SUMMON_RHINO_2, SAY_SUMMON_RHINO_3), me);
+                            uiStampedeTimer = 15*IN_MILLISECONDS;
                         } else uiStampedeTimer -= diff;
 
                         if (uiWhirlingSlashTimer <= diff)
                         {
-                            DoCast(me->getVictim(), DUNGEON_MODE(SPELL_WHIRLING_SLASH, H_SPELL_WHIRLING_SLASH));
-                            uiWhirlingSlashTimer = urand(18*IN_MILLISECONDS,22*IN_MILLISECONDS);;
+                            DoCast(me->getVictim(), SPELL_WHIRLING_SLASH);
+                            uiWhirlingSlashTimer = 21*IN_MILLISECONDS;
                             ++uiPhaseCounter;
                         } else uiWhirlingSlashTimer -= diff;
                     }
                 break;
                 case RHINO:
-                    if (uiPhaseCounter >= 2)
+                    if (uiPhaseCounter == 2)
                     {
                         if (uiTransformationTimer <= diff)
                         {
@@ -207,7 +189,7 @@ public:
                             Phase = TROLL;
                             uiPhaseCounter = 0;
                             DoScriptText(SAY_TRANSFORM_2, me);
-                            uiTransformationTimer = 6*IN_MILLISECONDS;
+                            uiTransformationTimer = 9*IN_MILLISECONDS;
                             bStartOfTransformation = true;
                             me->ClearUnitState(UNIT_STAT_STUNNED|UNIT_STAT_ROOT);
                             me->SetReactState(REACT_AGGRESSIVE);
@@ -228,31 +210,30 @@ public:
                     {
                         if (uiPunctureTimer <= diff)
                         {
-                            DoCast(me->getVictim(), DUNGEON_MODE(SPELL_PUNCTURE, H_SPELL_PUNCTURE));
-                            uiPunctureTimer = 15*IN_MILLISECONDS;
+                            DoCast(me->getVictim(), SPELL_PUNCTURE);
+                            uiPunctureTimer = 8*IN_MILLISECONDS;
                         } else uiPunctureTimer -= diff;
 
                         if (uiEnrageTimer <= diff)
                         {
-                            DoCast(me->getVictim(), DUNGEON_MODE(SPELL_ENRAGE, H_SPELL_ENRAGE));
+                            DoCast(me->getVictim(), SPELL_ENRAGE);
                             uiEnrageTimer = 20*IN_MILLISECONDS;
                         } else uiEnrageTimer -= diff;
 
                         if (uiStompTimer <= diff)
                         {
-                            DoCast(me->getVictim(), DUNGEON_MODE(SPELL_STOMP, H_SPELL_STOMP));
-                            uiStompTimer = urand(10*IN_MILLISECONDS,15*IN_MILLISECONDS);
+                            DoCast(me->getVictim(), SPELL_STOMP);
+                            uiStompTimer = 20*IN_MILLISECONDS;
                         } else uiStompTimer -= diff;
 
                         if (uiImpalingChargeTimer <= diff)
                         {
-                            if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 1, 100, true))
+                            if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
                             {
-                                DoCast(pTarget, DUNGEON_MODE(SPELL_IMPALING_CHARGE, H_SPELL_IMPALING_CHARGE));
-                                pTarget->CastSpell(me, SPELL_IMPALING_CHARGE_VEHICLE, true);  // needs vehicle id and take dmg while seated
-                                lImpaledPlayers.insert(pTarget->GetGUID());
+                                DoCast(pTarget, SPELL_IMPALING_CHARGE);
+                                CheckAchievement(pTarget->GetGUID());
                             }
-                            uiImpalingChargeTimer = 20*IN_MILLISECONDS;
+                            uiImpalingChargeTimer = 31*IN_MILLISECONDS;
                             ++uiPhaseCounter;
                         } else uiImpalingChargeTimer -= diff;
                     }
@@ -262,38 +243,37 @@ public:
             DoMeleeAttackIfReady();
         }
 
+        // 5 UNIQUE party members
+        void CheckAchievement(uint64 guid)
+        {
+            bool playerExists = false;
+            for (std::list<uint64>::iterator itr = impaledList.begin(); itr != impaledList.end(); ++itr)
+                if (guid != *itr)
+                    playerExists = true;
+
+            if (playerExists)
+                ++shareTheLove;
+
+            impaledList.push_back(guid);
+        }
+
+        uint32 GetData(uint32 type)
+        {
+            if (type == DATA_SHARE_THE_LOVE)
+                return shareTheLove;
+
+            return 0;
+        }
+
         void JustDied(Unit* /*killer*/)
         {
             DoScriptText(SAY_DEATH, me);
 
             if (pInstance)
-            {
-                if (IsHeroic())
-                {
-                    if (lImpaledPlayers.size() == 5)
-                        pInstance->DoCompleteAchievement(ACHIEV_SHARE_THE_LOVE);
-
-                    AchievementEntry const *achievWhatTheEck = GetAchievementStore()->LookupEntry(ACHIEV_WHAT_THE_ECK);
-                    if (achievWhatTheEck)
-                    {
-                        Map::PlayerList const &players = pInstance->instance->GetPlayers();
-                        for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-                            if (itr->getSource()->HasAura(SPELL_ECK_RESIDUE))
-                                itr->getSource()->CompletedAchievement(achievWhatTheEck);
-                    }
-                }
-
                 pInstance->SetData(DATA_GAL_DARAH_EVENT, DONE);
-            }
-        }
- 
-        void JustSummoned(Creature* pSummon)
-        {
-            if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
-                pSummon->CastSpell(pTarget, DUNGEON_MODE(SPELL_STAMPEDE_DMG, H_SPELL_STAMPEDE_DMG),true);
         }
 
-        void KilledUnit(Unit * victim)
+        void KilledUnit(Unit* victim)
         {
             if (victim == me)
                 return;
@@ -304,43 +284,28 @@ public:
 
 };
 
-class mob_rhino_spirit : public CreatureScript
+class achievement_share_the_love : public AchievementCriteriaScript
 {
-public:
-    mob_rhino_spirit() : CreatureScript("mob_rhino_spirit") { }
-
-    CreatureAI* GetAI(Creature* pCreature) const
-    {
-        return new mob_rhino_spiritAI (pCreature);
-    }
-
-    struct mob_rhino_spiritAI : public ScriptedAI
-    {
-        mob_rhino_spiritAI(Creature *c) : ScriptedAI(c) {}
-
-        uint32 uiDespawnTimer;
-
-        void Reset()
+    public:
+        achievement_share_the_love() : AchievementCriteriaScript("achievement_share_the_love")
         {
-            uiDespawnTimer = 1500;
         }
 
-        void UpdateAI(const uint32 diff)
+        bool OnCheck(Player* /*player*/, Unit* target)
         {
-            if (!UpdateVictim())
-               return;
+            if (!target)
+                return false;
 
-            if (uiDespawnTimer <= diff)
-            {
-                me->DisappearAndDie();
-            } else uiDespawnTimer -= diff;
-        }   
-    };
+            if (Creature* GalDarah = target->ToCreature())
+                if (GalDarah->AI()->GetData(DATA_SHARE_THE_LOVE) >= 5)
+                    return true;
 
+            return false;
+        }
 };
 
 void AddSC_boss_gal_darah()
 {
     new boss_gal_darah();
-    new mob_rhino_spirit();
+    new achievement_share_the_love();
 }

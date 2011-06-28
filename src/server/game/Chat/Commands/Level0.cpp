@@ -21,7 +21,6 @@
 #include "World.h"
 #include "Player.h"
 #include "Opcodes.h"
-#include "ObjectMgr.h"
 #include "Chat.h"
 #include "ObjectAccessor.h"
 #include "Language.h"
@@ -30,7 +29,6 @@
 #include "revision.h"
 #include "Util.h"
 #include "math.h"
-#include "Group.h"
 
 bool ChatHandler::HandleHelpCommand(const char* args)
 {
@@ -57,6 +55,7 @@ bool ChatHandler::HandleCommandsCommand(const char* /*args*/)
 
 bool ChatHandler::HandleStartCommand(const char* /*args*/)
 {
+		// Jail by WarHead edited by spgm
     if (m_session->GetPlayer()->m_jail_isjailed)
     {
         SendSysMessage(LANG_JAIL_DENIED);
@@ -135,18 +134,22 @@ bool ChatHandler::HandleDismountCommand(const char* /*args*/)
 
 bool ChatHandler::HandleSaveCommand(const char* /*args*/)
 {
-    Player *player = m_session->GetPlayer();
-
+    Player* player = m_session->GetPlayer();
+    
+		// Jail by WarHead edited by LordPsyan
     if (player->m_jail_isjailed)
     {
         SendSysMessage(LANG_JAIL_DENIED);
         return true;
     }
- 
+  
     // save GM account without delay and output message
     if (m_session->GetSecurity() > SEC_PLAYER)
     {
-        player->SaveToDB();
+        if (Player *target = getSelectedPlayer())
+            target->SaveToDB();
+        else
+            player->SaveToDB();
         SendSysMessage(LANG_PLAYER_SAVED);
         return true;
     }
@@ -159,191 +162,13 @@ bool ChatHandler::HandleSaveCommand(const char* /*args*/)
     return true;
 }
 
-//Playerbot mod
-bool ChatHandler::HandlePlayerbotCommand(const char *args)
-{
-    if(!m_session)
-    {
-        PSendSysMessage("You may only add bots from an active session");
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    if(!*args)
-    {
-        PSendSysMessage("usage: add PLAYERNAME  or  remove PLAYERNAME");
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    char *cmd = strtok ((char*)args, " ");
-    char *charname = strtok (NULL, " ");
-    if(!cmd || !charname)
-    {
-        PSendSysMessage("usage: add PLAYERNAME  or  remove PLAYERNAME");
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    std::string cmdStr = cmd;
-    std::string charnameStr = charname;
-    uint64 guid;
-
-   if (charnameStr.compare("all") != 0)
-   {
-       if (!normalizePlayerName(charnameStr))
-           return false;
-
-       guid = sObjectMgr->GetPlayerGUIDByName(charnameStr.c_str());
-       if (guid == 0 || (guid == m_session->GetPlayer()->GetGUID()))
-       {
-           SendSysMessage(LANG_PLAYER_NOT_FOUND);
-           SetSentErrorMessage(true);
-           return false;
-       }
-
-       uint32 accountId = sObjectMgr->GetPlayerAccountIdByGUID(guid);
-       if (accountId != m_session->GetAccountId())
-       {
-           PSendSysMessage("You may only add bots from the same account.");
-           SetSentErrorMessage(true);
-           return false;
-       }
-   }
-
-    if (cmdStr.compare("add") == 0 || cmdStr.compare("login") == 0)
-    {
-        if (charnameStr.compare("all") == 0)
-        {
-            std::list<std::string> *names;
-            names=m_session->GetPlayer()->GetCharacterList();
-            std::list<std::string>::iterator iter,next;
-            for (iter = names->begin(); iter != names->end(); iter++)
-            {
-                std::stringstream arg;
-                arg << "add " << (*iter).c_str();
-                HandlePlayerbotCommand(arg.str().c_str());
-            }
-            PSendSysMessage("Bots added successfully.");
-            return true;
-        }
-        else
-        {
-            if(m_session->GetPlayerBot(guid) != NULL)
-            {
-                PSendSysMessage("Bot already exists in world.");
-                SetSentErrorMessage(true);
-                return false;
-            }
-            m_session->AddPlayerBot(guid);
-        }
-
-    }
-    else if (cmdStr.compare("remove") == 0 || cmdStr.compare("logout") == 0)
-    {
-        if (charnameStr.compare("all") == 0)
-        {
-            std::list<std::string> *names = new std::list<std::string>;
-            for (PlayerBotMap::const_iterator iter = m_session->GetPlayerBotsBegin(); iter != m_session->GetPlayerBotsEnd(); ++iter)
-            {
-                names->push_back(iter->second->GetName());
-            }
-            std::list<std::string>::iterator iter,next;
-            for (iter = names->begin(); iter != names->end(); iter++)
-            {
-                std::stringstream arg;
-                arg << "remove " << (*iter).c_str();
-                HandlePlayerbotCommand(arg.str().c_str());
-            }
-            return true;
-        }
-        else
-        {
-            if (m_session->GetPlayerBot(guid) == NULL)
-            {
-                PSendSysMessage("Bot can not be removed because bot does not exist in world.");
-                SetSentErrorMessage(true);
-                return false;
-            }
-            m_session->LogoutPlayerBot(guid, true);
-            PSendSysMessage("Bot removed successfully.");
-            return true;
-        }
-    }
-    return true;
-}
-
-bool ChatHandler::HandlePlayerbotMainTankCommand(const char *args)
-{
-    uint64 guid = 0;
-    uint64 pGuid = 0;
-    char *charname ;
-    Group *group = m_session->GetPlayer()->GetGroup();
-
-    if (group == NULL) {
-        PSendSysMessage("Must be in a group to set a main tank.");
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    QueryResult result = CharacterDatabase.PQuery("SELECT memberGuid FROM group_member WHERE memberFlags='%u' AND guid = '%u'",MEMBER_FLAG_MAINTANK, group->GetGUID());
-    if(result)
-    {
-        pGuid = MAKE_NEW_GUID(result->Fetch()->GetInt32(),0,HIGHGUID_PLAYER);
-    }
-
-    // if no arguments are passed in, just say who the current main tank is
-    if(!*args) {
-
-        if (pGuid>0) {
-            Player *pPlayer = sObjectMgr->GetPlayer(pGuid);
-
-            if (pPlayer  && pPlayer->isAlive()){
-                PSendSysMessage("Main tank is %s.", pPlayer->GetName());
-                return true;
-            }
-        }
-
-        PSendSysMessage("Currently there is no main tank. ");
-        return true;
-    } else {
-        charname = strtok ((char*)args, " ");
-        std::string charnameStr = charname;
-        guid = sObjectMgr->GetPlayerGUIDByName(charnameStr.c_str());
-
-        // clear if same player
-        if (pGuid==guid) {
-            group->SetGroupMemberFlag(guid, false, MEMBER_FLAG_MAINTANK);
-            PSendSysMessage("Main tank has been cleared. ");
-            return true;
-        }
-
-        if (m_session->GetPlayer()->GetGroup()->IsMember(guid)) {
-            group->SetGroupMemberFlag(pGuid,false, MEMBER_FLAG_MAINTANK); // clear old one
-            group->SetGroupMemberFlag(guid, true, MEMBER_FLAG_MAINTANK);  // set new one
-            Player *pPlayer = sObjectMgr->GetPlayer(guid);
-            if (pPlayer->IsInWorld())
-                PSendSysMessage("Main tank is %s.", pPlayer->GetName());
-            else
-                PSendSysMessage("Player is not online.");
-
-        } else {
-            PSendSysMessage("Player is not in your group.");
-        }
-
-    }
-
-
-    return true;
-}
-
 /// Display the 'Message of the day' for the realm
 bool ChatHandler::HandleServerMotdCommand(const char* /*args*/)
 {
     PSendSysMessage(LANG_MOTD_CURRENT, sWorld->GetMotd());
     return true;
 }
-
+	//Trinity Jail Edited by spgm
 bool ChatHandler::HandleJailInfoCommand(const char* args)
 {
     time_t localtime;
@@ -377,3 +202,4 @@ bool ChatHandler::HandleJailInfoCommand(const char* args)
     }
     return false;
 }
+

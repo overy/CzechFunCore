@@ -307,6 +307,9 @@ class boss_valithria_dreamwalker : public CreatureScript
                 me->SetHealth(_spawnHealth);
                 me->SetReactState(REACT_PASSIVE);
                 me->LoadCreaturesAddon(true);
+                // immune to percent heals
+                me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_OBS_MOD_HEALTH, true);
+                me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_HEAL_PCT, true);
                 _instance->SendEncounterUnit(ENCOUNTER_FRAME_REMOVE, me);
                 _missedPortals = 0;
                 _under25PercentTalkDone = false;
@@ -334,6 +337,13 @@ class boss_valithria_dreamwalker : public CreatureScript
 
             void HealReceived(Unit* /*healer*/, uint32& heal)
             {
+                // Do not receive heal while encounter not in progress
+                if (_instance->GetBossState(DATA_VALITHRIA_DREAMWALKER) != IN_PROGRESS)
+                {
+                    heal = 0;
+                    return;
+                }
+
                 // encounter complete
                 if (me->HealthAbovePctHealed(100, heal) && !_done)
                 {
@@ -352,6 +362,9 @@ class boss_valithria_dreamwalker : public CreatureScript
                     _over75PercentTalkDone = true;
                     Talk(SAY_VALITHRIA_75_PERCENT);
                 }
+                else if (_instance->GetBossState(DATA_VALITHRIA_DREAMWALKER) == NOT_STARTED)
+                    if (Creature* archmage = me->FindNearestCreature(NPC_RISEN_ARCHMAGE, 30.0f))
+                        archmage->AI()->DoZoneInCombat();   // call EnterCombat on one of them, that will make it all start
             }
 
             void DamageTaken(Unit* /*attacker*/, uint32& damage)
@@ -389,8 +402,8 @@ class boss_valithria_dreamwalker : public CreatureScript
                     me->SetDisplayId(11686);
                     me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                     me->DespawnOrUnsummon(4000);
-                    if (Creature* lichKing = ObjectAccessor::GetCreature(*me, _instance->GetData64(DATA_VALITHRIA_LICH_KING)))
-                        lichKing->CastSpell(lichKing, SPELL_SPAWN_CHEST, false);
+                    //if (Creature* lichKing = ObjectAccessor::GetCreature(*me, _instance->GetData64(DATA_VALITHRIA_LICH_KING)))
+                        //lichKing->CastSpell(lichKing, SPELL_SPAWN_CHEST, false);
 
                     if (Creature* trigger = ObjectAccessor::GetCreature(*me, _instance->GetData64(DATA_VALITHRIA_TRIGGER)))
                         me->Kill(trigger);
@@ -503,6 +516,7 @@ class npc_green_dragon_combat_trigger : public CreatureScript
                 me->setActive(true);
                 DoZoneInCombat();
                 instance->SetBossState(DATA_VALITHRIA_DREAMWALKER, IN_PROGRESS);
+                instance->SetData(DATA_VALITHRIA_DREAMWALKER, IN_PROGRESS);
                 if (Creature* valithria = ObjectAccessor::GetCreature(*me, instance->GetData64(DATA_VALITHRIA_DREAMWALKER)))
                     valithria->AI()->DoAction(ACTION_ENTER_COMBAT);
             }
@@ -529,13 +543,14 @@ class npc_green_dragon_combat_trigger : public CreatureScript
                 if (action == ACTION_DEATH)
                 {
                     instance->SetBossState(DATA_VALITHRIA_DREAMWALKER, FAIL);
+                    instance->SetData(DATA_VALITHRIA_DREAMWALKER, FAIL);
                     me->m_Events.AddEvent(new ValithriaDespawner(me), me->m_Events.CalculateTime(5000));
                 }
             }
 
             void UpdateAI(uint32 const /*diff*/)
             {
-				if (!me->isInCombat())
+                if (!me->isInCombat())
                     return;
 
                 std::list<HostileReference*> const& threatList = me->getThreatManager().getThreatList();
@@ -686,7 +701,7 @@ class npc_risen_archmage : public CreatureScript
             void EnterCombat(Unit* /*target*/)
             {
                 me->FinishSpell(CURRENT_CHANNELED_SPELL, false);
-                if (me->GetDBTableGUIDLow() && _canCallEnterCombat)
+                if (me->GetDBTableGUIDLow() && _canCallEnterCombat && _instance->GetBossState(DATA_VALITHRIA_DREAMWALKER) != DONE)
                 {
                     std::list<Creature*> archmages;
                     RisenArchmageCheck check;

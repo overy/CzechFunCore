@@ -211,7 +211,7 @@ public:
             me->SetVisible(false);
         }
 
-        void EnterCombat(Unit *who)
+        void EnterCombat(Unit* who)
         {
             me->setActive(true);
             DoZoneInCombat();
@@ -228,13 +228,13 @@ public:
                 pInstance->SetData(DATA_FELMYST_EVENT, IN_PROGRESS);
         }
 
-        void AttackStart(Unit *who)
+        void AttackStart(Unit* who)
         {
             if(Phase != PHASE_FLIGHT)
                 ScriptedAI::AttackStart(who);
         }
 
-        void MoveInLineOfSight(Unit *who)
+        void MoveInLineOfSight(Unit* who)
         {
             if(Phase != PHASE_FLIGHT)
                 ScriptedAI::MoveInLineOfSight(who);
@@ -308,7 +308,7 @@ public:
             }
         }
 
-        void SpellHit(Unit *caster, const SpellEntry *spell)
+        void SpellHit(Unit* caster, const SpellEntry* spell)
         {
             // workaround for linked aura
             /*if(spell->Id == SPELL_VAPOR_FORCE)
@@ -332,7 +332,7 @@ public:
             //}
         }
 
-        void JustSummoned(Creature *summon)
+        void JustSummoned(Creature* summon)
         {
             if(summon->GetEntry() == MOB_DEAD)
             {

@@ -16,11 +16,11 @@
  */
 
 #include "OutdoorPvPMgr.h"
-#include "OutdoorPvPWG.h"
 #include "ObjectMgr.h"
 #include "Player.h"
 #include "DisableMgr.h"
 #include "ScriptMgr.h"
+#include "OutdoorPvPWG.h"
 
 OutdoorPvPMgr::OutdoorPvPMgr()
 {
@@ -165,7 +165,7 @@ void OutdoorPvPMgr::Update(uint32 diff)
     }
 }
 
-bool OutdoorPvPMgr::HandleCustomSpell(Player *plr, uint32 spellId, GameObject * go)
+bool OutdoorPvPMgr::HandleCustomSpell(Player *plr, uint32 spellId, GameObject* go)
 {
     for (OutdoorPvPSet::iterator itr = m_OutdoorPvPSet.begin(); itr != m_OutdoorPvPSet.end(); ++itr)
     {

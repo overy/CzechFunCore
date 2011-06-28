@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2008-2011 TrinityCore <http://www.trinitycore.org/>
  *
@@ -168,7 +169,7 @@ public:
                 pInstance->SetData(DATA_EPOCH_EVENT, DONE);
         }
 
-        void KilledUnit(Unit * victim)
+        void KilledUnit(Unit* victim)
         {
             if (victim == me)
                 return;

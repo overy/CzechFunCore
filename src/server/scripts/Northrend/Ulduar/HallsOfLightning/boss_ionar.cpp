@@ -34,14 +34,9 @@ enum Spells
     SPELL_SUMMON_SPARK                            = 52746,
     SPELL_SPARK_DESPAWN                           = 52776,
 
-    SPELL_ARCING_BURN                             = 52671,
-    H_SPELL_ARCING_BURN                           = 59834,
-
     //Spark of Ionar
     SPELL_SPARK_VISUAL_TRIGGER                    = 52667,
-    H_SPELL_SPARK_VISUAL_TRIGGER                  = 59833,
-
-    SPELL_ARC_WELD                                = 59086
+    H_SPELL_SPARK_VISUAL_TRIGGER                  = 59833
 };
 
 enum Yells
@@ -93,27 +88,30 @@ public:
         SummonList lSparkList;
 
         bool bIsSplitPhase;
+        bool bHasDispersed;
 
         uint32 uiSplitTimer;
 
         uint32 uiStaticOverloadTimer;
         uint32 uiBallLightningTimer;
-        uint32 uiHealthAmountModifier;
+
+        uint32 uiDisperseHealth;
 
         void Reset()
         {
             lSparkList.DespawnAll();
 
             bIsSplitPhase = true;
-            uiHealthAmountModifier = 1;
+            bHasDispersed = false;
 
             uiSplitTimer = 25*IN_MILLISECONDS;
 
-            uiStaticOverloadTimer = 10*IN_MILLISECONDS;
-            uiBallLightningTimer = 5*IN_MILLISECONDS;
+            uiStaticOverloadTimer = urand(5*IN_MILLISECONDS, 6*IN_MILLISECONDS);
+            uiBallLightningTimer = urand(10*IN_MILLISECONDS, 11*IN_MILLISECONDS);
+
+            uiDisperseHealth = 45 + urand(0, 10);
 
             me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE|UNIT_FLAG_DISABLE_MOVE);
-            me->ApplySpellImmune(0, IMMUNITY_SCHOOL, SPELL_SCHOOL_MASK_NATURE, true);
 
             if (!me->IsVisible())
                 me->SetVisible(true);
@@ -128,7 +126,6 @@ public:
 
             if (pInstance)
                 pInstance->SetData(TYPE_IONAR, IN_PROGRESS);
-            DoCast(me, SPELL_DISPERSE, true);
         }
 
         void JustDied(Unit* /*killer*/)
@@ -141,9 +138,25 @@ public:
                 pInstance->SetData(TYPE_IONAR, DONE);
         }
 
-        void KilledUnit(Unit * /*victim*/)
+        void KilledUnit(Unit* /*victim*/)
         {
             DoScriptText(RAND(SAY_SLAY_1, SAY_SLAY_2, SAY_SLAY_3), me);
+        }
+
+        void SpellHit(Unit* /*caster*/, const SpellEntry* spell)
+        {
+            if (spell->Id == SPELL_DISPERSE)
+            {
+                for (uint8 i = 0; i < DATA_MAX_SPARKS; ++i)
+                    me->CastSpell(me, SPELL_SUMMON_SPARK, true);
+
+                me->AttackStop();
+                me->SetVisible(false);
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE|UNIT_FLAG_DISABLE_MOVE);
+
+                me->GetMotionMaster()->Clear();
+                me->GetMotionMaster()->MoveIdle();
+            }
         }
 
         //make sparks come back
@@ -172,25 +185,7 @@ public:
             }
         }
 
-        void SpellHit(Unit* caster, const SpellEntry* spell)
-        {
-            if (spell->Id == SPELL_DISPERSE)
-            {
-                for (uint8 i = 0; i < DATA_MAX_SPARKS; ++i)
-                    me->CastSpell(me, SPELL_SUMMON_SPARK, true);
-
-                me->AttackStop();
-                me->SetVisible(false);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE|UNIT_FLAG_DISABLE_MOVE);
-
-                me->GetMotionMaster()->Clear();
-                me->GetMotionMaster()->MoveIdle();
-
-                me->ApplySpellImmune(0, IMMUNITY_SCHOOL, SPELL_SCHOOL_MASK_NATURE, true);
-            }
-        }
-
-        void DamageTaken(Unit * /*pDoneBy*/, uint32 &uiDamage)
+        void DamageTaken(Unit* /*pDoneBy*/, uint32 &uiDamage)
         {
             if (!me->IsVisible())
                 uiDamage = 0;
@@ -203,7 +198,8 @@ public:
                 lSparkList.Summon(pSummoned);
 
                 pSummoned->CastSpell(pSummoned, DUNGEON_MODE(SPELL_SPARK_VISUAL_TRIGGER, H_SPELL_SPARK_VISUAL_TRIGGER), true);
-                Unit *pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0);
+
+                Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0);
                 if (pTarget)
                 {
                     pSummoned->SetInCombatWith(pTarget);
@@ -261,43 +257,32 @@ public:
 
             if (uiStaticOverloadTimer <= uiDiff)
             {
-                if (!me->IsNonMeleeSpellCasted(false))
-                {
-                    if (Unit *pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0))
-                        DoCast(pTarget, DUNGEON_MODE(SPELL_STATIC_OVERLOAD,H_SPELL_STATIC_OVERLOAD));
+                if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0))
+                    DoCast(pTarget, SPELL_STATIC_OVERLOAD);
 
-                    uiStaticOverloadTimer = 11*IN_MILLISECONDS;
-                }
+                uiStaticOverloadTimer = urand(5*IN_MILLISECONDS, 6*IN_MILLISECONDS);
             }
             else
                 uiStaticOverloadTimer -= uiDiff;
 
             if (uiBallLightningTimer <= uiDiff)
             {
-                if (!me->IsNonMeleeSpellCasted(false))
-                {
-                    if (Unit* pTemp = SelectTarget(SELECT_TARGET_RANDOM,1,100,true))
-                        DoCast(pTemp, DUNGEON_MODE(SPELL_BALL_LIGHTNING,H_SPELL_BALL_LIGHTNING));
-                    else 
-                        DoCast(me->getVictim(), DUNGEON_MODE(SPELL_BALL_LIGHTNING,H_SPELL_BALL_LIGHTNING));
-
-                    uiBallLightningTimer = 10*IN_MILLISECONDS;
-                }
+                DoCast(me->getVictim(), SPELL_BALL_LIGHTNING);
+                uiBallLightningTimer = urand(10*IN_MILLISECONDS, 11*IN_MILLISECONDS);
             }
             else
                 uiBallLightningTimer -= uiDiff;
 
             // Health check
-            if (me->HealthBelowPct(100 - 20 * uiHealthAmountModifier))
+            if (!bHasDispersed && HealthBelowPct(uiDisperseHealth))
             {
-                ++uiHealthAmountModifier;
+                bHasDispersed = true;
 
                 DoScriptText(RAND(SAY_SPLIT_1, SAY_SPLIT_2), me);
 
                 if (me->IsNonMeleeSpellCasted(false))
                     me->InterruptNonMeleeSpells(false);
 
-                me->ApplySpellImmune(0, IMMUNITY_SCHOOL, SPELL_SCHOOL_MASK_NATURE, false);
                 DoCast(me, SPELL_DISPERSE, false);
             }
 
@@ -331,14 +316,11 @@ public:
         InstanceScript* pInstance;
 
         uint32 uiCheckTimer;
-        uint32 uiArcWeldTimer;
 
         void Reset()
         {
-            uiArcWeldTimer = 0;
-            me->SetSpeed(MOVE_RUN, 0.7f);
             uiCheckTimer = 2*IN_MILLISECONDS;
-            DoCast(DUNGEON_MODE(SPELL_SPARK_VISUAL_TRIGGER,H_SPELL_SPARK_VISUAL_TRIGGER));
+            me->SetReactState(REACT_PASSIVE);
         }
 
         void MovementInform(uint32 uiType, uint32 uiPointId)
@@ -350,7 +332,7 @@ public:
                 me->DespawnOrUnsummon();
         }
 
-        void DamageTaken(Unit * /*pDoneBy*/, uint32 &uiDamage)
+        void DamageTaken(Unit* /*pDoneBy*/, uint32 &uiDamage)
         {
             uiDamage = 0;
         }
@@ -364,12 +346,6 @@ public:
                 return;
             }
 
-            if (uiArcWeldTimer <= uiDiff)
-            {
-                DoCast(me, SPELL_ARC_WELD);
-                uiArcWeldTimer = 500;
-            } else uiArcWeldTimer -= uiDiff;
-            
             // Prevent them to follow players through the whole instance
             if (uiCheckTimer <= uiDiff)
             {

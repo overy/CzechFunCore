@@ -67,6 +67,8 @@ EndScriptData */
 #define CREATURE_PHOENIX_EGG          24675
 #define CREATURE_ARCANE_SPHERE        24708
 
+#define GO_ESCAPE_ORB                 188173
+
 /** Locations **/
 float KaelLocations[3][2]=
 {
@@ -147,7 +149,7 @@ public:
             }
         }
 
-        void JustDied(Unit * /*killer*/)
+        void JustDied(Unit* /*killer*/)
         {
             DoScriptText(SAY_DEATH, me);
 
@@ -156,6 +158,9 @@ public:
 
             pInstance->HandleGameObject(pInstance->GetData64(DATA_KAEL_DOOR), true);
             // Open the encounter door
+
+            if (GameObject* go = me->FindNearestGameObject(GO_ESCAPE_ORB, 150.0f))
+                go->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
         }
 
         void DamageTaken(Unit* /*done_by*/, uint32 &damage)
@@ -164,7 +169,7 @@ public:
                 RemoveGravityLapse();                           // Remove Gravity Lapse so that players fall to ground if they kill him when in air.
         }
 
-        void EnterCombat(Unit * /*who*/)
+        void EnterCombat(Unit* /*who*/)
         {
             if (!pInstance)
                 return;
@@ -457,8 +462,8 @@ public:
             DoCast(me, SPELL_FLAMESTRIKE2, true);
         }
 
-        void EnterCombat(Unit * /*who*/) {}
-        void MoveInLineOfSight(Unit * /*who*/) {}
+        void EnterCombat(Unit* /*who*/) {}
+        void MoveInLineOfSight(Unit* /*who*/) {}
         void UpdateAI(const uint32 diff)
         {
             if (FlameStrikeTimer <= diff)

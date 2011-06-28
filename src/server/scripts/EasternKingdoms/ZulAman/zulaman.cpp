@@ -86,7 +86,7 @@ class npc_forest_frog : public CreatureScript
 
             void Reset() {}
 
-            void EnterCombat(Unit * /*who*/) {}
+            void EnterCombat(Unit* /*who*/) {}
 
             void DoSpawnRandom()
             {
@@ -160,7 +160,7 @@ class npc_zulaman_hostage : public CreatureScript
             bool IsLoot;
             uint64 PlayerGUID;
             void Reset() {}
-            void EnterCombat(Unit * /*who*/) {}
+            void EnterCombat(Unit* /*who*/) {}
             void JustDied(Unit* /*who*/)
             {
                 Player* pPlayer = Unit::GetPlayer(*me, PlayerGUID);

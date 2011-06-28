@@ -526,8 +526,6 @@ void BossAI::_Reset()
     summons.DespawnAll();
     if (instance)
         instance->SetBossState(_bossId, NOT_STARTED);
-
-    inFightAggroCheck_Timer = MAX_AGGRO_PULSE_TIMER;
 }
 
 void BossAI::_JustDied()
@@ -694,7 +692,7 @@ void WorldBossAI::JustSummoned(Creature* summon)
 {
     summons.Summon(summon);
     Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 0.0f, true);
-    if(target)
+    if (target)
         summon->AI()->AttackStart(target);
 }
 

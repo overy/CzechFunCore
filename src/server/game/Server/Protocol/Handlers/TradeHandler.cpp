@@ -219,7 +219,7 @@ static void setAcceptTradeMode(TradeData* myTrade, TradeData* hisTrade, Item **m
     hisTrade->SetInAcceptProcess(true);
 
     // store items in local list and set 'in-trade' flag
-    for(uint8 i = 0; i < TRADE_SLOT_TRADED_COUNT; ++i)
+    for (uint8 i = 0; i < TRADE_SLOT_TRADED_COUNT; ++i)
     {
         if (Item* item = myTrade->GetItem(TradeSlots(i)))
         {
@@ -353,7 +353,7 @@ void WorldSession::HandleAcceptTradeOpcode(WorldPacket& /*recvPacket*/)
 
             my_spell = new Spell(_player, spellEntry, true);
             my_spell->m_CastItem = castItem;
-            my_targets.setTradeItemTarget(_player);
+            my_targets.SetTradeItemTarget(_player);
             my_spell->m_targets = my_targets;
 
             SpellCastResult res = my_spell->CheckCast(true);
@@ -388,7 +388,7 @@ void WorldSession::HandleAcceptTradeOpcode(WorldPacket& /*recvPacket*/)
 
             his_spell = new Spell(trader, spellEntry, true);
             his_spell->m_CastItem = castItem;
-            his_targets.setTradeItemTarget(trader);
+            his_targets.SetTradeItemTarget(trader);
             his_spell->m_targets = his_targets;
 
             SpellCastResult res = his_spell->CheckCast(true);

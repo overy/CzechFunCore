@@ -51,7 +51,6 @@ ScriptMapMap sQuestStartScripts;
 ScriptMapMap sSpellScripts;
 ScriptMapMap sGameObjectScripts;
 ScriptMapMap sEventScripts;
-ScriptMapMap sGossipScripts;
 ScriptMapMap sWaypointScripts;
 
 std::string GetScriptsTableNameByType(ScriptsType type)
@@ -65,7 +64,6 @@ std::string GetScriptsTableNameByType(ScriptsType type)
         case SCRIPTS_GAMEOBJECT:    res = "gameobject_scripts"; break;
         case SCRIPTS_EVENT:         res = "event_scripts";      break;
         case SCRIPTS_WAYPOINT:      res = "waypoint_scripts";   break;
-        case SCRIPTS_GOSSIP:        res = "gossip_scripts";     break;
         default: break;
     }
     return res;
@@ -82,7 +80,6 @@ ScriptMapMap* GetScriptsMapByType(ScriptsType type)
         case SCRIPTS_GAMEOBJECT:    res = &sGameObjectScripts;  break;
         case SCRIPTS_EVENT:         res = &sEventScripts;       break;
         case SCRIPTS_WAYPOINT:      res = &sWaypointScripts;    break;
-        case SCRIPTS_GOSSIP:        res = &sGossipScripts;      break;
         default: break;
     }
     return res;
@@ -222,7 +219,7 @@ bool SpellClickInfo::IsFitToRequirements(Unit const* clicker, Unit const* clicke
         if (clicker->HasAura(auraForbidden))
             return false;
 
-    Unit const * summoner = NULL;
+    Unit const* summoner = NULL;
     // Check summoners for party
     if (clickee->isSummon())
         summoner = clickee->ToTempSummon()->GetSummoner();
@@ -987,7 +984,7 @@ void ObjectMgr::LoadCreatureAddons()
     sLog->outString();
 }
 
-CreatureAddon const * ObjectMgr::GetCreatureAddon(uint32 lowguid)
+CreatureAddon const* ObjectMgr::GetCreatureAddon(uint32 lowguid)
 {
     CreatureAddonContainer::const_iterator itr = CreatureAddonStore.find(lowguid);
     if (itr != CreatureAddonStore.end())
@@ -996,7 +993,7 @@ CreatureAddon const * ObjectMgr::GetCreatureAddon(uint32 lowguid)
     return NULL;
 }
 
-CreatureAddon const * ObjectMgr::GetCreatureTemplateAddon(uint32 entry)
+CreatureAddon const* ObjectMgr::GetCreatureTemplateAddon(uint32 entry)
 {
     CreatureAddonContainer::const_iterator itr = CreatureTemplateAddonStore.find(entry);
     if (itr != CreatureTemplateAddonStore.end())
@@ -1437,8 +1434,8 @@ void ObjectMgr::LoadCreatures()
 
     //                                                         0     1   2      3           4            5         6            7           8            9            10
     QueryResult result = WorldDatabase.Query("SELECT creature.guid, id, map, modelid, equipment_id, position_x, position_y, position_z, orientation, spawntimesecs, spawndist, "
-    //          11            12        13        14           15           16        17          18          19                 20                  21                   22
-        "currentwaypoint, curhealth, curmana, DeathState, MovementType, spawnMask, phaseMask, eventEntry, pool_entry, creature.npcflag, creature.unit_flags, creature.dynamicflags "
+    //          11            12        13        14           15           16        17          18          19                 20                  21
+        "currentwaypoint, curhealth, curmana, MovementType, spawnMask, phaseMask, eventEntry, pool_entry, creature.npcflag, creature.unit_flags, creature.dynamicflags "
         "FROM creature "
         "LEFT OUTER JOIN game_event_creature ON creature.guid = game_event_creature.guid "
         "LEFT OUTER JOIN pool_creature ON creature.guid = pool_creature.guid");
@@ -1497,15 +1494,14 @@ void ObjectMgr::LoadCreatures()
         data.currentwaypoint= fields[11].GetUInt32();
         data.curhealth      = fields[12].GetUInt32();
         data.curmana        = fields[13].GetUInt32();
-        data.is_dead        = fields[14].GetBool();
-        data.movementType   = fields[15].GetUInt8();
-        data.spawnMask      = fields[16].GetUInt8();
-        data.phaseMask      = fields[17].GetUInt16();
-        int16 gameEvent     = fields[18].GetInt16();
-        uint32 PoolId       = fields[19].GetUInt32();
-        data.npcflag        = fields[20].GetUInt32();
-        data.unit_flags     = fields[21].GetUInt32();
-        data.dynamicflags   = fields[22].GetUInt32();
+        data.movementType   = fields[14].GetUInt8();
+        data.spawnMask      = fields[15].GetUInt8();
+        data.phaseMask      = fields[16].GetUInt16();
+        int16 gameEvent     = fields[17].GetInt16();
+        uint32 PoolId       = fields[18].GetUInt32();
+        data.npcflag        = fields[19].GetUInt32();
+        data.unit_flags     = fields[20].GetUInt32();
+        data.dynamicflags   = fields[21].GetUInt32();
 
         MapEntry const* mapEntry = sMapStore.LookupEntry(data.mapid);
         if (!mapEntry)
@@ -1572,12 +1568,6 @@ void ObjectMgr::LoadCreatures()
         {
             sLog->outErrorDb("Table `creature` have creature (GUID: %u Entry: %u) with `phaseMask`=0 (not visible for anyone), set to 1.", guid, data.id);
             data.phaseMask = 1;
-        }
-
-        if (data.npcflag & UNIT_NPC_FLAG_SPELLCLICK)
-        {
-            sLog->outErrorDb("Table `creature` have creature (GUID: %u Entry: %u) with npcflag UNIT_NPC_FLAG_SPELLCLICK (%u) set, it is expected to be set by code handling `npc_spellclick_spells` content.", guid, data.id, UNIT_NPC_FLAG_SPELLCLICK);
-            data.npcflag &= ~UNIT_NPC_FLAG_SPELLCLICK;
         }
 
         // Add to grid if not managed by the game event or pool system
@@ -1733,7 +1723,6 @@ uint32 ObjectMgr::AddCreData(uint32 entry, uint32 /*team*/, uint32 mapId, float 
     data.currentwaypoint = 0;
     data.curhealth = stats->GenerateHealth(cInfo);
     data.curmana = stats->GenerateMana(cInfo);
-    data.is_dead = false;
     data.movementType = cInfo->MovementType;
     data.spawnMask = 1;
     data.phaseMask = PHASEMASK_NORMAL;
@@ -2941,48 +2930,6 @@ void ObjectMgr::LoadVehicleAccessories()
     while (result->NextRow());
 
     sLog->outString(">> Loaded %u Vehicle Accessories in %u ms", count, GetMSTimeDiffToNow(oldMSTime));
-    sLog->outString();
-}
-
-void ObjectMgr::LoadVehicleScaling()
-{
-    uint32 oldMSTime = getMSTime();
-
-    m_VehicleScalingMap.clear();                           // needed for reload case
-
-    uint32 count = 0;
-
-    QueryResult result = WorldDatabase.Query("SELECT `entry`, `baseItemLevel`, `scalingFactor` FROM `vehicle_scaling_info`");
-
-    if (!result)
-    {
-        sLog->outString(">> Loaded 0 vehicle scaling entries. DB table `vehicle_scaling_info` is empty.");
-        sLog->outString();
-        return;
-    }
-
-    do
-    {
-        Field *fields = result->Fetch();
-
-        uint32 vehicleEntry       = fields[0].GetUInt32();
-        float baseItemLevel       = fields[1].GetFloat();
-        float scalingFactor       = fields[2].GetFloat();
-
-        if (!sVehicleStore.LookupEntry(vehicleEntry))
-        {
-            sLog->outErrorDb("Table `vehicle_scaling_info`: vehicle entry %u does not exist.", vehicleEntry);
-            continue;
-        }
-
-        m_VehicleScalingMap[vehicleEntry].ID = vehicleEntry;
-        m_VehicleScalingMap[vehicleEntry].baseItemLevel = baseItemLevel;
-        m_VehicleScalingMap[vehicleEntry].scalingFactor = scalingFactor;
-
-        ++count;
-    } while (result->NextRow());
-
-    sLog->outString(">> Loaded %u vehicle scaling entries in %u ms", count, GetMSTimeDiffToNow(oldMSTime));
     sLog->outString();
 }
 
@@ -4912,7 +4859,7 @@ void ObjectMgr::LoadEventScripts()
     // Load all possible script entries from spells
     for (uint32 i = 1; i < sSpellStore.GetNumRows(); ++i)
     {
-        SpellEntry const * spell = sSpellStore.LookupEntry(i);
+        SpellEntry const* spell = sSpellStore.LookupEntry(i);
         if (spell)
         {
             for (uint8 j = 0; j < MAX_SPELL_EFFECTS; ++j)
@@ -4926,9 +4873,9 @@ void ObjectMgr::LoadEventScripts()
         }
     }
 
-    for(size_t path_idx = 0; path_idx < sTaxiPathNodesByPath.size(); ++path_idx)
+    for (size_t path_idx = 0; path_idx < sTaxiPathNodesByPath.size(); ++path_idx)
     {
-        for(size_t node_idx = 0; node_idx < sTaxiPathNodesByPath[path_idx].size(); ++node_idx)
+        for (size_t node_idx = 0; node_idx < sTaxiPathNodesByPath[path_idx].size(); ++node_idx)
         {
             TaxiPathNodeEntry const& node = sTaxiPathNodesByPath[path_idx][node_idx];
 
@@ -5054,7 +5001,7 @@ void ObjectMgr::ValidateSpellScripts()
 
     for (SpellScriptsMap::iterator itr = mSpellScripts.begin(); itr != mSpellScripts.end();)
     {
-        SpellEntry const * spellEntry = sSpellStore.LookupEntry(itr->first);
+        SpellEntry const* spellEntry = sSpellStore.LookupEntry(itr->first);
         std::vector<std::pair<SpellScriptLoader *, SpellScriptsMap::iterator> > SpellScriptLoaders;
         sScriptMgr->CreateSpellScriptLoaders(itr->first, SpellScriptLoaders);
         itr = mSpellScripts.upper_bound(itr->first);
@@ -5095,13 +5042,6 @@ void ObjectMgr::ValidateSpellScripts()
 
     sLog->outString(">> Validated %u scripts in %u ms", count, GetMSTimeDiffToNow(oldMSTime));
     sLog->outString();
-}
-
-void ObjectMgr::LoadGossipScripts()
-{
-    LoadScripts(SCRIPTS_GOSSIP);
-
-    // checks are done in LoadGossipMenuItems
 }
 
 void ObjectMgr::LoadPageTexts()
@@ -5446,12 +5386,29 @@ void ObjectMgr::ReturnOrDeleteOldMails(bool serverUp)
     PreparedQueryResult result = CharacterDatabase.Query(stmt);
     if (!result)
     {
-        sLog->outString(">> No expired mails found or DB table `mail` is empty.");
+        sLog->outString(">> No expired mails found.");
         sLog->outString();
         return;                                             // any mails need to be returned or deleted
     }
 
-    uint32 count = 0;
+    std::map<uint32 /*messageId*/, MailItemInfoVec> itemsCache;
+    stmt = CharacterDatabase.GetPreparedStatement(CHAR_GET_EXPIRED_MAIL_ITEMS);
+    stmt->setUInt64(0, basetime);
+    if (PreparedQueryResult items = CharacterDatabase.Query(stmt))
+    {
+        MailItemInfo item;
+        do
+        {
+            Field* fields = items->Fetch();
+            item.item_guid = fields[0].GetUInt32();
+            item.item_template = fields[1].GetUInt32();
+            uint32 mailId = fields[2].GetUInt32();
+            itemsCache[mailId].push_back(item);
+        } while (items->NextRow());
+    }
+
+    uint32 deletedCount = 0;
+    uint32 returnedCount = 0;
     do
     {
 
@@ -5482,21 +5439,9 @@ void ObjectMgr::ReturnOrDeleteOldMails(bool serverUp)
         // Delete or return mail
         if (has_items)
         {
-            stmt = CharacterDatabase.GetPreparedStatement(CHAR_GET_MAIL_ITEM_LITE);
-            stmt->setUInt32(0, m->messageID);
-            if (PreparedQueryResult resultItems = CharacterDatabase.Query(stmt))
-            {
-                do
-                {
-                    Field *fields2 = resultItems->Fetch();
+            // read items from cache
+            m->items.swap(itemsCache[m->messageID]);
 
-                    uint32 item_guid_low = fields2[0].GetUInt32();
-                    uint32 item_template = fields2[1].GetUInt32();
-
-                    m->AddItem(item_guid_low, item_template);
-                }
-                while (resultItems->NextRow());
-            }
             // if it is mail from non-player, or if it's already return mail, it shouldn't be returned, but deleted
             if (m->messageType != MAIL_NORMAL || (m->checked & (MAIL_CHECK_MASK_COD_PAYMENT | MAIL_CHECK_MASK_RETURNED)))
             {
@@ -5533,6 +5478,7 @@ void ObjectMgr::ReturnOrDeleteOldMails(bool serverUp)
                     CharacterDatabase.Execute(stmt);
                 }
                 delete m;
+                ++returnedCount;
                 continue;
             }
         }
@@ -5541,11 +5487,11 @@ void ObjectMgr::ReturnOrDeleteOldMails(bool serverUp)
         stmt->setUInt32(0, m->messageID);
         CharacterDatabase.Execute(stmt);
         delete m;
-        ++count;
+        ++deletedCount;
     }
     while (result->NextRow());
 
-    sLog->outString(">> Loaded %u mails in %u ms", count, GetMSTimeDiffToNow(oldMSTime));
+    sLog->outString(">> Processed %u expired mails: %u deleted and %u returned in %u ms", deletedCount + returnedCount, deletedCount, returnedCount, GetMSTimeDiffToNow(oldMSTime));
     sLog->outString();
 }
 
@@ -7314,7 +7260,7 @@ void ObjectMgr::LoadQuestPOI()
             int32  x                  = fields[2].GetInt32();
             int32  y                  = fields[3].GetInt32();
 
-            if(POIs[questId].size() <= id + 1)
+            if (POIs[questId].size() <= id + 1)
                 POIs[questId].resize(id + 10);
 
             QuestPOIPoint point(x, y);
@@ -8370,7 +8316,7 @@ void ObjectMgr::LoadMailLevelRewards()
     sLog->outString();
 }
 
-void ObjectMgr::AddSpellToTrainer( uint32 entry, uint32 spell, uint32 spellCost, uint32 reqSkill, uint32 reqSkillValue, uint32 reqLevel)
+void ObjectMgr::AddSpellToTrainer(uint32 entry, uint32 spell, uint32 spellCost, uint32 reqSkill, uint32 reqSkillValue, uint32 reqLevel)
 {
     if (entry >= TRINITY_TRAINER_START_REF)
         return;
@@ -8630,7 +8576,7 @@ void ObjectMgr::LoadGossipMenuItems()
 
     QueryResult result = WorldDatabase.Query(
         "SELECT menu_id, id, option_icon, option_text, option_id, npc_option_npcflag, "
-        "action_menu_id, action_poi_id, action_script_id, box_coded, box_money, box_text "
+        "action_menu_id, action_poi_id, box_coded, box_money, box_text "
         "FROM gossip_menu_option ORDER BY menu_id, id");
 
     if (!result)
@@ -8642,14 +8588,8 @@ void ObjectMgr::LoadGossipMenuItems()
 
     uint32 count = 0;
 
-    std::set<uint32> gossipScriptSet;
-
-    for (ScriptMapMap::const_iterator itr = sGossipScripts.begin(); itr != sGossipScripts.end(); ++itr)
-        gossipScriptSet.insert(itr->first);
-
     do
     {
-
         Field* fields = result->Fetch();
 
         GossipMenuItems gMenuItem;
@@ -8662,10 +8602,9 @@ void ObjectMgr::LoadGossipMenuItems()
         gMenuItem.OptionNpcflag         = fields[5].GetUInt32();
         gMenuItem.ActionMenuId          = fields[6].GetUInt32();
         gMenuItem.ActionPoiId           = fields[7].GetUInt32();
-        gMenuItem.ActionScriptId        = fields[8].GetUInt32();
-        gMenuItem.BoxCoded              = fields[9].GetBool();
-        gMenuItem.BoxMoney              = fields[10].GetUInt32();
-        gMenuItem.BoxText               = fields[11].GetString();
+        gMenuItem.BoxCoded              = fields[8].GetBool();
+        gMenuItem.BoxMoney              = fields[9].GetUInt32();
+        gMenuItem.BoxText               = fields[10].GetString();
 
         if (gMenuItem.OptionIcon >= GOSSIP_ICON_MAX)
         {
@@ -8682,33 +8621,10 @@ void ObjectMgr::LoadGossipMenuItems()
             gMenuItem.ActionPoiId = 0;
         }
 
-        if (gMenuItem.ActionScriptId)
-        {
-            if (gMenuItem.OptionType != GOSSIP_OPTION_GOSSIP)
-            {
-                sLog->outErrorDb("Table gossip_menu_option for menu %u, id %u have action_script_id %u but option_id is not GOSSIP_OPTION_GOSSIP, ignoring", gMenuItem.MenuId, gMenuItem.OptionIndex, gMenuItem.ActionScriptId);
-                continue;
-            }
-
-            if (sGossipScripts.find(gMenuItem.ActionScriptId) == sGossipScripts.end())
-            {
-                sLog->outErrorDb("Table gossip_menu_option for menu %u, id %u have action_script_id %u that does not exist in `gossip_scripts`, ignoring", gMenuItem.MenuId, gMenuItem.OptionIndex, gMenuItem.ActionScriptId);
-                continue;
-            }
-
-            gossipScriptSet.erase(gMenuItem.ActionScriptId);
-        }
-
         m_mGossipMenuItemsMap.insert(GossipMenuItemsMap::value_type(gMenuItem.MenuId, gMenuItem));
         ++count;
     }
     while (result->NextRow());
-
-    if (!gossipScriptSet.empty())
-    {
-        for (std::set<uint32>::const_iterator itr = gossipScriptSet.begin(); itr != gossipScriptSet.end(); ++itr)
-            sLog->outErrorDb("Table `gossip_scripts` contain unused script, id %u.", *itr);
-    }
 
     sLog->outString(">> Loaded %u gossip_menu_option entries in %u ms", count, GetMSTimeDiffToNow(oldMSTime));
     sLog->outString();
@@ -8729,7 +8645,7 @@ bool ObjectMgr::RemoveVendorItem(uint32 entry, uint32 item, bool savetodb)
     if (iter == m_mCacheVendorItemMap.end())
         return false;
 
-    if(!iter->second.RemoveItem(item))
+    if (!iter->second.RemoveItem(item))
         return false;
 
     if (savetodb) WorldDatabase.PExecute("DELETE FROM npc_vendor WHERE entry='%u' AND item='%u'", entry, item);
@@ -8807,7 +8723,7 @@ bool ObjectMgr::IsVendorItemValid(uint32 vendor_entry, uint32 item_id, int32 max
         if (pl)
             ChatHandler(pl).PSendSysMessage(LANG_ITEM_ALREADY_IN_LIST, item_id, ExtendedCost);
         else
-            sLog->outErrorDb( "Table `npc_vendor` has duplicate items %u (with extended cost %u) for vendor (Entry: %u), ignoring", item_id, ExtendedCost, vendor_entry);
+            sLog->outErrorDb("Table `npc_vendor` has duplicate items %u (with extended cost %u) for vendor (Entry: %u), ignoring", item_id, ExtendedCost, vendor_entry);
         return false;
     }
 

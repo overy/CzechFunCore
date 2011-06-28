@@ -254,7 +254,6 @@ struct CreatureData
     uint32 currentwaypoint;
     uint32 curhealth;
     uint32 curmana;
-    bool  is_dead;
     uint8 movementType;
     uint8 spawnMask;
     uint32 npcflag;
@@ -492,15 +491,6 @@ class Creature : public Unit, public GridObject<Creature>
         void AI_SendMoveToPacket(float x, float y, float z, uint32 time, uint32 MovementFlags, uint8 type);
         CreatureAI * AI() const { return (CreatureAI*)i_AI; }
 
-        //Bot commands
-        void SetBotAI(CreatureAI *newAI)
-        {
-            bot_AI = newAI;
-        }
-        CreatureAI *GetBotAI(){ return bot_AI; }
-        void SetIAmABot(bool bot){ is_a_bot = bot; }
-        bool GetIAmABot(){ return is_a_bot; }
-
         uint32 GetShieldBlockValue() const                  //dunno mob block value
         {
             return (getLevel()/2 + uint32(GetStat(STAT_STRENGTH)/20));
@@ -568,7 +558,7 @@ class Creature : public Unit, public GridObject<Creature>
         Player *GetLootRecipient() const;
         Group *GetLootRecipientGroup() const;
         bool hasLootRecipient() const { return m_lootRecipient || m_lootRecipientGroup; }
-        bool isTappedBy(Player *player) const;                          // return true if the creature is tapped by the player or a member of his party.
+        bool isTappedBy(Player* player) const;                          // return true if the creature is tapped by the player or a member of his party.
 
         void SetLootRecipient (Unit* unit);
         void AllLootRemovedFromCorpse();
@@ -612,7 +602,6 @@ class Creature : public Unit, public GridObject<Creature>
         void SetCurrentCell(Cell const& cell) { m_currentCell = cell; }
 
         void RemoveCorpse(bool setSpawnTime = true);
-        bool isDeadByDefault() const { return m_isDeadByDefault; };
 
         void ForcedDespawn(uint32 timeMSToDespawn = 0);
         void DespawnOrUnsummon(uint32 msTimeToDespawn = 0);
@@ -666,7 +655,6 @@ class Creature : public Unit, public GridObject<Creature>
         void SetFormation(CreatureGroup *formation) {m_formation = formation;}
 
         Unit *SelectVictim();
-        void SetDeadByDefault (bool death_state) {m_isDeadByDefault = death_state;}
 
         void SetDisableReputationGain(bool disable) { DisableReputationGain = disable; }
         bool IsReputationGainDisabled() { return DisableReputationGain; }
@@ -723,7 +711,6 @@ class Creature : public Unit, public GridObject<Creature>
         bool m_AlreadySearchedAssistance;
         bool m_regenHealth;
         bool m_AI_locked;
-        bool m_isDeadByDefault;
 
         SpellSchoolMask m_meleeDamageSchoolMask;
         uint32 m_originalEntry;
@@ -741,10 +728,6 @@ class Creature : public Unit, public GridObject<Creature>
         bool isVisibleForInState(WorldObject const* seer) const;
         bool canSeeAlways(WorldObject const* obj) const;
     private:
-
-        bool is_a_bot;
-        CreatureAI *bot_AI;
-
         //WaypointMovementGenerator vars
         uint32 m_waypointID;
         uint32 m_path_id;

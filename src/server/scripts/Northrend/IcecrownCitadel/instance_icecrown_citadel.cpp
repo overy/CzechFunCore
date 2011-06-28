@@ -24,7 +24,6 @@
 #include "icecrown_citadel.h"
 
 #define MAX_ENCOUNTER      12
-
 DoorData const doorData[] =
 {
     {GO_LORD_MARROWGAR_S_ENTRANCE,           DATA_LORD_MARROWGAR,        DOOR_TYPE_ROOM,       BOUNDARY_N   },
@@ -117,14 +116,26 @@ class instance_icecrown_citadel : public InstanceMapScript
                 SindragosaGUID = 0;
                 SpinestalkerGUID = 0;
                 RimefangGUID = 0;
-                                    TheLichKingGUID = 0;
+                DreamwalkerCache = 0;
+                TheLichKingGUID = 0;
                 FrostwyrmCount = 0;
                 SpinestalkerTrashCount = 0;
                 RimefangTrashCount = 0;
-                TirionGUID         = 0;
-                TerenasFighterGUID   = 0;
-                SpiritWardenGUID     = 0;
-                uiNecroticStack    = 0;
+                Tirion = 0;
+                TerenasFighter = 0;
+                SpiritWarden = 0;
+                NecroticStack = 0;
+                BeenWaiting = 0;
+                NeckDeep = 0;
+                IceShard1 = 0;
+                IceShard2 = 0;
+                IceShard3 = 0;
+                IceShard4 = 0;
+                FrostyEdgeInner = 0;
+                FrostyEdgeOuter = 0;
+                EdgeDestroyWarning = 0;
+                FrozenLavaman = 0;
+                LavamanPillars = 0;
                 IsBonedEligible = true;
                 IsOozeDanceEligible = true;
                 IsNauseaEligible = true;
@@ -135,6 +146,12 @@ class instance_icecrown_citadel : public InstanceMapScript
                 BloodQuickeningMinutes = 0;
             }
 
+            void Initialize()
+            {
+                memset(&uiEncounter, 0, sizeof(uiEncounter));
+                //While Gunship Battle is not implemented
+                //uiEncounter[DATA_GUNSHIP_EVENT] = DONE;
+            }
             void FillInitialWorldStates(WorldPacket& data)
             {
                 data << uint32(WORLDSTATE_SHOW_TIMER)         << uint32(BloodQuickeningState == IN_PROGRESS);
@@ -144,6 +161,15 @@ class instance_icecrown_citadel : public InstanceMapScript
                 data << uint32(WORLDSTATE_ATTEMPTS_MAX)       << uint32(MaxHeroicAttempts);
             }
 
+            bool IsEncounterInProgress() const
+            {
+                if (!instance->GetPlayersCountExceptGMs())
+                    return false;
+                for (uint8 i = 0; i < MAX_ENCOUNTER; ++i)
+                    if (uiEncounter[i] == IN_PROGRESS)
+                        return true;
+                return false;
+            }
             void OnPlayerEnter(Player* player)
             {
                 if (!TeamInInstance)
@@ -269,23 +295,22 @@ class instance_icecrown_citadel : public InstanceMapScript
                         if (!creature->isDead())
                             ++FrostwyrmCount;
                         break;
-                       case NPC_THE_LICH_KING:
-                            TheLichKingGUID = creature->GetGUID();
-                           break;
                     case NPC_RIMEFANG:
                         RimefangGUID = creature->GetGUID();
                         if (!creature->isDead())
                             ++FrostwyrmCount;
                         break;
-                    case NPC_TIRION_ICC:
-                        TirionGUID = creature->GetGUID();
+                    case NPC_THE_LICH_KING:
+                        TheLichKingGUID = creature->GetGUID();
                         break;
-                    case NPC_TERENAS_FIGHTER:{
-                        TerenasFighterGUID = creature->GetGUID();
-                        break;}
+                    case NPC_TIRION:
+                        Tirion = creature->GetGUID();
+                        break;
+                    case NPC_TERENAS_FIGHTER:
+                        TerenasFighter = creature->GetGUID();
+                        break;
                     case NPC_SPIRIT_WARDEN:
-                        SpiritWardenGUID = creature->GetGUID();
-                        break;
+                        SpiritWarden = creature->GetGUID();
                     default:
                         break;
                 }
@@ -447,38 +472,44 @@ class instance_icecrown_citadel : public InstanceMapScript
                     case GO_DRINK_ME:
                         PutricideTableGUID = go->GetGUID();
                         break;
-                    case GO_LAVAMAN:
-                        uilavaman = go->GetGUID();
+                    case GO_DREAMWALKER_CACHE_10N:
+                    case GO_DREAMWALKER_CACHE_25N:
+                    case GO_DREAMWALKER_CACHE_10H:
+                    case GO_DREAMWALKER_CACHE_25H:
+                        DreamwalkerCache = go->GetGUID();
                         break;
-                    case GO_HANGINGMAN:
-                        uihangingman = go->GetGUID();
+                    case GO_FROZEN_LAVAMAN:
+                        FrozenLavaman = go->GetGUID();
+                        break;
+                    case GO_LAVAMAN_PILLARS:
+                        LavamanPillars = go->GetGUID();
                         break;
                     case GO_ICE_SHARD_1:
-                        uiIceShard1 = go->GetGUID();
-                        go->SetGoState(uiEncounter[DATA_LICH_KING_EVENT] == DONE ? GO_STATE_ACTIVE : GO_STATE_READY);
+                        IceShard1 = go->GetGUID();
+                        go->SetGoState(GetBossState(DATA_THE_LICH_KING) == DONE ? GO_STATE_ACTIVE : GO_STATE_READY);
                         break;
                     case GO_ICE_SHARD_2:     
-                        uiIceShard2 = go->GetGUID();
-                        go->SetGoState(uiEncounter[DATA_LICH_KING_EVENT] == DONE ? GO_STATE_ACTIVE : GO_STATE_READY);
+                        IceShard2 = go->GetGUID();
+                        go->SetGoState(GetBossState(DATA_THE_LICH_KING) == DONE ? GO_STATE_ACTIVE : GO_STATE_READY);
                         break;
                     case GO_ICE_SHARD_3:
-                        uiIceShard3 = go->GetGUID();
-                        go->SetGoState(uiEncounter[DATA_LICH_KING_EVENT] == DONE ? GO_STATE_ACTIVE : GO_STATE_READY);
+                        IceShard3 = go->GetGUID();
+                        go->SetGoState(GetBossState(DATA_THE_LICH_KING) == DONE ? GO_STATE_ACTIVE : GO_STATE_READY);
                         break;
                     case GO_ICE_SHARD_4:
-                        uiIceShard4 = go->GetGUID();
-                        go->SetGoState(uiEncounter[DATA_LICH_KING_EVENT] == DONE ? GO_STATE_ACTIVE : GO_STATE_READY);
+                        IceShard4 = go->GetGUID();
+                        go->SetGoState(GetBossState(DATA_THE_LICH_KING) == DONE ? GO_STATE_ACTIVE : GO_STATE_READY);
                         break;
                     case GO_FROSTY_EDGE_OUTER:
-                        uiFrostyEdgeOuter = go->GetGUID();
+                        FrostyEdgeOuter = go->GetGUID();
                         go->SetGoState(GO_STATE_ACTIVE);
                         break;
                     case GO_FROSTY_EDGE_INNER:
-                        uiFrostyEdgeInner = go->GetGUID();
+                        FrostyEdgeInner = go->GetGUID();
                         go->SetGoState(GO_STATE_READY);
                         break;
                     case GO_EDGE_DESTROY_WARNING:
-                        uiEdgeDestroyWarning = go->GetGUID();
+                        EdgeDestroyWarning = go->GetGUID();
                         go->SetGoState(GO_STATE_READY);
                         break;
                     default:
@@ -538,12 +569,10 @@ class instance_icecrown_citadel : public InstanceMapScript
                         return BloodQuickeningState;
                     case DATA_HEROIC_ATTEMPTS:
                         return HeroicAttempts;
-                    case DATA_LICH_KING_EVENT:
-                        return uiEncounter[DATA_LICH_KING_EVENT];
-                    case DATA_NECK_DEEP_ACHIEVEMENT:         
-                        return uiNeckDeep;
-                    case DATA_BEEN_WAITING_ACHIEVEMENT:              
-                        return uiNecroticStack;
+                    case DATA_BEEN_WAITING_ACHIEVEMENT:
+                        return BeenWaiting;
+                    case DATA_NECK_DEEP_ACHIEVEMENT:
+                        return NeckDeep;
                     default:
                         break;
                 }
@@ -602,35 +631,32 @@ class instance_icecrown_citadel : public InstanceMapScript
                         return SpinestalkerGUID;
                     case DATA_RIMEFANG:
                         return RimefangGUID;
-                       case DATA_THE_LICH_KING:
-                           return TheLichKingGUID;
-                    case GUID_LICH_KING:                        
-                    {
-                        if (!TheLichKingGUID || !instance->GetCreature(TheLichKingGUID))
-                            instance->LoadGrid(428.6f, -2123.88f);
+                    case DATA_THE_LICH_KING:
                         return TheLichKingGUID;
-                    }
-                    case GUID_TIRION:                           return TirionGUID;
-                    case GUID_LAVAMAN:                          return uilavaman;
-                    case GUID_HANGINGMAN:                       return uihangingman;
-                    case GUID_ICE_SHARD_1:
-                        return uiIceShard1;
-                    case GUID_ICE_SHARD_2:
-                        return uiIceShard2;
-                    case GUID_ICE_SHARD_3:
-                        return uiIceShard3;
-                    case GUID_ICE_SHARD_4:
-                        return uiIceShard4;
-                    case GUID_FROSTY_EDGE_OUTER:
-                        return uiFrostyEdgeOuter;
-                    case GUID_FROSTY_EDGE_INNER:
-                        return uiFrostyEdgeInner;
-                    case GUID_EDGE_DESTROY_WARNING:
-                        return uiEdgeDestroyWarning;
-                    case GUID_TERENAS_FIGHTER:
-                        return TerenasFighterGUID;
-                    case GUID_SPIRIT_WARDEN:
-                        return SpiritWardenGUID;
+                    case DATA_TIRION:
+                        return Tirion;
+                    case DATA_TERENAS_FIGHTER:
+                        return TerenasFighter;
+                    case DATA_SPIRIT_WARDEN:
+                        return SpiritWarden;
+                    case DATA_FROZEN_LAVAMAN:
+                        return FrozenLavaman;
+                    case DATA_LAVAMAN_PILLARS:
+                        return LavamanPillars;
+                    case DATA_ICE_SHARD_1:
+                        return IceShard1;
+                    case DATA_ICE_SHARD_2:
+                        return IceShard2;
+                    case DATA_ICE_SHARD_3:
+                        return IceShard3;
+                    case DATA_ICE_SHARD_4:
+                        return IceShard4;
+                    case DATA_FROSTY_EDGE_OUTER:
+                        return FrostyEdgeOuter;
+                    case DATA_FROSTY_EDGE_INNER:
+                        return FrostyEdgeInner;
+                    case DATA_EDGE_DESTROY_WARNING:
+                        return EdgeDestroyWarning;
                     default:
                         break;
                 }
@@ -646,7 +672,7 @@ class instance_icecrown_citadel : public InstanceMapScript
                 switch (type)
                 {
                     case DATA_LADY_DEATHWHISPER:
-                        SetBossState(DATA_GUNSHIP_EVENT, state);    // TEMP HACK UNTIL GUNSHIP SCRIPTED
+                        SetBossState(DATA_GUNSHIP_BATTLE_EVENT, state);// TEMP HACK UNTIL GUNSHIP SCRIPTED
                         if (state == DONE)
                         {
                             if (GameObject* elevator = instance->GetGameObject(LadyDeathwisperElevatorGUID))
@@ -672,6 +698,15 @@ class instance_icecrown_citadel : public InstanceMapScript
                                 break;
                         }
                         break;
+                    /*case DATA_GUNSHIP_BATTLE_EVENT:
+                        switch(state)
+                        {
+                            case DONE:
+                                break;
+                            case NOT_STARTED:
+                                break;
+                        }
+                        break;*/
                     case DATA_FESTERGUT:
                         if (state == DONE)
                         {
@@ -735,6 +770,8 @@ class instance_icecrown_citadel : public InstanceMapScript
                     case DATA_VALITHRIA_DREAMWALKER:
                         if (state == DONE && sPoolMgr->IsSpawnedObject<Quest>(WeeklyQuestData[8].questId[instance->GetSpawnMode() & 1]))
                             instance->SummonCreature(NPC_VALITHRIA_DREAMWALKER_QUEST, ValithriaSpawnPos);
+                        if (state == DONE)
+                        	DoRespawnGameObject(DreamwalkerCache, 7*DAY);
                         break;
                     case DATA_SINDRAGOSA:
                         HandleGameObject(FrostwingSigilGUID, state != DONE);
@@ -751,6 +788,19 @@ class instance_icecrown_citadel : public InstanceMapScript
                         }
                         break;
                     case DATA_THE_LICH_KING:
+                        if (state == NOT_STARTED)
+                            if (GameObject* go = instance->GetGameObject(FrozenLavaman))
+                                go->SetPhaseMask(2, true);
+
+                        if (state == DONE)
+                        {
+                            if (GameObject* go = instance->GetGameObject(FrozenLavaman))
+                                go->SetPhaseMask(1, true);
+
+                            if (GameObject* go = instance->GetGameObject(LavamanPillars))
+                                go->SetPhaseMask(2, true);
+                        }
+
                         if (instance->IsHeroic())
                         {
                             if (state == FAIL && HeroicAttempts)
@@ -795,7 +845,6 @@ class instance_icecrown_citadel : public InstanceMapScript
                             return;
 
                         if (GetBossState(DATA_SINDRAGOSA) == DONE)
-
                             return;
 
                         switch (data)
@@ -881,27 +930,6 @@ class instance_icecrown_citadel : public InstanceMapScript
                                     trap->AI()->DoAction(ACTION_STOP_TRAPS);
                         }
                         break;
-                    case DATA_LICH_KING_EVENT:
-                        if(data == NOT_STARTED)
-                        {
-                            if (GameObject *go = instance->GetGameObject(uilavaman))
-                                go->SetPhaseMask(2,true);
-                        }
-                        if (data == DONE)
-                        {
-                            if (GameObject *go = instance->GetGameObject(uilavaman))
-                                go->SetPhaseMask(1,true);
-                            if (GameObject *go = instance->GetGameObject(uihangingman))
-                                go->SetPhaseMask(2,true);
-                        }
-                        uiEncounter[DATA_LICH_KING_EVENT] = data;
-                        break;
-                    case DATA_NECK_DEEP_ACHIEVEMENT:         
-                        uiNeckDeep = data;
-                        break;
-                    case DATA_BEEN_WAITING_ACHIEVEMENT:         
-                        uiNecroticStack = data;
-                        break;
                     case DATA_BLOOD_QUICKENING_STATE:
                     {
                         // skip if nothing changes
@@ -933,6 +961,10 @@ class instance_icecrown_citadel : public InstanceMapScript
                         SaveToDB();
                         break;
                     }
+                    case DATA_BEEN_WAITING_ACHIEVEMENT:         
+                        NecroticStack = data;
+                    case DATA_NECK_DEEP_ACHIEVEMENT:         
+                        NeckDeep = data;
                     default:
                         break;
                 }
@@ -976,139 +1008,6 @@ class instance_icecrown_citadel : public InstanceMapScript
                 }
 
                 return false;
-            }
-
-            bool CheckRequiredBosses(uint32 bossId, Player const* player = NULL) const
-            {
-                if (player && player->isGameMaster())
-                    return true;
-
-                switch (bossId)
-                {
-                    case DATA_THE_LICH_KING:
-                        if (!CheckPlagueworks(bossId))
-                            return false;
-                        if (!CheckCrimsonHalls(bossId))
-                            return false;
-                        if (!CheckFrostwingHalls(bossId))
-                            return false;
-                        break;
-                    case DATA_SINDRAGOSA:
-                    case DATA_VALITHRIA_DREAMWALKER:
-                        if (!CheckFrostwingHalls(bossId))
-                            return false;
-                        break;
-                    case DATA_BLOOD_QUEEN_LANA_THEL:
-                    case DATA_BLOOD_PRINCE_COUNCIL:
-                        if (!CheckCrimsonHalls(bossId))
-                            return false;
-                        break;
-                    case DATA_FESTERGUT:
-                    case DATA_ROTFACE:
-                    case DATA_PROFESSOR_PUTRICIDE:
-                        if (!CheckPlagueworks(bossId))
-                            return false;
-                        break;
-                    default:
-                        break;
-                }
-
-                if (!CheckLowerSpire(bossId))
-                    return false;
-
-                return true;
-            }
-
-            bool CheckPlagueworks(uint32 bossId) const
-            {
-                switch (bossId)
-                {
-                    case DATA_THE_LICH_KING:
-                        if (GetBossState(DATA_PROFESSOR_PUTRICIDE) != DONE)
-                            return false;
-                        // no break
-                    case DATA_PROFESSOR_PUTRICIDE:
-                        if (GetBossState(DATA_FESTERGUT) != DONE || GetBossState(DATA_ROTFACE) != DONE)
-                            return false;
-                        break;
-                    default:
-                        break;
-                }
-
-                return true;
-            }
-
-            bool CheckCrimsonHalls(uint32 bossId) const
-            {
-                switch (bossId)
-                {
-                    case DATA_THE_LICH_KING:
-                        if (GetBossState(DATA_BLOOD_QUEEN_LANA_THEL) != DONE)
-                            return false;
-                        // no break
-                    case DATA_BLOOD_QUEEN_LANA_THEL:
-                        if (GetBossState(DATA_BLOOD_PRINCE_COUNCIL) != DONE)
-                            return false;
-                        break;
-                    default:
-                        break;
-                }
-
-                return true;
-            }
-
-            bool CheckFrostwingHalls(uint32 bossId) const
-            {
-                switch (bossId)
-                {
-                    case DATA_THE_LICH_KING:
-                        if (GetBossState(DATA_SINDRAGOSA) != DONE)
-                            return false;
-                        // no break
-                    case DATA_SINDRAGOSA:
-                        if (GetBossState(DATA_VALITHRIA_DREAMWALKER) != DONE)
-                            return false;
-                        break;
-                    default:
-                        break;
-                }
-
-                return true;
-            }
-
-            bool CheckLowerSpire(uint32 bossId) const
-            {
-                switch (bossId)
-                {
-                    case DATA_THE_LICH_KING:
-                    case DATA_SINDRAGOSA:
-                    case DATA_BLOOD_QUEEN_LANA_THEL:
-                    case DATA_PROFESSOR_PUTRICIDE:
-                    case DATA_VALITHRIA_DREAMWALKER:
-                    case DATA_BLOOD_PRINCE_COUNCIL:
-                    case DATA_ROTFACE:
-                    case DATA_FESTERGUT:
-                        if (GetBossState(DATA_DEATHBRINGER_SAURFANG) != DONE)
-                            return false;
-                        // no break
-                    case DATA_DEATHBRINGER_SAURFANG:
-                        if (GetBossState(DATA_GUNSHIP_EVENT) != DONE)
-                            return false;
-                        // no break
-                    case DATA_GUNSHIP_EVENT:
-                        if (GetBossState(DATA_LADY_DEATHWHISPER) != DONE)
-                            return false;
-                        // no break
-                    case DATA_LADY_DEATHWHISPER:
-                        if (GetBossState(DATA_LORD_MARROWGAR) != DONE)
-                            return false;
-                        // no break
-                    case DATA_LORD_MARROWGAR:
-                    default:
-                        break;
-                }
-
-                return true;
             }
 
             std::string GetSaveData()
@@ -1191,7 +1090,6 @@ class instance_icecrown_citadel : public InstanceMapScript
                         BloodQuickeningTimer -= diff;
                 }
             }
-
         protected:
             std::set<uint64> ColdflameJetGUIDs;
             uint64 LadyDeathwisperElevatorGUID;
@@ -1222,19 +1120,20 @@ class instance_icecrown_citadel : public InstanceMapScript
             uint64 SindragosaGUID;
             uint64 SpinestalkerGUID;
             uint64 RimefangGUID;
+            uint64 DreamwalkerCache;
             uint64 TheLichKingGUID;
-            uint64 uilavaman;
-            uint64 uihangingman;
-            uint64 TirionGUID;
-            uint64 TerenasFighterGUID;
-            uint64 SpiritWardenGUID;
-            uint64 uiIceShard1;
-            uint64 uiIceShard2;
-            uint64 uiIceShard3;
-            uint64 uiIceShard4;
-            uint64 uiFrostyEdgeInner;
-            uint64 uiFrostyEdgeOuter;
-            uint64 uiEdgeDestroyWarning;
+            uint64 Tirion;
+            uint64 TerenasFighter;
+            uint64 SpiritWarden;
+            uint64 IceShard1;
+            uint64 IceShard2;
+            uint64 IceShard3;
+            uint64 IceShard4;
+            uint64 FrostyEdgeInner;
+            uint64 FrostyEdgeOuter;
+            uint64 EdgeDestroyWarning;
+            uint64 FrozenLavaman;
+            uint64 LavamanPillars;
             uint32 TeamInInstance;
             uint32 BloodQuickeningTimer;
             uint32 ColdflameJetsState;
@@ -1243,10 +1142,11 @@ class instance_icecrown_citadel : public InstanceMapScript
             uint32 RimefangTrashCount;
             uint32 BloodQuickeningState;
             uint32 HeroicAttempts;
-            uint32 uiEncounter[MAX_ENCOUNTER];
-            uint16 BloodQuickeningMinutes;
-            uint8 uiNeckDeep;
-            uint8 uiNecroticStack;
+            uint32 uiEncounter[MAX_ENCOUNTER];            uint16 BloodQuickeningMinutes;
+            uint8 BeenWaiting;
+            uint8 NeckDeep;
+            uint8 NecroticStack;
+            uint8 IsPortalJockeyEligible;
             bool IsBonedEligible;
             bool IsOozeDanceEligible;
             bool IsNauseaEligible;
@@ -1355,7 +1255,6 @@ TPlayerList GetAttackablePlayersInTheMap(Map *pMap)
             ++it;
     return players;
 }
-
 void AddSC_instance_icecrown_citadel()
 {
     new instance_icecrown_citadel();

@@ -87,7 +87,6 @@ enum WorldBoolConfigs
     CONFIG_ADDON_CHANNEL,
     CONFIG_ALLOW_PLAYER_COMMANDS,
     CONFIG_CLEAN_CHARACTER_DB,
-	CONFIG_HONOR_FROM_PLAYERBOTS,
     CONFIG_GRID_UNLOAD,
     CONFIG_STATS_SAVE_ONLY_ON_LOGOUT,
     CONFIG_ALLOW_TWO_SIDE_ACCOUNTS,
@@ -160,9 +159,9 @@ enum WorldBoolConfigs
     CONFIG_ALLOW_TICKETS,
     CONFIG_DBC_ENFORCE_ITEM_ATTRIBUTES,
     CONFIG_PRESERVE_CUSTOM_CHANNELS,
-	CONFIG_ANTICHEAT_ENABLE,
     CONFIG_GMISLAND_PLAYERS_NOACCESS_ENABLE,
     CONFIG_GMISLAND_BAN_ENABLE,
+    CONFIG_ANTICHEAT_ENABLE,
     CONFIG_OUTDOORPVP_WINTERGRASP_ENABLED,
     CONFIG_OUTDOORPVP_WINTERGRASP_CUSTOM_HONOR,
     CONFIG_CONFIG_OUTDOORPVP_WINTERGRASP_ANTIFARM_ENABLE,
@@ -314,10 +313,9 @@ enum WorldIntConfigs
     CONFIG_DB_PING_INTERVAL,
     CONFIG_PRESERVE_CUSTOM_CHANNEL_DURATION,
     CONFIG_PERSISTENT_CHARACTER_CLEAN_FLAGS,
-	CONFIG_ANTICHEAT_REPORTS_INGAME_NOTIFICATION,
+    CONFIG_ANTICHEAT_REPORTS_INGAME_NOTIFICATION,
     CONFIG_ANTICHEAT_MAX_REPORTS_FOR_DAILY_REPORT,
-    CONFIG_MAX_INSTANCES_PER_HOUR,
-	CONFIG_ANTICHEAT_DETECTIONS_ENABLED,
+    CONFIG_ANTICHEAT_DETECTIONS_ENABLED,
     CONFIG_OUTDOORPVP_WINTERGRASP_START_TIME,
     CONFIG_OUTDOORPVP_WINTERGRASP_BATTLE_TIME,
     CONFIG_OUTDOORPVP_WINTERGRASP_INTERVAL,
@@ -330,6 +328,7 @@ enum WorldIntConfigs
     CONFIG_OUTDOORPVP_WINTERGRASP_SAVESTATE_PERIOD,
     CONFIG_CONFIG_OUTDOORPVP_WINTERGRASP_ANTIFARM_ATK,
     CONFIG_CONFIG_OUTDOORPVP_WINTERGRASP_ANTIFARM_DEF,
+    CONFIG_MAX_INSTANCES_PER_HOUR,
     INT_CONFIG_VALUE_COUNT
 };
 
@@ -664,12 +663,12 @@ class World
         void LoadConfigSettings(bool reload = false);
 
         void SendWorldText(int32 string_id, ...);
-        void SendGlobalText(const char* text, WorldSession *self);
+        void SendGlobalText(const char* text, WorldSession* self);
         void SendGMText(int32 string_id, ...);
-        void SendGlobalMessage(WorldPacket *packet, WorldSession *self = 0, uint32 team = 0);
-        void SendGlobalGMMessage(WorldPacket *packet, WorldSession *self = 0, uint32 team = 0);
-        void SendZoneMessage(uint32 zone, WorldPacket *packet, WorldSession *self = 0, uint32 team = 0);
-        void SendZoneText(uint32 zone, const char *text, WorldSession *self = 0, uint32 team = 0);
+        void SendGlobalMessage(WorldPacket* packet, WorldSession* self = 0, uint32 team = 0);
+        void SendGlobalGMMessage(WorldPacket* packet, WorldSession* self = 0, uint32 team = 0);
+        void SendZoneMessage(uint32 zone, WorldPacket* packet, WorldSession* self = 0, uint32 team = 0);
+        void SendZoneText(uint32 zone, const char *text, WorldSession* self = 0, uint32 team = 0);
         void SendServerMessage(ServerMessageType type, const char *text = "", Player* player = NULL);
 
         uint32 pvp_ranks[HKRANKMAX];
@@ -780,6 +779,9 @@ class World
 
         bool isEventKillStart;
 
+        uint32 GetCleaningFlags() const { return m_CleaningFlags; }
+        void   SetCleaningFlags(uint32 flags) { m_CleaningFlags = flags; }
+		
         uint32 GetWintergrapsTimer() { return m_WintergrapsTimer; }
         uint32 GetWintergrapsState() { return m_WintergrapsState; }
         uint32 m_WintergrapsTimer;
@@ -791,8 +793,6 @@ class World
             m_WintergrapsState = state;
         }
 
-        uint32 GetCleaningFlags() const { return m_CleaningFlags; }
-        void   SetCleaningFlags(uint32 flags) { m_CleaningFlags = flags; }
     protected:
         void _UpdateGameTime();
         // callback for UpdateRealmCharacters

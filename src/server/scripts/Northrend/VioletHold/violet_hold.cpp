@@ -21,7 +21,7 @@
 
 #define GOSSIP_START_EVENT  "Get your people to safety, we'll keep the Blue Dragonflight's forces at bay."
 #define GOSSIP_ITEM_1       "Activate the crystals when we get in trouble, right"
-#define GOSSIP_I_WANT_IN    "Sorry, I'm late! Can I get in to help my friends?"
+#define GOSSIP_I_WANT_IN    "I'm not fighting, so send me in now!"
 #define SPAWN_TIME          20000
 
 enum PortalCreatures
@@ -438,9 +438,6 @@ public:
         bool bHasGotMovingPoints;
         uint32 uiBoss;
 
-        void AttackStart(Unit* /*who*/) {}
-        void MoveInLineOfSight(Unit* /*who*/) {}
-
         void Reset()
         {
             if (pInstance && !uiBoss)
@@ -574,9 +571,9 @@ public:
             bPortalGuardianOrKeeperOrEliteSpawn = false;
         }
 
-        void EnterCombat(Unit * /*who*/) {}
+        void EnterCombat(Unit* /*who*/) {}
 
-        void MoveInLineOfSight(Unit * /*who*/) {}
+        void MoveInLineOfSight(Unit* /*who*/) {}
 
         void UpdateAI(const uint32 diff)
         {
@@ -781,7 +778,7 @@ struct violet_hold_trashAI : public npc_escortAI
         }
     }
 
-    void JustDied(Unit * /*unit*/)
+    void JustDied(Unit* /*unit*/)
     {
         if (Creature* portal = Unit::GetCreature((*me), pInstance->GetData64(DATA_TELEPORTATION_PORTAL)))
             CAST_AI(npc_teleportation_portal_vh::npc_teleportation_portalAI, portal->AI())->SummonedMobDied(me);
@@ -791,7 +788,7 @@ struct violet_hold_trashAI : public npc_escortAI
 
     void CreatureStartAttackDoor()
     {
-        //me->SetReactState(REACT_PASSIVE);
+        me->SetReactState(REACT_PASSIVE);
         DoCast(SPELL_DESTROY_DOOR_SEAL);
         if (pInstance)
             pInstance->SetData(DATA_NPC_PRESENCE_AT_DOOR_ADD, 1);

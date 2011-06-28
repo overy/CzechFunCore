@@ -54,12 +54,12 @@ float TeleportPointsUlduarGOs[9][3] =
     {-706.122f, -92.6024f, 429.876f},   // Base Camp
     {131.248f, -35.3802f, 409.804f},    // Grounds
     {553.233f, -12.3247f, 409.679f},    // Forge
-    {926.292f, -11.4635f, 418.595f},    //Scrapyard
+    {926.292f, -11.4635f, 418.595f},    // Scrapyard
     {1498.09f, -24.246f, 420.967f},     // Antechamber
     {1859.45f, -24.1f, 448.9f},         // Walkway
     {2086.27f, -24.3134f, 421.239f},    // Conservatory
     {2518.13f, 2569.34f, 421.382f},     // Spark
-    {1855.03f, -11.629f, 334.58f},      //Descent into Madness
+    {1855.03f, -11.629f, 334.58f},      // Descent into Madness
 };
 
 enum TeleportSpells
@@ -82,7 +82,7 @@ public:
             return false;
 
         int pos = action - GOSSIP_ACTION_INFO_DEF;
-        if(pos >= 0 && pos < MAX)
+        if (pos >= 0 && pos < MAX)
             pPlayer->TeleportTo(MAP_ULDUAR, TeleportPointsUlduarGOs[pos][0], TeleportPointsUlduarGOs[pos][1], TeleportPointsUlduarGOs[pos][2], 0.0f);
         pPlayer->CLOSE_GOSSIP_MENU();
 
@@ -107,9 +107,11 @@ public:
                 pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Shattered Walkway", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + WALKWAY);
             if (pInstance->GetBossState(TYPE_AURIAYA) == DONE)
                 pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Conservatory of Life", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + CONSERVATORY);
+            if (pInstance->GetBossState(TYPE_FREYA) == DONE)
+                pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Spark of Imagination", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + SPARK);
+            if (pInstance->GetBossState(TYPE_VEZAX) == DONE)
+                pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to Descent into Madness", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + MADNESS);
         }
-        // TO DO 2 Missing Teleports ... SPARK nachdem man das entsprechenden Objekt aktiviert hat
-        //                           ... MADDNESS nachdem General Vezax erledigt wurde
         pPlayer->SEND_GOSSIP_MENU(pGO->GetGOInfo()->GetGossipMenuId(), pGO->GetGUID());
         return true;
     }

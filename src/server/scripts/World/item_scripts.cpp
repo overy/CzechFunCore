@@ -152,8 +152,8 @@ public:
 
     bool OnUse(Player *pPlayer, Item *pItem, SpellCastTargets const& targets)
     {
-        if (targets.getUnitTarget() && targets.getUnitTarget()->GetTypeId() == TYPEID_UNIT &&
-            targets.getUnitTarget()->GetEntry() == 20748 && !targets.getUnitTarget()->HasAura(32578))
+        if (targets.GetUnitTarget() && targets.GetUnitTarget()->GetTypeId() == TYPEID_UNIT &&
+            targets.GetUnitTarget()->GetEntry() == 20748 && !targets.GetUnitTarget()->HasAura(32578))
             return false;
 
         pPlayer->SendEquipError(EQUIP_ERR_CANT_DO_RIGHT_NOW, pItem, NULL);
@@ -190,7 +190,7 @@ class item_mysterious_egg : public ItemScript
 {
 public:
     item_mysterious_egg() : ItemScript("item_mysterious_egg") { }
-    bool OnExpire(Player *pPlayer, ItemTemplate const * /*pItemProto*/)
+    bool OnExpire(Player *pPlayer, ItemTemplate const* /*pItemProto*/)
     {
         ItemPosCountVec dest;
         uint8 msg = pPlayer->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, 39883, 1); // Cracked Egg
@@ -210,7 +210,7 @@ class item_disgusting_jar : public ItemScript
 public:
     item_disgusting_jar() : ItemScript("item_disgusting_jar") {}
 
-    bool OnExpire(Player *pPlayer, ItemTemplate const * /*pItemProto*/)
+    bool OnExpire(Player *pPlayer, ItemTemplate const* /*pItemProto*/)
     {
         ItemPosCountVec dest;
         uint8 msg = pPlayer->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, 44718, 1); // Ripe Disgusting Jar
@@ -259,7 +259,7 @@ class item_pile_fake_furs : public ItemScript
 public:
     item_pile_fake_furs() : ItemScript("item_pile_fake_furs") { }
 
-    bool OnUse(Player *pPlayer, Item * /*pItem*/, SpellCastTargets const & /*targets*/)
+    bool OnUse(Player *pPlayer, Item* /*pItem*/, SpellCastTargets const & /*targets*/)
     {
         GameObject *pGo = NULL;
         for (uint8 i = 0; i < CaribouTrapsNum; ++i)

@@ -42,11 +42,8 @@
 #include "zlib.h"
 #include "ScriptMgr.h"
 #include "Transport.h"
-//Playerbot mod
-#include "PlayerbotAI.h"
-#include "PlayerbotClassAI.h"
 
-bool MapSessionFilter::Process(WorldPacket *packet)
+bool MapSessionFilter::Process(WorldPacket* packet)
 {
     OpcodeHandler const &opHandle = opcodeTable[packet->GetOpcode()];
 
@@ -68,7 +65,7 @@ bool MapSessionFilter::Process(WorldPacket *packet)
 
 //we should process ALL packets when player is not in world/logged in
 //OR packet handler is not thread-safe!
-bool WorldSessionFilter::Process(WorldPacket *packet)
+bool WorldSessionFilter::Process(WorldPacket* packet)
 {
     OpcodeHandler const &opHandle = opcodeTable[packet->GetOpcode()];
     //check if packet handler is supposed to be safe
@@ -105,16 +102,14 @@ m_latency(0), m_TutorialsChanged(false), recruiterId(recruiter)
         ResetTimeOutTime();
         LoginDatabase.PExecute("UPDATE account SET online = 1 WHERE id = %u;", GetAccountId());
     }
+
+    InitializeQueryCallbackParameters();
 }
 
 /// WorldSession destructor
 WorldSession::~WorldSession()
 {
-    //Playerbot mod: log out any PlayerBots owned in this WorldSession
-    while(!m_playerBots.empty())
-    LogoutPlayerBot(m_playerBots.begin()->first, true);
-
-	///- unload player if not unloaded
+    ///- unload player if not unloaded
     if (_player)
         LogoutPlayer (true);
 
@@ -127,7 +122,7 @@ WorldSession::~WorldSession()
     }
 
     ///- empty incoming packet queue
-    WorldPacket *packet = NULL;
+    WorldPacket* packet = NULL;
     while (_recvQueue.next(packet))
         delete packet;
 
@@ -149,13 +144,6 @@ char const *WorldSession::GetPlayerName() const
 /// Send a packet to the client
 void WorldSession::SendPacket(WorldPacket const *packet)
 {
-    //Playerbot mod: send packet to bot AI
-    if(GetPlayer() && GetPlayer()->GetPlayerbotAI()) {
-            GetPlayer()->GetPlayerbotAI()->HandleBotOutgoingPacket(*packet);
-    } else if(!m_playerBots.empty()) {
-            PlayerbotAI::HandleMasterOutgoingPacket(*packet, *this);
-    }
-
     if (!m_Socket)
         return;
 
@@ -204,7 +192,7 @@ void WorldSession::QueuePacket(WorldPacket *new_packet)
 }
 
 /// Logging helper for unexpected opcodes
-void WorldSession::LogUnexpectedOpcode(WorldPacket *packet, const char* status, const char *reason)
+void WorldSession::LogUnexpectedOpcode(WorldPacket* packet, const char* status, const char *reason)
 {
     sLog->outError("SESSION (account: %u, guidlow: %u, char: %s): received unexpected opcode %s (0x%.4X, status: %s) %s",
         GetAccountId(), m_GUIDLow, _player ? _player->GetName() : "<none>",
@@ -212,7 +200,7 @@ void WorldSession::LogUnexpectedOpcode(WorldPacket *packet, const char* status, 
 }
 
 /// Logging helper for unexpected opcodes
-void WorldSession::LogUnprocessedTail(WorldPacket *packet)
+void WorldSession::LogUnprocessedTail(WorldPacket* packet)
 {
     sLog->outError("SESSION: opcode %s (0x%.4X) have unprocessed tail data (read stop at %u from %u)",
         LookupOpcodeName(packet->GetOpcode()), packet->GetOpcode(), uint32(packet->rpos()), uint32(packet->wpos()));
@@ -227,12 +215,12 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
 
     ///- Before we process anything:
     /// If necessary, kick the player from the character select screen
-    /*if (IsConnectionIdle())
-        m_Socket->CloseSocket();*/
+    if (IsConnectionIdle())
+        m_Socket->CloseSocket();
 
     ///- Retrieve packets from the receive queue and call the appropriate handlers
     /// not process packets if socket already closed
-    WorldPacket *packet = NULL;
+    WorldPacket* packet = NULL;
     while (m_Socket && !m_Socket->IsClosed() && _recvQueue.next(packet, updater))
     {
         if (packet->GetOpcode() >= NUM_MSG_TYPES)
@@ -260,11 +248,6 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
                             (this->*opHandle.handler)(*packet);
                             if (sLog->IsOutDebug() && packet->rpos() < packet->wpos())
                                 LogUnprocessedTail(packet);
-
-                            // Playerbot mod: if this player has bots let the
-                            // botAI see the masters packet
-                            if(!m_playerBots.empty())
-                                PlayerbotAI::HandleMasterIncomingPacket(*packet, *this);
                         }
                         // lag can cause STATUS_LOGGEDIN opcodes to arrive after the player started a transfer
                         break;
@@ -349,28 +332,7 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
         ///- If necessary, log the player out
         if (ShouldLogOut(currTime) && !m_playerLoading)
             LogoutPlayer(true);
-    //Playerbot mod - Process player bot packets
-    //The PlayerbotAI class adds to the packet queue to simulate a real player
-    //since Playerbots are known to the World obj only its master's
-    //WorldSession object we need to process all master's bot's packets.
-        for(PlayerBotMap::const_iterator itr = GetPlayerBotsBegin(); itr != GetPlayerBotsEnd(); ++itr)
-        {
-            Player *const botPlayer = itr->second;
-            WorldSession *const pBotWorldSession = botPlayer->GetSession();
-            if(botPlayer->IsBeingTeleportedFar())
-            {
-              pBotWorldSession->HandleMoveWorldportAckOpcode();
-          } else if(botPlayer->IsInWorld())
-          {
-              WorldPacket *packet;
-              while(pBotWorldSession->_recvQueue.next(packet))
-              {
-                  OpcodeHandler &opHandle = opcodeTable[packet->GetOpcode()];
-                  (pBotWorldSession->*opHandle.handler)(*packet);
-                  delete packet;
-              }
-          }
-        }
+
         ///- Cleanup socket pointer if need
         if (m_Socket && m_Socket->IsClosed())
         {
@@ -387,25 +349,6 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
 /// %Log the player out
 void WorldSession::LogoutPlayer(bool Save)
 {
-    if (!_player)
-    {
-        return;
-    }
-
-    if (_player->IsMounted()) _player->Unmount();
-
-     // in case it has a minion, kill it
-    if(_player->HaveBot())
-    {
-         _player->GetBot()->SetCharmerGUID(0);
-         _player->GetBot()->RemoveFromWorld();
-         _player->RemoveBot();
-    }
-
-     //Playerbot mod: log out all player bots owned by this toon
-     while(!m_playerBots.empty())
-     LogoutPlayerBot(m_playerBots.begin()->first, Save);
-
     // finish pending transfers before starting the logout
     while (_player && _player->IsBeingTeleportedFar())
         HandleMoveWorldportAckOpcode();
@@ -526,7 +469,7 @@ void WorldSession::LogoutPlayer(bool Save)
 
         // remove player from the group if he is:
         // a) in group; b) not in raid group; c) logging out normally (not being kicked or disconnected)
-        if ((_player->GetGroup() && !_player->GetGroup()->isRaidGroup() && m_Socket) || (_player->IsPlayerbot() && _player->GetGroup()))
+        if (_player->GetGroup() && !_player->GetGroup()->isRaidGroup() && m_Socket)
             _player->RemoveFromGroup();
 
         ///- Send update to group and reset stored max enchanting level
@@ -550,7 +493,6 @@ void WorldSession::LogoutPlayer(bool Save)
         _player->CleanupsBeforeDelete();
         sLog->outChar("Account: %d (IP: %s) Logout Character:[%s] (GUID: %u)", GetAccountId(), GetRemoteAddress().c_str(), _player->GetName() , _player->GetGUIDLow());
         Map *_map = _player->GetMap();
-		uint32 guid = _player->GetGUIDLow();
         _map->Remove(_player, true);
         SetPlayer(NULL);                                    // deleted in Remove call
 
@@ -560,7 +502,7 @@ void WorldSession::LogoutPlayer(bool Save)
 
         ///- Since each account can only have one online character at any given time, ensure all characters for active account are marked as offline
         //No SQL injection as AccountId is uint32
-        CharacterDatabase.PExecute("UPDATE characters SET online = 0 WHERE guid = '%u'", guid);
+        CharacterDatabase.PExecute("UPDATE characters SET online = 0 WHERE account = '%u'", GetAccountId());
         sLog->outDebug(LOG_FILTER_NETWORKIO, "SESSION: Sent SMSG_LOGOUT_COMPLETE Message");
     }
 
@@ -660,41 +602,6 @@ void WorldSession::LoadGlobalAccountData()
     PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_LOAD_ACCOUNT_DATA);
     stmt->setUInt32(0, GetAccountId());
     LoadAccountData(CharacterDatabase.Query(stmt), GLOBAL_CACHE_MASK);
-}
-
-//Playerbot mod: logs out a Playerbot.
-void WorldSession::LogoutPlayerBot(uint64 guid, bool Save)
-{
-    Player *pPlayerBot = GetPlayerBot(guid);
-
-    if(pPlayerBot) //log out any playbots I have
-    {
-        //if (pPlayerBot->IsMounted()) pPlayerBot->GetPlayerbotAI()->GetClassAI()->Unmount();
-
-        pPlayerBot->CombatStop();
-        if(pPlayerBot->HaveBot())
-            pPlayerBot->SetBotMustDie();
-
-        // remove from group
-        Group* m_group = pPlayerBot->GetGroup();
-        if (m_group) {
-            if (m_group->RemoveMember(pPlayerBot->GetGUID(),GROUP_REMOVEMETHOD_DEFAULT) <= 1) {
-                //delete m_group;
-            }
-        }
-
-        WorldSession *pPlayerBotWorldSession = pPlayerBot->m_session;
-        m_playerBots.erase(guid); //deletes bot player ptr inside this WorldSession PlayerBotMap
-        pPlayerBotWorldSession->LogoutPlayer(Save); //this will delete the bot Player object and PlayerbotAI object
-        delete pPlayerBotWorldSession; //finally delete the bot's WorldSession
-    }
-}
-
-//Playerbot mod: Gets a player bot Player object for this WorldSession master
-Player *WorldSession::GetPlayerBot(uint64 playerGuid) const
-{
-    PlayerBotMap::const_iterator it = m_playerBots.find(playerGuid);
-    return(it == m_playerBots.end()) ? 0 : it->second;
 }
 
 void WorldSession::LoadAccountData(PreparedQueryResult result, uint32 mask)
@@ -847,6 +754,36 @@ void WorldSession::ReadMovementInfo(WorldPacket &data, MovementInfo *mi)
 
     if (mi->HasMovementFlag(MOVEMENTFLAG_SPLINE_ELEVATION))
         data >> mi->splineElevation;
+
+    // This must be a packet spoofing attempt. MOVEMENTFLAG_ROOT sent from the client is not valid,  
+    // and when used in conjunction with any of the moving movement flags such as MOVEMENTFLAG_FORWARD
+    // it will freeze clients that receive this player's movement info.
+    if (mi->HasMovementFlag(MOVEMENTFLAG_ROOT))
+        mi->flags &= ~MOVEMENTFLAG_ROOT;
+
+    // Cannot hover and jump at the same time
+    if (mi->HasMovementFlag(MOVEMENTFLAG_HOVER) && mi->HasMovementFlag(MOVEMENTFLAG_JUMPING))
+        mi->flags &= ~MOVEMENTFLAG_JUMPING;
+
+    // Cannot ascend and descend at the same time
+    if (mi->HasMovementFlag(MOVEMENTFLAG_ASCENDING) && mi->HasMovementFlag(MOVEMENTFLAG_DESCENDING))
+        mi->flags &= ~(MOVEMENTFLAG_ASCENDING | MOVEMENTFLAG_DESCENDING);
+
+    // Cannot move left and right at the same time
+    if (mi->HasMovementFlag(MOVEMENTFLAG_LEFT) && mi->HasMovementFlag(MOVEMENTFLAG_RIGHT))
+        mi->flags &= ~(MOVEMENTFLAG_LEFT | MOVEMENTFLAG_RIGHT);
+
+    // Cannot strafe left and right at the same time
+    if (mi->HasMovementFlag(MOVEMENTFLAG_STRAFE_LEFT) && mi->HasMovementFlag(MOVEMENTFLAG_STRAFE_RIGHT))
+        mi->flags &= ~(MOVEMENTFLAG_STRAFE_LEFT | MOVEMENTFLAG_STRAFE_RIGHT);
+
+    // Cannot pitch up and down at the same time
+    if (mi->HasMovementFlag(MOVEMENTFLAG_PITCH_UP) && mi->HasMovementFlag(MOVEMENTFLAG_PITCH_DOWN))
+        mi->flags &= ~(MOVEMENTFLAG_PITCH_UP | MOVEMENTFLAG_PITCH_DOWN);
+
+    // Cannot move forwards and backwards at the same time
+    if (mi->HasMovementFlag(MOVEMENTFLAG_FORWARD) && mi->HasMovementFlag(MOVEMENTFLAG_BACKWARD))
+        mi->flags &= ~(MOVEMENTFLAG_FORWARD | MOVEMENTFLAG_BACKWARD);
 }
 
 void WorldSession::WriteMovementInfo(WorldPacket *data, MovementInfo *mi)
@@ -1035,16 +972,23 @@ void WorldSession::SetPlayer(Player *plr)
         m_GUIDLow = _player->GetGUIDLow();
 }
 
+void WorldSession::InitializeQueryCallbackParameters()
+{
+    // Callback parameters that have pointers in them should be properly
+    // initialized to NULL here.
+    _charCreateCallback.SetParam(NULL);
+}
+
 void WorldSession::ProcessQueryCallbacks()
 {
     QueryResult result;
 
     //! HandleNameQueryOpcode
-    while (!m_nameQueryCallbacks.is_empty())
+    while (!_nameQueryCallbacks.is_empty())
     {
         QueryResultFuture lResult;
         ACE_Time_Value timeout = ACE_Time_Value::zero;
-        if (m_nameQueryCallbacks.next_readable(lResult, &timeout) != 1)
+        if (_nameQueryCallbacks.next_readable(lResult, &timeout) != 1)
            break;
 
         if (lResult.ready())
@@ -1056,89 +1000,87 @@ void WorldSession::ProcessQueryCallbacks()
     }
 
     //! HandleCharEnumOpcode
-    if (m_charEnumCallback.ready())
+    if (_charEnumCallback.ready())
     {
-        m_charEnumCallback.get(result);
+        _charEnumCallback.get(result);
         HandleCharEnum(result);
-        m_charEnumCallback.cancel();
+        _charEnumCallback.cancel();
     }
 
+    if (_charCreateCallback.IsReady())
+    {
+        PreparedQueryResult pResult;
+        _charCreateCallback.GetResult(pResult);
+        HandleCharCreateCallback(pResult, _charCreateCallback.GetParam());
+        // Don't call FreeResult() here, the callback handler will do that depending on the events in the callback chain
+    }
     //! HandlePlayerLoginOpcode
-    if (m_charLoginCallback.ready())
+    if (_charLoginCallback.ready())
     {
         SQLQueryHolder* param;
-        m_charLoginCallback.get(param);
+        _charLoginCallback.get(param);
         HandlePlayerLogin((LoginQueryHolder*)param);
-        m_charLoginCallback.cancel();
-    }
-
-    //! HandlePlayerBotLogin
-    if (m_charBotLoginCallback.ready())
-    {
-        SQLQueryHolder* param;
-        m_charBotLoginCallback.get(param);
-        HandlePlayerBotLogin((SQLQueryHolder*)param);
-        m_charBotLoginCallback.cancel();
+        _charLoginCallback.cancel();
     }
 
     //! HandleAddFriendOpcode
-    if (m_addFriendCallback.IsReady())
+    if (_addFriendCallback.IsReady())
     {
-        std::string param = m_addFriendCallback.GetParam();
-        m_addFriendCallback.GetResult(result);
+        std::string param = _addFriendCallback.GetParam();
+        _addFriendCallback.GetResult(result);
         HandleAddFriendOpcodeCallBack(result, param);
-        m_addFriendCallback.FreeResult();
+        _addFriendCallback.FreeResult();
     }
 
     //- HandleCharRenameOpcode
-    if (m_charRenameCallback.IsReady())
+    if (_charRenameCallback.IsReady())
     {
-        std::string param = m_charRenameCallback.GetParam();
-        m_charRenameCallback.GetResult(result);
+        std::string param = _charRenameCallback.GetParam();
+        _charRenameCallback.GetResult(result);
         HandleChangePlayerNameOpcodeCallBack(result, param);
-        m_charRenameCallback.FreeResult();
+        _charRenameCallback.FreeResult();
     }
 
     //- HandleCharAddIgnoreOpcode
-    if (m_addIgnoreCallback.ready())
+    if (_addIgnoreCallback.ready())
     {
-        m_addIgnoreCallback.get(result);
+        _addIgnoreCallback.get(result);
         HandleAddIgnoreOpcodeCallBack(result);
-        m_addIgnoreCallback.cancel();
+        _addIgnoreCallback.cancel();
     }
 
     //- SendStabledPet
-    if (m_sendStabledPetCallback.IsReady())
+    if (_sendStabledPetCallback.IsReady())
     {
-        uint64 param = m_sendStabledPetCallback.GetParam();
-        m_sendStabledPetCallback.GetResult(result);
+        uint64 param = _sendStabledPetCallback.GetParam();
+        _sendStabledPetCallback.GetResult(result);
         SendStablePetCallback(result, param);
-        m_sendStabledPetCallback.FreeResult();
+        _sendStabledPetCallback.FreeResult();
     }
 
     //- HandleStablePet
-    if (m_stablePetCallback.ready())
+    if (_stablePetCallback.ready())
     {
-        m_stablePetCallback.get(result);
+        _stablePetCallback.get(result);
         HandleStablePetCallback(result);
-        m_stablePetCallback.cancel();
+        _stablePetCallback.cancel();
     }
 
     //- HandleUnstablePet
-    if (m_unstablePetCallback.IsReady())
+    if (_unstablePetCallback.IsReady())
     {
-        uint32 param = m_unstablePetCallback.GetParam();
-        m_unstablePetCallback.GetResult(result);
+        uint32 param = _unstablePetCallback.GetParam();
+        _unstablePetCallback.GetResult(result);
         HandleUnstablePetCallback(result, param);
-        m_unstablePetCallback.FreeResult();
+        _unstablePetCallback.FreeResult();
     }
 
     //- HandleStableSwapPet
-    if (m_stableSwapCallback.IsReady())
+    if (_stableSwapCallback.IsReady())
     {
-        uint32 param = m_stableSwapCallback.GetParam();
-        m_stableSwapCallback.GetResult(result);
+        uint32 param = _stableSwapCallback.GetParam();
+        _stableSwapCallback.GetResult(result);
         HandleStableSwapPetCallback(result, param);
-        m_stableSwapCallback.FreeResult();
+        _stableSwapCallback.FreeResult();
     }
 }

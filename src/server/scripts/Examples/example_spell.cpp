@@ -280,7 +280,7 @@ class spell_ex_66244 : public SpellScriptLoader
             {
             }
 
-            bool DoCheckAreaTarget(Unit * proposedTarget)
+            bool DoCheckAreaTarget(Unit* proposedTarget)
             {
             }*/
         };
@@ -291,6 +291,9 @@ class spell_ex_66244 : public SpellScriptLoader
             return new spell_ex_66244AuraScript();
         }
 };
+
+// example usage of OnEffectManaShield and AfterEffectManaShield hooks
+// see spell_ex_absorb_aura, these hooks work the same as OnEffectAbsorb and AfterEffectAbsorb
 
 // example usage of OnEffectAbsorb and AfterEffectAbsorb hooks
 class spell_ex_absorb_aura : public SpellScriptLoader
@@ -329,8 +332,33 @@ class spell_ex_absorb_aura : public SpellScriptLoader
         }
 };
 
-// example usage of OnEffectManaShield and AfterEffectManaShield hooks
-// see spell_ex_absorb_aura, these hooks work the same as OnEffectAbsorb and AfterEffectAbsorb
+class spell_ex_463 : public SpellScriptLoader
+{
+    public:
+        spell_ex_463() : SpellScriptLoader("spell_ex_463") { }
+
+        class spell_ex_463AuraScript : public AuraScript
+        {
+            PrepareAuraScript(spell_ex_463AuraScript);
+
+            bool CheckAreaTarget(Unit* target)
+            {
+                sLog->outString("Area aura checks if unit is a valid target for it!");
+                // in our script we allow only players to be affected
+                return target->GetTypeId() == TYPEID_PLAYER;
+            }
+            void Register()
+            {
+                DoCheckAreaTarget += AuraCheckAreaTargetFn(spell_ex_463AuraScript::CheckAreaTarget);
+            }
+        };
+
+        // function which creates AuraScript
+        AuraScript* GetAuraScript() const
+        {
+            return new spell_ex_463AuraScript();
+        }
+};
 
 // this function has to be added to function set in ScriptLoader.cpp
 void AddSC_example_spell_scripts()
@@ -338,6 +366,7 @@ void AddSC_example_spell_scripts()
     new spell_ex_5581;
     new spell_ex_66244;
     new spell_ex_absorb_aura;
+    new spell_ex_463;
 }
 
 /* empty script for copypasting
@@ -350,7 +379,7 @@ class spell_ex : public SpellScriptLoader
         {
             PrepareSpellScript(spell_ex_SpellScript);
 
-            //bool Validate(SpellEntry const * spellEntry){return true;}
+            //bool Validate(SpellEntry const* spellEntry){return true;}
             //bool Load(){return true;}
             //void Unload(){}
 

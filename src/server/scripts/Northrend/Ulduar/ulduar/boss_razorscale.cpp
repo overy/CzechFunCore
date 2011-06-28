@@ -94,6 +94,7 @@ enum Actions
     ACTION_GROUND_PHASE                          = 2,
     ACTION_HARPOON_BUILD                         = 3,
     ACTION_PLACE_BROKEN_HARPOON                  = 4,
+    ACTION_REMOVE_HARPOON                        = 5,
     ACTION_COMMANDER_RESET                       = 7,
     ACTION_DESPAWN_ADDS                          = 8
 };
@@ -188,16 +189,9 @@ class boss_razorscale_controller : public CreatureScript
                 switch (spell->Id)
                 {
                     case SPELL_FLAMED:
-                        if (GameObject* Harpoon1 = ObjectAccessor::GetGameObject(*me, instance->GetData64(GO_RAZOR_HARPOON_1)))
-                            Harpoon1->RemoveFromWorld();
-                        if (GameObject* Harpoon2 = ObjectAccessor::GetGameObject(*me, instance->GetData64(GO_RAZOR_HARPOON_2)))
-                            Harpoon2->RemoveFromWorld();
-                        if (GameObject* Harpoon3 = ObjectAccessor::GetGameObject(*me, instance->GetData64(GO_RAZOR_HARPOON_3)))
-                            Harpoon3->RemoveFromWorld();
-                        if (GameObject* Harpoon4 = ObjectAccessor::GetGameObject(*me, instance->GetData64(GO_RAZOR_HARPOON_4)))
-                            Harpoon4->RemoveFromWorld();
-                        me->AI()->DoAction(ACTION_HARPOON_BUILD);
-                        me->AI()->DoAction(ACTION_PLACE_BROKEN_HARPOON);
+                        DoAction(ACTION_REMOVE_HARPOON);
+                        DoAction(ACTION_HARPOON_BUILD);
+                        DoAction(ACTION_PLACE_BROKEN_HARPOON);
                         break;
                     case SPELL_HARPOON_SHOT_1:
                     case SPELL_HARPOON_SHOT_2:
@@ -228,6 +222,16 @@ class boss_razorscale_controller : public CreatureScript
                     case ACTION_PLACE_BROKEN_HARPOON:
                         for (uint8 n = 0; n < RAID_MODE(2, 4); n++)
                             me->SummonGameObject(GO_RAZOR_BROKEN_HARPOON, PosHarpoon[n].GetPositionX(), PosHarpoon[n].GetPositionY(), PosHarpoon[n].GetPositionZ(), 2.286f, 0, 0, 0, 0, 180000);
+                        break;
+                    case ACTION_REMOVE_HARPOON:
+                        if (GameObject* Harpoon1 = ObjectAccessor::GetGameObject(*me, instance->GetData64(GO_RAZOR_HARPOON_1)))
+                            Harpoon1->RemoveFromWorld();
+                        if (GameObject* Harpoon2 = ObjectAccessor::GetGameObject(*me, instance->GetData64(GO_RAZOR_HARPOON_2)))
+                            Harpoon2->RemoveFromWorld();
+                        if (GameObject* Harpoon3 = ObjectAccessor::GetGameObject(*me, instance->GetData64(GO_RAZOR_HARPOON_3)))
+                            Harpoon3->RemoveFromWorld();
+                        if (GameObject* Harpoon4 = ObjectAccessor::GetGameObject(*me, instance->GetData64(GO_RAZOR_HARPOON_4)))
+                            Harpoon4->RemoveFromWorld();
                         break;
                 }
             }
@@ -329,6 +333,11 @@ class boss_razorscale : public CreatureScript
 
             void Reset()
             {
+                if (Creature* controller = ObjectAccessor::GetCreature(*me, instance ? instance->GetData64(DATA_RAZORSCALE_CONTROL) : 0))
+                {
+                    controller->AI()->DoAction(ACTION_REMOVE_HARPOON);
+                    controller->AI()->DoAction(ACTION_PLACE_BROKEN_HARPOON);
+                }
                 summons.DoAction(MOLE_MACHINE_TRIGGER, ACTION_DESPAWN_ADDS);
                 _Reset();
                 me->SetFlying(true);
@@ -393,6 +402,7 @@ class boss_razorscale : public CreatureScript
                     return;
 
                 events.Update(Diff);
+                _DoAggroPulse(Diff);
 
                 if (HealthBelowPct(50) && !PermaGround)
                     EnterPermaGround();
@@ -997,7 +1007,7 @@ class spell_razorscale_devouring_flame : public SpellScriptLoader
                 PreventHitDefaultEffect(effIndex);
                 Unit* caster = GetCaster();
                 uint32 entry = uint32(GetSpellInfo()->EffectMiscValue[effIndex]);
-                WorldLocation* summonLocation = GetTargetDest();
+                WorldLocation const* summonLocation = GetTargetDest();
                 if (!caster || !summonLocation)
                     return;
 

@@ -32,11 +32,13 @@ enum OutdoorPvPTypes
     OUTDOOR_PVP_ZM = 4,
     OUTDOOR_PVP_SI = 5,
     OUTDOOR_PVP_EP = 6,
-    OUTDOOR_PVP_GH = 7,
-    OUTDOOR_PVP_WG = 8,
+    OUTDOOR_PVP_WG = 7,
+    OUTDOOR_PVP_GH = 8,
 };
 
 #define MAX_OUTDOORPVP_TYPES 9
+
+const uint8 CapturePointArtKit[3] = {2, 1, 21};
 
 enum ObjectiveStates
 {
@@ -106,13 +108,13 @@ class OPvPCapturePoint
         void SendObjectiveComplete(uint32 id, uint64 guid);
 
         // used when player is activated/inactivated in the area
-        virtual bool HandlePlayerEnter(Player * plr);
-        virtual void HandlePlayerLeave(Player * plr);
+        virtual bool HandlePlayerEnter(Player* plr);
+        virtual void HandlePlayerLeave(Player* plr);
 
         // checks if player is in range of a capture credit marker
-        bool IsInsideObjective(Player * plr) const;
+        bool IsInsideObjective(Player* plr) const;
 
-        virtual bool HandleCustomSpell(Player *plr, uint32 spellId, GameObject * go);
+        virtual bool HandleCustomSpell(Player *plr, uint32 spellId, GameObject* go);
 
         virtual int32 HandleOpenGo(Player *plr, uint64 guid);
 
@@ -129,7 +131,7 @@ class OPvPCapturePoint
 
         virtual bool CanTalkTo(Player* plr, Creature* c, GossipMenuItems const& gso);
 
-        virtual bool HandleDropFlag(Player * plr, uint32 spellId);
+        virtual bool HandleDropFlag(Player* plr, uint32 spellId);
 
         virtual void DeleteSpawns();
 
@@ -210,10 +212,10 @@ class OutdoorPvP : public ZoneScript
         virtual void FillInitialWorldStates(WorldPacket & /*data*/) {}
 
         // called when a player triggers an areatrigger
-        virtual bool HandleAreaTrigger(Player * plr, uint32 trigger);
+        virtual bool HandleAreaTrigger(Player* plr, uint32 trigger);
 
         // called on custom spell
-        virtual bool HandleCustomSpell(Player *plr, uint32 spellId, GameObject * go);
+        virtual bool HandleCustomSpell(Player *plr, uint32 spellId, GameObject* go);
 
         // called on go use
         virtual bool HandleOpenGo(Player *plr, uint64 guid);
@@ -232,18 +234,18 @@ class OutdoorPvP : public ZoneScript
         virtual bool Update(uint32 diff);
 
         // handle npc/player kill
-        virtual void HandleKill(Player * killer, Unit * killed);
-        virtual void HandleKillImpl(Player * /*killer*/, Unit * /*killed*/) {}
+        virtual void HandleKill(Player* killer, Unit* killed);
+        virtual void HandleKillImpl(Player* /*killer*/, Unit* /*killed*/) {}
 
         // checks if player is in range of a capture credit marker
-        bool IsInsideObjective(Player * plr) const;
+        bool IsInsideObjective(Player* plr) const;
 
         // awards rewards for player kill
-        virtual void AwardKillBonus(Player * /*plr*/) {}
+        virtual void AwardKillBonus(Player* /*plr*/) {}
 
         uint32 GetTypeId() {return m_TypeId;}
 
-        virtual bool HandleDropFlag(Player * plr, uint32 spellId);
+        virtual bool HandleDropFlag(Player* plr, uint32 spellId);
 
         virtual bool HandleGossipOption(Player *plr, uint64 guid, uint32 gossipid);
 
@@ -263,14 +265,14 @@ class OutdoorPvP : public ZoneScript
         bool m_sendUpdate;
 
         // world state stuff
-        virtual void SendRemoveWorldStates(Player * /*plr*/) {}
+        virtual void SendRemoveWorldStates(Player* /*plr*/) {}
 
         void BroadcastPacket(WorldPacket & data) const;
 
-        virtual void HandlePlayerEnterZone(Player * plr, uint32 zone);
-        virtual void HandlePlayerLeaveZone(Player * plr, uint32 zone);
+        virtual void HandlePlayerEnterZone(Player* plr, uint32 zone);
+        virtual void HandlePlayerLeaveZone(Player* plr, uint32 zone);
 
-        virtual void HandlePlayerResurrects(Player * plr, uint32 zone);
+        virtual void HandlePlayerResurrects(Player* plr, uint32 zone);
 
         void AddCapturePoint(OPvPCapturePoint* cp)
         {

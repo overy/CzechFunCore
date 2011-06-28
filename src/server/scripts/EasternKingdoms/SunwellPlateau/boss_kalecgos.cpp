@@ -191,7 +191,7 @@ public:
                 pInstance->SetData(DATA_KALECGOS_EVENT, IN_PROGRESS);
         }
 
-        void KilledUnit(Unit * /*victim*/)
+        void KilledUnit(Unit* /*victim*/)
         {
             switch(rand()%2)
             {
@@ -396,7 +396,7 @@ public:
             }
         }
 
-        void JustDied(Unit * /*killer*/)
+        void JustDied(Unit* /*killer*/)
         {
             DoScriptText(SAY_SATH_DEATH, me);
             me->Relocate(me->GetPositionX(), me->GetPositionY(), DRAGON_REALM_Z, me->GetOrientation());

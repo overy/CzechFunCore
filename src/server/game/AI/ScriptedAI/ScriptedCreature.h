@@ -1,25 +1,23 @@
-/* 
-* Copyright (C) 2008-2011 TrinityCore <http://www.trinitycore.org/> 
-* Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/> 
-*
-* 
-This program is free software; you can redistribute it and/or modify it 
-* under the terms of the GNU General Public License as published by the 
-* Free Software Foundation; either version 2 of the License, or (at your 
-* option) any later version. 
-* 
-* This program is distributed in the hope that it will be useful, but WITHOUT 
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-* FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for 
-* more details. 
-* 
-* You should have received a copy of the GNU General Public License along 
-* with this program. If not, see <http://www.gnu.org/licenses/>. 
-*/
+/*
+ * Copyright (C) 2008-2011 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your
+ * option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
-#ifndef SCRIPTEDCREATURE_H_ 
-#define SCRIPTEDCREATURE_H_ 
-
+#ifndef SCRIPTEDCREATURE_H_
+#define SCRIPTEDCREATURE_H_
 
 #include "Creature.h"
 #include "CreatureAI.h"
@@ -257,11 +255,7 @@ struct ScriptedAI : public CreatureAI
 
 struct Scripted_NoMovementAI : public ScriptedAI
 {
-    Scripted_NoMovementAI(Creature* creature) : ScriptedAI(creature)
-    {
-        SetImmuneToPushPullEffects(true);
-    }
-
+    Scripted_NoMovementAI(Creature* creature) : ScriptedAI(creature) {}
     virtual ~Scripted_NoMovementAI() {}
 
     //Called at each attack of me by any victim
@@ -274,7 +268,7 @@ class BossAI : public ScriptedAI
         BossAI(Creature* creature, uint32 bossId);
         virtual ~BossAI() {}
 
-    uint32 inFightAggroCheck_Timer;
+        uint32 inFightAggroCheck_Timer;
         InstanceScript* const instance;
         BossBoundaryMap const* GetBoundary() const { return _boundary; }
 
@@ -288,7 +282,6 @@ class BossAI : public ScriptedAI
         // note: You must re-schedule the event within this method if the event
         // is supposed to run more than once
         virtual void ExecuteEvent(uint32 const /*eventId*/) { }
-
 
         void Reset() { _Reset(); }
         void EnterCombat(Unit* /*who*/) { _EnterCombat(); }
@@ -321,7 +314,6 @@ class BossAI : public ScriptedAI
     private:
         BossBoundaryMap const* const _boundary;
         uint32 const _bossId;
-
 };
 
 class WorldBossAI : public ScriptedAI

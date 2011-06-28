@@ -174,9 +174,6 @@ class ChatHandler
         bool HandleBindSightCommand(const char* args);
         bool HandleUnbindSightCommand(const char* args);
 
-        bool HandlePlayerbotCommand(const char *args);
-        bool HandlePlayerbotMainTankCommand(const char *args);
-
         bool HandleGuildCreateCommand(const char* args);
         bool HandleGuildInviteCommand(const char* args);
         bool HandleGuildUninviteCommand(const char* args);
@@ -213,10 +210,6 @@ class ChatHandler
 
         bool HandlePDumpLoadCommand(const char *args);
         bool HandlePDumpWriteCommand(const char *args);
-
-        bool HandleQuestAdd(const char * args);
-        bool HandleQuestRemove(const char * args);
-        bool HandleQuestComplete(const char * args);
 
         bool HandleResetAchievementsCommand(const char * args);
         bool HandleResetAllCommand(const char * args);
@@ -301,7 +294,6 @@ class ChatHandler
         bool HandleHideAreaCommand(const char* args);
         bool HandleAddItemCommand(const char* args);
         bool HandleAddItemSetCommand(const char* args);
-        bool HandlePetTpCommand(const char* args);
         bool HandlePetUnlearnCommand(const char* args);
         bool HandlePetLearnCommand(const char* args);
         bool HandleCreatePetCommand(const char* args);
@@ -425,5 +417,7 @@ class CliHandler : public ChatHandler
         void* m_callbackArg;
         Print* m_print;
 };
+
+char const *fmtstring(char const *format, ...);
 
 #endif

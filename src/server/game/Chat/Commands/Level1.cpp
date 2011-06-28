@@ -177,9 +177,9 @@ bool ChatHandler::HandleGPSCommand(const char* args)
     uint32 have_map = Map::ExistMap(obj->GetMapId(), gx, gy) ? 1 : 0;
     uint32 have_vmap = Map::ExistVMap(obj->GetMapId(), gx, gy) ? 1 : 0;
 
-    if(have_vmap)
+    if (have_vmap)
     {
-        if(map->IsOutdoors(obj->GetPositionX(), obj->GetPositionY(), obj->GetPositionZ()))
+        if (map->IsOutdoors(obj->GetPositionX(), obj->GetPositionY(), obj->GetPositionZ()))
             PSendSysMessage("You are outdoors");
         else
             PSendSysMessage("You are indoors");
@@ -265,10 +265,9 @@ bool ChatHandler::HandleSummonCommand(const char* args)
                 target->UnbindInstance(pMap->GetInstanceId(), target->GetDungeonDifficulty(), true);
 
             // we are in instance, and can summon only player in our group with us as lead
-            if(!target->IsPlayerbot() &&
-                (!m_session->GetPlayer()->GetGroup() || !target->GetGroup() ||
+            if (!m_session->GetPlayer()->GetGroup() || !target->GetGroup() ||
                 (target->GetGroup()->GetLeaderGUID() != m_session->GetPlayer()->GetGUID()) ||
-                (m_session->GetPlayer()->GetGroup()->GetLeaderGUID() != m_session->GetPlayer()->GetGUID())))
+                (m_session->GetPlayer()->GetGroup()->GetLeaderGUID() != m_session->GetPlayer()->GetGUID()))
                 // the last check is a bit excessive, but let it be, just in case
             {
                 PSendSysMessage(LANG_CANNOT_SUMMON_TO_INST, nameLink.c_str());
@@ -397,7 +396,7 @@ bool ChatHandler::HandleAppearCommand(const char* args)
             InstancePlayerBind *pBind = _player->GetBoundInstance(target->GetMapId(), target->GetDifficulty(cMap->IsRaid()));
             if (!pBind)
             {
-                Group *group = _player->GetGroup();
+                Group* group = _player->GetGroup();
                 // if no bind exists, create a solo bind
                 InstanceGroupBind *gBind = group ? group->GetBoundInstance(target) : NULL;                // if no bind exists, create a solo bind
                 if (!gBind)

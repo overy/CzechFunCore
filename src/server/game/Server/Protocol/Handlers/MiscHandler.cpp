@@ -91,7 +91,7 @@ void WorldSession::HandleGossipSelectOptionOpcode(WorldPacket & recv_data)
     if (_player->PlayerTalkClass->IsGossipOptionCoded(gossipListId))
         recv_data >> code;
 
-    Creature *unit = NULL;
+    Creature* unit = NULL;
     GameObject *go = NULL;
     if (IS_CRE_OR_VEH_GUID(guid))
     {
@@ -558,8 +558,8 @@ void WorldSession::HandleAddFriendOpcode(WorldPacket & recv_data)
     sLog->outDebug(LOG_FILTER_NETWORKIO, "WORLD: %s asked to add friend : '%s'",
         GetPlayer()->GetName(), friendName.c_str());
 
-    m_addFriendCallback.SetParam(friendNote);
-    m_addFriendCallback.SetFutureResult(
+    _addFriendCallback.SetParam(friendNote);
+    _addFriendCallback.SetFutureResult(
         CharacterDatabase.AsyncPQuery("SELECT guid, race, account FROM characters WHERE name = '%s'", friendName.c_str())
         );
 }
@@ -647,7 +647,7 @@ void WorldSession::HandleAddIgnoreOpcode(WorldPacket & recv_data)
     sLog->outDebug(LOG_FILTER_NETWORKIO, "WORLD: %s asked to Ignore: '%s'",
         GetPlayer()->GetName(), IgnoreName.c_str());
 
-    m_addIgnoreCallback = CharacterDatabase.AsyncPQuery("SELECT guid FROM characters WHERE name = '%s'", IgnoreName.c_str());
+    _addIgnoreCallback = CharacterDatabase.AsyncPQuery("SELECT guid FROM characters WHERE name = '%s'", IgnoreName.c_str());
 }
 
 void WorldSession::HandleAddIgnoreOpcodeCallBack(QueryResult result)
@@ -1250,7 +1250,7 @@ void WorldSession::HandleInspectHonorStatsOpcode(WorldPacket& recv_data)
     uint64 guid;
     recv_data >> guid;
 
-    Player *player = sObjectMgr->GetPlayer(guid);
+    Player* player = sObjectMgr->GetPlayer(guid);
 
     if (!player)
     {
@@ -1691,7 +1691,7 @@ void WorldSession::HandleQueryInspectAchievements(WorldPacket & recv_data)
     uint64 guid;
     recv_data.readPackGUID(guid);
 
-    Player *player = sObjectMgr->GetPlayer(guid);
+    Player* player = sObjectMgr->GetPlayer(guid);
     if (!player)
         return;
 

@@ -764,7 +764,7 @@ class GameObject : public WorldObject, public GridObject<GameObject>
 
         GameObject* LookupFishingHoleAround(float range);
 
-        void CastSpell(Unit *target, uint32 spell);
+        void CastSpell(Unit* target, uint32 spell);
         void SendCustomAnim(uint32 anim);
         bool IsInRange(float x, float y, float z, float radius) const;
         void TakenDamage(uint32 damage, Unit* who = NULL);
@@ -774,7 +774,7 @@ class GameObject : public WorldObject, public GridObject<GameObject>
 
         uint64 GetRotation() const { return m_rotation; }
         virtual uint32 GetScriptId() const { return GetGOInfo()->ScriptId; }
-        GameObjectAI* AI() const { return (GameObjectAI*)m_AI; }
+        GameObjectAI* AI() const { return m_AI; }
 
         std::string GetAIName() const;
     protected:

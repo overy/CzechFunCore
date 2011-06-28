@@ -343,7 +343,7 @@ void BattlegroundEY::AddPlayer(Player *plr)
     m_PlayerScores[plr->GetGUID()] = sc;
 }
 
-void BattlegroundEY::RemovePlayer(Player *plr, uint64 guid)
+void BattlegroundEY::RemovePlayer(Player *plr, uint64 guid, uint32 /*team*/)
 {
     // sometimes flag aura not removed :(
     for (int j = EY_POINTS_MAX; j >= 0; --j)
@@ -574,7 +574,7 @@ void BattlegroundEY::RespawnFlagAfterDrop()
     SetDroppedFlagGUID(0);
 }
 
-void BattlegroundEY::HandleKillPlayer(Player *player, Player *killer)
+void BattlegroundEY::HandleKillPlayer(Player* player, Player* killer)
 {
     if (GetStatus() != STATUS_IN_PROGRESS)
         return;

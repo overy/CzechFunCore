@@ -147,7 +147,7 @@ public:
                 pInstance->SetData(DATA_MURU_EVENT, NOT_STARTED);
         }
 
-        void EnterCombat(Unit * /*who*/)
+        void EnterCombat(Unit* /*who*/)
         {
             DoCastAOE(SPELL_NEGATIVE_ENERGY_E, true);
             DoCast(me, SPELL_ENTROPIUS_SPAWN, false);
@@ -259,7 +259,7 @@ public:
                 pInstance->SetData(DATA_MURU_EVENT, NOT_STARTED);
         }
 
-        void EnterCombat(Unit * /*who*/)
+        void EnterCombat(Unit* /*who*/)
         {
         DoCastAOE(SPELL_NEGATIVE_ENERGY,true);
         DoCastAOE(SPELL_DARKNESS,true);
@@ -268,7 +268,7 @@ public:
                 pInstance->SetData(DATA_MURU_EVENT, IN_PROGRESS);
         }
 
-        void SpellHit(Unit *caster, const SpellEntry *spell)
+        void SpellHit(Unit* caster, const SpellEntry* spell)
         {
             if(spell->Id == 45996)
             {
@@ -277,7 +277,7 @@ public:
             }
         }
 
-        void DamageTaken(Unit *done_by, uint32 &damage)
+        void DamageTaken(Unit* done_by, uint32 &damage)
         {
             if (damage > me->GetHealth() && Phase == 1)
             {
@@ -387,7 +387,7 @@ public:
 
     struct npc_muru_portalAI : public Scripted_NoMovementAI
     {
-        npc_muru_portalAI(Creature *c) : Scripted_NoMovementAI(c), Summons(me)
+        npc_muru_portalAI(Creature* c) : Scripted_NoMovementAI(c), Summons(me)
         {
             pInstance = c->GetInstanceScript();
         c->SetFlying(true);
@@ -473,7 +473,7 @@ public:
 
     struct npc_dark_fiendAI : public ScriptedAI
     {
-        npc_dark_fiendAI(Creature *c) : ScriptedAI(c) {}
+        npc_dark_fiendAI(Creature* c) : ScriptedAI(c) {}
 
         uint32 WaitTimer;
         bool InAction;
@@ -542,7 +542,7 @@ public:
 
     struct npc_void_sentinelAI : public ScriptedAI
     {
-        npc_void_sentinelAI(Creature *c) : ScriptedAI(c){}
+        npc_void_sentinelAI(Creature* c) : ScriptedAI(c){}
 
         uint32 PulseTimer;
         uint32 VoidBlastTimer;
@@ -599,7 +599,7 @@ public:
 
     struct npc_blackholeAI : public ScriptedAI
     {
-        npc_blackholeAI(Creature *c) : ScriptedAI(c)
+        npc_blackholeAI(Creature* c) : ScriptedAI(c)
         {
             pInstance = c->GetInstanceScript();
         }

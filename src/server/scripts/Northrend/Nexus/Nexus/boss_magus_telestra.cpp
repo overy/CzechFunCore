@@ -30,17 +30,16 @@ enum Spells
 
     SPELL_FIRE_MAGUS_VISUAL                       = 47705,
     SPELL_FROST_MAGUS_VISUAL                      = 47706,
-    SPELL_ARCANE_MAGUS_VISUAL                     = 47704,
-
-    SPELL_CRITTER                                 = 47731,
-    SPELL_TIMESTOP                                = 47736
+    SPELL_ARCANE_MAGUS_VISUAL                     = 47704
 };
+
 enum Creatures
 {
     MOB_FIRE_MAGUS                                = 26928,
     MOB_FROST_MAGUS                               = 26930,
     MOB_ARCANE_MAGUS                              = 26929
 };
+
 enum Yells
 {
     SAY_AGGRO                                     = -1576000,
@@ -50,11 +49,9 @@ enum Yells
     SAY_SPLIT_1                                   = -1576004,
     SAY_SPLIT_2                                   = -1576005,
 };
-enum Achievements
-{
-    ACHIEV_SPLIT_PERSONALITY                      = 2150,
-    ACHIEV_TIMER                                  = 5*IN_MILLISECONDS
-};
+
+#define ACTION_MAGUS_DEAD                         1
+#define DATA_SPLIT_PERSONALITY                    2
 
 const Position  CenterOfRoom = {504.80f, 89.07f, -16.12f, 6.27f};
 
@@ -85,17 +82,16 @@ public:
         bool bFrostMagusDead;
         bool bArcaneMagusDead;
         bool bIsWaitingToAppear;
-        bool bIsAchievementTimerRunning;
 
         uint32 uiIsWaitingToAppearTimer;
         uint32 uiIceNovaTimer;
         uint32 uiFireBombTimer;
         uint32 uiGravityWellTimer;
         uint32 uiCooldown;
-        uint32 uiAchievementTimer;
 
         uint8 Phase;
-        uint8 uiAchievementProgress;
+        uint8 splitPersonality;
+        time_t time[3];
 
         void Reset()
         {
@@ -110,10 +106,10 @@ public:
             uiFrostMagusGUID = 0;
             uiArcaneMagusGUID = 0;
 
-            uiAchievementProgress = 0;
-            uiAchievementTimer = 0;
+            for (uint8 n = 0; n < 3; ++n)
+                time[n] = 0;
 
-            bIsAchievementTimerRunning = false;
+            splitPersonality = 0;
             bIsWaitingToAppear = false;
 
             me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
@@ -136,16 +132,34 @@ public:
             DoScriptText(SAY_DEATH, me);
 
             if (pInstance)
-            {
-                if (IsHeroic() && uiAchievementProgress == 2)
-                    pInstance->DoCompleteAchievement(ACHIEV_SPLIT_PERSONALITY);
                 pInstance->SetData(DATA_MAGUS_TELESTRA_EVENT, DONE);
+        }
+
+        void KilledUnit(Unit* /*victim*/)
+        {
+            DoScriptText(SAY_KILL, me);
+        }
+
+        void DoAction(int32 const action)
+        {
+            if (action == ACTION_MAGUS_DEAD)
+            {
+                uint8 i = 0;
+                while (time[i] != 0)
+                    ++i;
+
+                time[i] = sWorld->GetGameTime();
+                if (i == 2 && (time[2] - time[1] < 5) && (time[1] - time[0] < 5))
+                    ++splitPersonality;
             }
         }
 
-        void KilledUnit(Unit * /*victim*/)
+        uint32 GetData(uint32 type)
         {
-            DoScriptText(SAY_KILL, me);
+            if (type == DATA_SPLIT_PERSONALITY)
+                return splitPersonality;
+
+            return 0;
         }
 
         uint64 SplitPersonality(uint32 entry)
@@ -184,18 +198,18 @@ public:
 
             if (summon->GetGUID() == uiFireMagusGUID)
             {
+                me->AI()->DoAction(ACTION_MAGUS_DEAD);
                 bFireMagusDead = true;
-                bIsAchievementTimerRunning = true;
             }
             else if (summon->GetGUID() == uiFrostMagusGUID)
             {
+                me->AI()->DoAction(ACTION_MAGUS_DEAD);
                 bFrostMagusDead = true;
-                bIsAchievementTimerRunning = true;
             }
             else if (summon->GetGUID() == uiArcaneMagusGUID)
             {
+                me->AI()->DoAction(ACTION_MAGUS_DEAD);
                 bArcaneMagusDead = true;
-                bIsAchievementTimerRunning = true;
             }
         }
 
@@ -219,25 +233,24 @@ public:
 
             if ((Phase == 1) ||(Phase == 3))
             {
-                if (bIsAchievementTimerRunning)
-                    uiAchievementTimer += diff;
                 if (bFireMagusDead && bFrostMagusDead && bArcaneMagusDead)
                 {
-                    if (uiAchievementTimer <= ACHIEV_TIMER)
-                        uiAchievementProgress +=1;
+                    for (uint8 n = 0; n < 3; ++n)
+                        time[n] = 0;
                     me->GetMotionMaster()->Clear();
                     me->GetMap()->CreatureRelocation(me, CenterOfRoom.GetPositionX(), CenterOfRoom.GetPositionY(), CenterOfRoom.GetPositionZ(), CenterOfRoom.GetOrientation());
                     DoCast(me, SPELL_TELESTRA_BACK);
                     me->SetVisible(true);
-                    Phase++;
+                    if (Phase == 1)
+                        Phase = 2;
+                    if (Phase == 3)
+                        Phase = 4;
                     uiFireMagusGUID = 0;
                     uiFrostMagusGUID = 0;
                     uiArcaneMagusGUID = 0;
                     bIsWaitingToAppear = true;
                     uiIsWaitingToAppearTimer = 4*IN_MILLISECONDS;
                     DoScriptText(SAY_MERGE, me);
-                    bIsAchievementTimerRunning = false;
-                    uiAchievementTimer = 0;
                 }
                 else
                     return;
@@ -260,7 +273,7 @@ public:
                 return;
             }
 
-        if (IsHeroic() && (Phase == 2) && HealthBelowPct(15))
+            if (IsHeroic() && (Phase == 2) && HealthBelowPct(10))
             {
                 Phase = 3;
                 me->CastStop();
@@ -321,96 +334,31 @@ public:
             DoMeleeAttackIfReady();
         }
     };
+
 };
 
-class boss_magus_telestra_arcane : public CreatureScript
-{
-public:
-    boss_magus_telestra_arcane() : CreatureScript("boss_magus_telestra_arcane") { }
-
-    struct boss_magus_telestra_arcaneAI : public ScriptedAI
-    {
-        boss_magus_telestra_arcaneAI(Creature* c) : ScriptedAI(c)
-        {
-            pInstance = c->GetInstanceScript();
-        }
-
-        InstanceScript* pInstance;
-
-        uint32 uiCritterTimer;
-        uint32 uiTimeStopTimer;
-
-        void Reset()
-        {
-            uiCritterTimer = urand(3000, 6000);
-            uiTimeStopTimer = urand(7000, 10000);
-        }
-
-        void UpdateAI(const uint32 diff)
-        {
-            if (!UpdateVictim())
-                return;
-
-            if (uiCritterTimer<=diff)
-            {
-                DoCast(SPELL_CRITTER);
-                uiCritterTimer = urand(5000, 8000);
-            }else uiCritterTimer-=diff;
-
-            if (uiTimeStopTimer<=diff)
-            {
-                DoCastAOE(SPELL_TIMESTOP);
-                uiTimeStopTimer = urand(15000, 18000);
-            } else uiTimeStopTimer-=diff;
-
-            DoMeleeAttackIfReady();
-        }
-    };
-
-    CreatureAI* GetAI(Creature* pCreature) const
-    {
-        return new boss_magus_telestra_arcaneAI(pCreature);
-    }
-};
-
-class spell_nexus_critter_targeting : public SpellScriptLoader
+class achievement_split_personality : public AchievementCriteriaScript
 {
     public:
-        spell_nexus_critter_targeting() : SpellScriptLoader("spell_nexus_critter_targeting") { }
-
-        class spell_nexus_critter_targeting_SpellScript : public SpellScript
+        achievement_split_personality() : AchievementCriteriaScript("achievement_split_personality")
         {
-            PrepareSpellScript(spell_nexus_critter_targeting_SpellScript);
+        }
 
-            void FilterTargetsInitial(std::list<Unit*>& unitList)
-            {
-                sharedUnitList = unitList;
-            }
-
-            void FilterTargetsSubsequent(std::list<Unit*>& unitList)
-            {
-                unitList = sharedUnitList;
-            }
-
-            void Register()
-            {
-                OnUnitTargetSelect += SpellUnitTargetFn(spell_nexus_critter_targeting_SpellScript::FilterTargetsInitial, EFFECT_0, TARGET_UNIT_AREA_ENEMY_SRC);
-                OnUnitTargetSelect += SpellUnitTargetFn(spell_nexus_critter_targeting_SpellScript::FilterTargetsSubsequent, EFFECT_1, TARGET_UNIT_AREA_ENEMY_SRC);
-                OnUnitTargetSelect += SpellUnitTargetFn(spell_nexus_critter_targeting_SpellScript::FilterTargetsSubsequent, EFFECT_2, TARGET_UNIT_AREA_ENEMY_SRC);
-            }
-
-            std::list<Unit*> sharedUnitList;
-        };
-
-        SpellScript* GetSpellScript() const
+        bool OnCheck(Player* /*player*/, Unit* target)
         {
-            return new spell_nexus_critter_targeting_SpellScript();
+            if (!target)
+                return false;
+
+            if (Creature* Telestra = target->ToCreature())
+                if (Telestra->AI()->GetData(DATA_SPLIT_PERSONALITY) == 2)
+                    return true;
+
+            return false;
         }
 };
 
 void AddSC_boss_magus_telestra()
 {
     new boss_magus_telestra();
-    new boss_magus_telestra_arcane();
-    new spell_nexus_critter_targeting();
+    new achievement_split_personality();
 }

@@ -206,7 +206,6 @@ ChatCommand * ChatHandler::getCommandTable()
         { "create",         SEC_GAMEMASTER,     false, OldHandler<&ChatHandler::HandleCreatePetCommand>,           "", NULL },
         { "learn",          SEC_GAMEMASTER,     false, OldHandler<&ChatHandler::HandlePetLearnCommand>,            "", NULL },
         { "unlearn",        SEC_GAMEMASTER,     false, OldHandler<&ChatHandler::HandlePetUnlearnCommand>,          "", NULL },
-        { "tp",             SEC_GAMEMASTER,     false, OldHandler<&ChatHandler::HandlePetTpCommand>,               "", NULL },
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };
 
@@ -214,14 +213,6 @@ ChatCommand * ChatHandler::getCommandTable()
     {
         { "load",           SEC_ADMINISTRATOR,  true,  OldHandler<&ChatHandler::HandlePDumpLoadCommand>,           "", NULL },
         { "write",          SEC_ADMINISTRATOR,  true,  OldHandler<&ChatHandler::HandlePDumpWriteCommand>,          "", NULL },
-        { NULL,             0,                  false, NULL,                                           "", NULL }
-    };
-
-    static ChatCommand questCommandTable[] =
-    {
-        { "add",            SEC_ADMINISTRATOR,  false, OldHandler<&ChatHandler::HandleQuestAdd>,                   "", NULL },
-        { "complete",       SEC_ADMINISTRATOR,  false, OldHandler<&ChatHandler::HandleQuestComplete>,              "", NULL },
-        { "remove",         SEC_ADMINISTRATOR,  false, OldHandler<&ChatHandler::HandleQuestRemove>,                "", NULL },
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };
 
@@ -364,11 +355,11 @@ ChatCommand * ChatHandler::getCommandTable()
         { "pet",            SEC_GAMEMASTER,     false, NULL,                                           "", petCommandTable },
         { "ticket",         SEC_MODERATOR,      false,  NULL,                                          "", ticketCommandTable },
         { "ahbotoptions",   SEC_GAMEMASTER,     true,  OldHandler<&ChatHandler::HandleAHBotOptionsCommand>,        "", NULL },
+	     // Jail by WarHead Edited by LordPsyan
         { "jail",           SEC_MODERATOR,      false, OldHandler<&ChatHandler::HandleJailCommand>,                "", NULL },
         { "jailinfo",       SEC_PLAYER,         false, OldHandler<&ChatHandler::HandleJailInfoCommand>,            "", NULL },
         { "unjail",         SEC_MODERATOR,      false, OldHandler<&ChatHandler::HandleUnJailCommand>,              "", NULL },
         { "jailreload",     SEC_ADMINISTRATOR,  false, OldHandler<&ChatHandler::HandleJailReloadCommand>,          "", NULL },
-        
         { "aura",           SEC_ADMINISTRATOR,  false, OldHandler<&ChatHandler::HandleAuraCommand>,                "", NULL },
         { "unaura",         SEC_ADMINISTRATOR,  false, OldHandler<&ChatHandler::HandleUnAuraCommand>,              "", NULL },
         { "nameannounce",   SEC_MODERATOR,      true,  OldHandler<&ChatHandler::HandleNameAnnounceCommand>,        "", NULL },
@@ -439,9 +430,6 @@ ChatCommand * ChatHandler::getCommandTable()
         { "unbindsight",    SEC_ADMINISTRATOR,  false, OldHandler<&ChatHandler::HandleUnbindSightCommand>,         "", NULL },
         { "playall",        SEC_GAMEMASTER,  false, OldHandler<&ChatHandler::HandlePlayAllCommand>,             "", NULL },
         { "wg",             SEC_ADMINISTRATOR,  false, NULL,                                 "", wintergraspCommandTable },
-        // Playerbot mod
-        { "bot",            SEC_ADMINISTRATOR,  false, OldHandler<&ChatHandler::HandlePlayerbotCommand>,           "", NULL },
-        { "maintank",       SEC_PLAYER,  false, OldHandler<&ChatHandler::HandlePlayerbotMainTankCommand>,          "", NULL },
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };
 
@@ -1084,7 +1072,7 @@ void ChatHandler::FillMessageData(WorldPacket *data, WorldSession* session, uint
         *data << uint8(0);
 }
 
-Player * ChatHandler::getSelectedPlayer()
+Player* ChatHandler::getSelectedPlayer()
 {
     if (!m_session)
         return NULL;
@@ -1177,6 +1165,38 @@ char* ChatHandler::extractKeyFromLink(char* text, char const* linkType, char** s
     strtok(cKeysTail, "]");                                 // restart scan tail and skip name with possible spaces
     strtok(NULL, " ");                                      // skip link tail (to allow continue strtok(NULL, s) use after return from function
     return cKey;
+}
+
+char const *fmtstring(char const *format, ...)
+{
+    va_list        argptr;
+    #define    MAX_FMT_STRING    32000
+    static char        temp_buffer[MAX_FMT_STRING];
+    static char        string[MAX_FMT_STRING];
+    static int        index = 0;
+    char    *buf;
+    int len;
+
+    va_start(argptr, format);
+    vsnprintf(temp_buffer,MAX_FMT_STRING, format, argptr);
+    va_end(argptr);
+
+    len = strlen(temp_buffer);
+
+    if (len >= MAX_FMT_STRING)
+        return "ERROR";
+
+    if (len + index >= MAX_FMT_STRING-1)
+    {
+        index = 0;
+    }
+
+    buf = &string[index];
+    memcpy(buf, temp_buffer, len+1);
+
+    index += len + 1;
+
+    return buf;
 }
 
 char* ChatHandler::extractKeyFromLink(char* text, char const* const* linkTypes, int* found_idx, char** something1)

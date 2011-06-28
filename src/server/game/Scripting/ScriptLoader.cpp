@@ -27,6 +27,7 @@ void AddSC_example_commandscript();
 
 //TeleNPC2
 void AddSC_npc_teleport();
+
 //custom
 void AddSC_npc_teleport();
 void AddSC_boss_continental();
@@ -81,18 +82,10 @@ void AddSC_tele_commandscript();
 void AddSC_titles_commandscript();
 void AddSC_wp_commandscript();
 
-// Custom
-void AddSC_city_conquest_boss();
-void AddSC_city_conquest_generic();
-void AddSC_city_conquest_portal();
-void AddSC_city_conquest_spawner();
-
 #ifdef SCRIPTS
 //world
 void AddSC_areatrigger_scripts();
-void AddSC_boss_emeriss();
-void AddSC_boss_taerar();
-void AddSC_boss_ysondre();
+void AddSC_emerald_dragons();
 void AddSC_generic_creature();
 void AddSC_go_scripts();
 void AddSC_guards();
@@ -102,7 +95,6 @@ void AddSC_npc_innkeeper();
 void AddSC_npcs_special();
 void AddSC_npc_taxi();
 void AddSC_achievement_scripts();
-void AddSC_script_bot_giver();
 
 //eastern kingdoms
 void AddSC_alterac_valley();                 //Alterac Valley
@@ -506,6 +498,7 @@ void AddSC_boss_marwyn();
 void AddSC_boss_lich_king_hr();
 void AddSC_boss_lord_marrowgar();       // Icecrown Citadel
 void AddSC_boss_lady_deathwhisper();
+void AddSC_boss_gunship_battle();
 void AddSC_boss_deathbringer_saurfang();
 void AddSC_boss_festergut();
 void AddSC_boss_rotface();
@@ -529,6 +522,7 @@ void AddSC_sholazar_basin();
 void AddSC_storm_peaks();
 void AddSC_zuldrak();
 void AddSC_crystalsong_forest();
+void AddSC_Argen_Tournament();
 void AddSC_isle_of_conquest();
 
 void AddSC_boss_baltharus();	//RubySanctum
@@ -710,9 +704,7 @@ void AddWorldScripts()
 {
 #ifdef SCRIPTS
     AddSC_areatrigger_scripts();
-    AddSC_boss_emeriss();
-    AddSC_boss_taerar();
-    AddSC_boss_ysondre();
+    AddSC_emerald_dragons();
     AddSC_generic_creature();
     AddSC_go_scripts();
     AddSC_guards();
@@ -722,7 +714,6 @@ void AddWorldScripts()
     AddSC_npcs_special();
     AddSC_npc_taxi();
     AddSC_achievement_scripts();
-	AddSC_script_bot_giver();
     AddSC_chat_log();
 #endif
 }
@@ -1226,6 +1217,7 @@ void AddNorthrendScripts()
     AddSC_boss_lich_king_hr();
     AddSC_boss_lord_marrowgar();        // Icecrown Citadel
     AddSC_boss_lady_deathwhisper();
+    AddSC_boss_gunship_battle();
     AddSC_boss_deathbringer_saurfang();
     AddSC_boss_festergut();
     AddSC_boss_rotface();
@@ -1249,6 +1241,7 @@ void AddNorthrendScripts()
     AddSC_storm_peaks();
     AddSC_zuldrak();
     AddSC_crystalsong_forest();
+    AddSC_Argen_Tournament();
     AddSC_isle_of_conquest();
     AddSC_wintergrasp();
 
@@ -1289,11 +1282,8 @@ void AddCustomScripts()
 {
 #ifdef SCRIPTS
     /* This is where custom scripts should be added. */
-	AddSC_city_conquest_boss();
-	AddSC_city_conquest_generic();
-	AddSC_city_conquest_portal();
-	AddSC_city_conquest_spawner();
-	AddSC_npc_teleport();
+    //TeleNPC2
+    AddSC_npc_teleport();
 	AddSC_boss_continental();
 	AddSC_bazilisek();
 	AddSC_lava_boost();

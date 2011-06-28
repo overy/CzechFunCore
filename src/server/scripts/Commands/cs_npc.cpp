@@ -63,7 +63,6 @@ public:
         static ChatCommand npcSetCommandTable[] =
         {
             { "allowmove",      SEC_ADMINISTRATOR,  false, &HandleNpcSetAllowMovementCommand,  "", NULL },
-            { "deathstate",     SEC_GAMEMASTER,     false, &HandleNpcSetDeathStateCommand,     "", NULL },
             { "entry",          SEC_ADMINISTRATOR,  false, &HandleNpcSetEntryCommand,          "", NULL },
             { "factionid",      SEC_GAMEMASTER,     false, &HandleNpcSetFactionIdCommand,      "", NULL },
             { "flag",           SEC_GAMEMASTER,     false, &HandleNpcSetFlagCommand,           "", NULL },
@@ -495,7 +494,7 @@ public:
     //npc follow handling
     static bool HandleNpcFollowCommand(ChatHandler* handler, const char* /*args*/)
     {
-        Player *player = handler->GetSession()->GetPlayer();
+        Player* player = handler->GetSession()->GetPlayer();
         Creature *creature = handler->getSelectedCreature();
 
         if (!creature)
@@ -986,7 +985,7 @@ public:
     //npc unfollow handling
     static bool HandleNpcUnFollowCommand(ChatHandler* handler, const char* /*args*/)
     {
-        Player *player = handler->GetSession()->GetPlayer();
+        Player* player = handler->GetSession()->GetPlayer();
         Creature *creature = handler->getSelectedCreature();
 
         if (!creature)
@@ -1101,7 +1100,7 @@ public:
             return false;
         }
 
-        Player *player = handler->GetSession()->GetPlayer ();
+        Player* player = handler->GetSession()->GetPlayer ();
 
         if (player->GetPetGUID ())
         {
@@ -1153,37 +1152,6 @@ public:
 
         pet->SavePetToDB(PET_SAVE_AS_CURRENT);
         player->PetSpellInitialize();
-
-        return true;
-    }
-
-    //npc deathstate handling
-    static bool HandleNpcSetDeathStateCommand(ChatHandler* handler, const char* args)
-    {
-        if (!*args)
-            return false;
-
-        Creature* pCreature = handler->getSelectedCreature();
-        if (!pCreature || pCreature->isPet())
-        {
-            handler->SendSysMessage(LANG_SELECT_CREATURE);
-            handler->SetSentErrorMessage(true);
-            return false;
-        }
-
-        if (strncmp(args, "on", 3) == 0)
-            pCreature->SetDeadByDefault(true);
-        else if (strncmp(args, "off", 4) == 0)
-            pCreature->SetDeadByDefault(false);
-        else
-        {
-            handler->SendSysMessage(LANG_USE_BOL);
-            handler->SetSentErrorMessage(true);
-            return false;
-        }
-
-        pCreature->SaveToDB();
-        pCreature->Respawn();
 
         return true;
     }

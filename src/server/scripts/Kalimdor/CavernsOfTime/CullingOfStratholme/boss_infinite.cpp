@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2008-2011 TrinityCore <http://www.trinitycore.org/>
  *
@@ -35,6 +36,7 @@ enum Achievements
 {
     ACHIEV_CULLING_OF_TIME                      = 1817
 };
+
 class boss_infinite_corruptor : public CreatureScript
 {
 public:

@@ -89,7 +89,7 @@ public:
         void AttackStart(Unit* /*who*/) {}
         void MoveInLineOfSight(Unit* /*who*/) {}
 
-        void JustDied(Unit *killer)
+        void JustDied(Unit* killer)
         {
             if (killer->GetGUID() != me->GetGUID())
                 ShatterFrostTomb = true;
@@ -152,7 +152,7 @@ public:
                 pInstance->SetData(DATA_PRINCEKELESETH_EVENT, NOT_STARTED);
         }
 
-        void KilledUnit(Unit * victim)
+        void KilledUnit(Unit* victim)
         {
             if (victim == me)
                 return;
@@ -166,8 +166,17 @@ public:
 
             if (IsHeroic() && !ShatterFrostTomb)
             {
-                if (pInstance)
-                    pInstance->DoCompleteAchievement(ACHIEVEMENT_ON_THE_ROCKS);
+                AchievementEntry const *AchievOnTheRocks = GetAchievementStore()->LookupEntry(ACHIEVEMENT_ON_THE_ROCKS);
+                if (AchievOnTheRocks)
+                {
+                    Map* pMap = me->GetMap();
+                    if (pMap && pMap->IsDungeon())
+                    {
+                        Map::PlayerList const &players = pMap->GetPlayers();
+                        for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                            itr->getSource()->CompletedAchievement(AchievOnTheRocks);
+                    }
+                }
             }
 
             if (pInstance)
@@ -277,7 +286,7 @@ public:
             isDead = false;
         }
 
-        void EnterCombat(Unit * /*who*/){}
+        void EnterCombat(Unit* /*who*/){}
         void DamageTaken(Unit *done_by, uint32 &damage)
         {
             if (done_by->GetGUID() == me->GetGUID())

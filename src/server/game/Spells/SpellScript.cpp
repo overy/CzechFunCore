@@ -19,6 +19,7 @@
 #include "Spell.h"
 #include "SpellAuras.h"
 #include "SpellScript.h"
+#include "SpellMgr.h"
 
 bool _SpellScript::_Validate(SpellEntry const* entry)
 {
@@ -63,7 +64,7 @@ uint8 _SpellScript::EffectHook::GetAffectedEffectsMask(SpellEntry const* spellEn
     uint8 mask = 0;
     if ((effIndex == EFFECT_ALL) || (effIndex == EFFECT_FIRST_FOUND))
     {
-        for(uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
+        for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
         {
             if ((effIndex == EFFECT_FIRST_FOUND) && mask)
                 return mask;
@@ -212,7 +213,7 @@ void SpellScript::UnitTargetHandler::Call(SpellScript* spellScript, std::list<Un
     (spellScript->*pUnitTargetHandlerScript)(unitTargets);
 }
 
-bool SpellScript::_Validate(SpellEntry const * entry)
+bool SpellScript::_Validate(SpellEntry const* entry)
 {
     for (std::list<EffectHandler>::iterator itr = OnEffect.begin(); itr != OnEffect.end();  ++itr)
         if (!(*itr).GetAffectedEffectsMask(entry))
@@ -265,26 +266,31 @@ SpellEntry const* SpellScript::GetSpellInfo()
     return m_spell->GetSpellInfo();
 }
 
-WorldLocation* SpellScript::GetTargetDest()
+WorldLocation const* SpellScript::GetTargetDest()
 {
     if (m_spell->m_targets.HasDst())
-        return &m_spell->m_targets.m_dstPos;
+        return m_spell->m_targets.GetDst();
     return NULL;
+}
+
+void SpellScript::SetTargetDest(WorldLocation& loc)
+{
+    m_spell->m_targets.SetDst(loc);
 }
 
 Unit* SpellScript::GetTargetUnit()
 {
-    return m_spell->m_targets.getUnitTarget();
+    return m_spell->m_targets.GetUnitTarget();
 }
 
 GameObject* SpellScript::GetTargetGObj()
 {
-    return m_spell->m_targets.getGOTarget();
+    return m_spell->m_targets.GetGOTarget();
 }
 
 Item* SpellScript::GetTargetItem()
 {
-    return m_spell->m_targets.getItemTarget();
+    return m_spell->m_targets.GetItemTarget();
 }
 
 Unit* SpellScript::GetHitUnit()
@@ -466,8 +472,12 @@ void SpellScript::SetCustomCastResultMessage(SpellCustomErrors result)
     m_spell->m_customError = result;
 }
 
-bool AuraScript::_Validate(SpellEntry const * entry)
+bool AuraScript::_Validate(SpellEntry const* entry)
 {
+    for (std::list<CheckAreaTargetHandler>::iterator itr = DoCheckAreaTarget.begin(); itr != DoCheckAreaTarget.end();  ++itr)
+        if (!HasAreaAuraEffect(entry))
+            sLog->outError("TSCR: Spell `%u` of script `%s` does not have area aura effect - handler bound to hook `DoCheckAreaTarget` of AuraScript won't be executed", entry->Id, m_scriptName->c_str());
+
     for (std::list<EffectApplyHandler>::iterator itr = OnEffectApply.begin(); itr != OnEffectApply.end();  ++itr)
         if (!(*itr).GetAffectedEffectsMask(entry))
             sLog->outError("TSCR: Spell `%u` Effect `%s` of script `%s` did not match dbc effect data - handler bound to hook `OnEffectApply` of AuraScript won't be executed", entry->Id, (*itr).ToString().c_str(), m_scriptName->c_str());
@@ -521,6 +531,16 @@ bool AuraScript::_Validate(SpellEntry const * entry)
             sLog->outError("TSCR: Spell `%u` Effect `%s` of script `%s` did not match dbc effect data - handler bound to hook `AfterEffectManaShield` of AuraScript won't be executed", entry->Id, (*itr).ToString().c_str(), m_scriptName->c_str());
 
     return _SpellScript::_Validate(entry);
+}
+
+AuraScript::CheckAreaTargetHandler::CheckAreaTargetHandler(AuraCheckAreaTargetFnType _pHandlerScript)
+{
+    pHandlerScript = _pHandlerScript;
+}
+
+bool AuraScript::CheckAreaTargetHandler::Call(AuraScript* auraScript, Unit* _target)
+{
+    return (auraScript->*pHandlerScript)(_target);
 }
 
 AuraScript::EffectBase::EffectBase(uint8 _effIndex, uint16 _effName)
@@ -600,7 +620,7 @@ AuraScript::EffectApplyHandler::EffectApplyHandler(AuraEffectApplicationModeFnTy
     mode = _mode;
 }
 
-void AuraScript::EffectApplyHandler::Call(AuraScript* auraScript, AuraEffect const * _aurEff, AuraEffectHandleModes _mode)
+void AuraScript::EffectApplyHandler::Call(AuraScript* auraScript, AuraEffect const* _aurEff, AuraEffectHandleModes _mode)
 {
     if (_mode & mode)
         (auraScript->*pEffectHandlerScript)(_aurEff, _mode);
@@ -763,6 +783,11 @@ void AuraScript::SetMaxDuration(int32 duration)
     m_aura->SetMaxDuration(duration);
 }
 
+int32 AuraScript::CalcMaxDuration() const
+{
+    return m_aura->CalcMaxDuration();
+}
+
 bool AuraScript::IsExpired() const
 {
     return m_aura->IsExpired();
@@ -783,9 +808,19 @@ void AuraScript::SetCharges(uint8 charges)
     m_aura->SetCharges(charges);
 }
 
-bool AuraScript::DropCharge()
+uint8 AuraScript::CalcMaxCharges() const
 {
-    return m_aura->DropCharge();
+    return m_aura->CalcMaxCharges();
+}
+
+bool AuraScript::ModCharges(int8 num, AuraRemoveMode removeMode /*= AURA_REMOVE_BY_DEFAULT*/)
+{
+    return m_aura->ModCharges(num, removeMode);
+}
+
+bool AuraScript::DropCharge(AuraRemoveMode removeMode)
+{
+    return m_aura->DropCharge(removeMode);
 }
 
 uint8 AuraScript::GetStackAmount() const
@@ -798,7 +833,7 @@ void AuraScript::SetStackAmount(uint8 num)
     m_aura->SetStackAmount(num);
 }
 
-void AuraScript::ModStackAmount(int32 num, AuraRemoveMode removeMode)
+bool AuraScript::ModStackAmount(int32 num, AuraRemoveMode removeMode)
 {
     return m_aura->ModStackAmount(num, removeMode);
 }

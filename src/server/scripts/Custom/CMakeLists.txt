@@ -10,14 +10,6 @@
 
 set(scripts_STAT_SRCS
   ${scripts_STAT_SRCS}
-  Custom/script_bot_giver.cpp
-  Custom/city_conquest_boss.cpp
-
-  Custom/city_conquest_generic.cpp
-
-  Custom/city_conquest_portal.cpp
-
-  Custom/city_conquest_spawner.cpp
   Custom/bazilisek.cpp
   Custom/boss_continental.cpp
   Custom/boss_Demoncreator.cpp

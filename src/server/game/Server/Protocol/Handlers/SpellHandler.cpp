@@ -32,14 +32,19 @@
 #include "ScriptMgr.h"
 #include "GameObjectAI.h"
 
-void WorldSession::HandleClientCastFlags(WorldPacket& recvPacket, uint8 castFlags, SpellCastTargets & targets)
+void WorldSession::HandleClientCastFlags(WorldPacket& recvPacket, uint8 castFlags, SpellCastTargets& targets)
 {
     // some spell cast packet including more data (for projectiles?)
     if (castFlags & 0x02)
     {
         // not sure about these two
-        recvPacket >> targets.m_elevation;
-        recvPacket >> targets.m_speed;
+        float elevation, speed;
+        recvPacket >> elevation;
+        recvPacket >> speed;
+
+        targets.SetElevation(elevation);
+        targets.SetSpeed(speed);
+
         uint8 hasMovementData;
         recvPacket >> hasMovementData;
         if (hasMovementData)
@@ -156,10 +161,10 @@ void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
     }
 
     SpellCastTargets targets;
-    targets.read(recvPacket, pUser);
+    targets.Read(recvPacket, pUser);
     HandleClientCastFlags(recvPacket, castFlags, targets);
 
-    if (!pItem->IsTargetValidForItemUse(targets.getUnitTarget()))
+    if (!pItem->IsTargetValidForItemUse(targets.GetUnitTarget()))
     {
         // free gray item after use fail
         pUser->SendEquipError(EQUIP_ERR_NONE, pItem, NULL);
@@ -168,7 +173,7 @@ void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
         if (SpellEntry const* spellInfo = sSpellStore.LookupEntry(spellId))
         {
             // for implicit area/coord target spells
-            if (!targets.getUnitTarget())
+            if (!targets.GetUnitTarget())
                 Spell::SendCastResult(_player, spellInfo, castCount, SPELL_FAILED_NO_VALID_TARGETS);
             // for explicit target spells
             else
@@ -222,7 +227,7 @@ void WorldSession::HandleOpenItemOpcode(WorldPacket& recvPacket)
     }
 
     // Verify that the bag is an actual bag or wrapped item that can be used "normally"
-    if(!(proto->Flags & ITEM_PROTO_FLAG_OPENABLE) && !pItem->HasFlag(ITEM_FIELD_FLAGS, ITEM_FLAG_WRAPPED))
+    if (!(proto->Flags & ITEM_PROTO_FLAG_OPENABLE) && !pItem->HasFlag(ITEM_FIELD_FLAGS, ITEM_FLAG_WRAPPED))
     {
         pUser->SendEquipError(EQUIP_ERR_CANT_DO_RIGHT_NOW, pItem, NULL);
         sLog->outError("Possible hacking attempt: Player %s [guid: %u] tried to open item [guid: %u, entry: %u] which is not openable!",
@@ -384,20 +389,20 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
 
     // client provided targets
     SpellCastTargets targets;
-    targets.read(recvPacket, mover);
+    targets.Read(recvPacket, mover);
     HandleClientCastFlags(recvPacket, castFlags, targets);
 
     // auto-selection buff level base at target level (in spellInfo)
-    if (targets.getUnitTarget())
+    if (targets.GetUnitTarget())
     {
-        SpellEntry const *actualSpellInfo = sSpellMgr->SelectAuraRankForPlayerLevel(spellInfo, targets.getUnitTarget()->getLevel());
+        SpellEntry const *actualSpellInfo = sSpellMgr->SelectAuraRankForPlayerLevel(spellInfo, targets.GetUnitTarget()->getLevel());
 
         // if rank not found then function return NULL but in explicit cast case original spell can be casted and later failed with appropriate error message
         if (actualSpellInfo)
             spellInfo = actualSpellInfo;
     }
 
-    Spell *spell = new Spell(mover, spellInfo, false);
+    Spell* spell = new Spell(mover, spellInfo, false, 0, false, true);
     spell->m_cast_count = castCount;                       // set count of casts
     spell->prepare(&targets);
 }
@@ -550,7 +555,7 @@ void WorldSession::HandleSpellClick(WorldPacket& recv_data)
     recv_data >> guid;
 
     // this will get something not in world. crash
-    Creature *unit = ObjectAccessor::GetCreatureOrPetOrVehicle(*_player, guid);
+    Creature* unit = ObjectAccessor::GetCreatureOrPetOrVehicle(*_player, guid);
 
     if (!unit)
         return;
@@ -583,7 +588,7 @@ void WorldSession::HandleMirrorImageDataRequest(WorldPacket & recv_data)
     data << uint32(creator->GetDisplayId());
     if (creator->GetTypeId() == TYPEID_PLAYER)
     {
-        Player * pCreator = creator->ToPlayer();
+        Player* pCreator = creator->ToPlayer();
         data << uint8(pCreator->getRace());
         data << uint8(pCreator->getGender());
         data << uint8(pCreator->getClass());

@@ -160,7 +160,7 @@ public:
             me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_ATTACK_ME, false);
         }
 
-        void EnterCombat(Unit * /*who*/)
+        void EnterCombat(Unit* /*who*/)
         {
             DoZoneInCombat();
             DoScriptText(SAY_AGGRO, me);
@@ -168,7 +168,7 @@ public:
                 pInstance->SetData(DATA_GURTOGGBLOODBOILEVENT, IN_PROGRESS);
         }
 
-        void KilledUnit(Unit * /*victim*/)
+        void KilledUnit(Unit* /*victim*/)
         {
             switch(rand()%2)
             {
@@ -177,7 +177,7 @@ public:
             }
         }
 
-        void JustDied(Unit * /*victim*/)
+        void JustDied(Unit* /*victim*/)
         {
             if(pInstance)
                 pInstance->SetData(DATA_GURTOGGBLOODBOILEVENT, DONE);

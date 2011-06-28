@@ -984,9 +984,10 @@ void AuctionHouseBot::Initialize()
             if (debug_Out) sLog->outString("AuctionHouseBot: \"%s\" failed", lootQuery);
         }
 
-		ItemTemplateContainer const* its = sObjectMgr->GetItemTemplateStore();
-		for (ItemTemplateContainer::const_iterator itr = its->begin(); itr != its->end(); ++itr)
-		{
+        ItemTemplateContainer const* its = sObjectMgr->GetItemTemplateStore();
+        for (ItemTemplateContainer::const_iterator itr = its->begin(); itr != its->end(); ++itr)
+        {
+
             switch (itr->second.Bonding)
             {
             case NO_BIND:

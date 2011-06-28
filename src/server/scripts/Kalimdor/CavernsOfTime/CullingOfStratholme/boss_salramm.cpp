@@ -77,7 +77,7 @@ public:
         {
             pInstance = c->GetInstanceScript();
             if (pInstance)
-                DoScriptText(SAY_SPAWN, me);
+                DoScriptText(SAY_SPAWN,me);
         }
 
         uint32 uiCurseFleshTimer;
@@ -139,27 +139,28 @@ public:
             if (uiShadowBoltTimer <= diff)
             {
                 if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0))
-                    DoCast(pTarget, DUNGEON_MODE(SPELL_SHADOW_BOLT, H_SPELL_SHADOW_BOLT));
-                uiShadowBoltTimer = urand(8000, 10000);
+                    DoCast(pTarget, SPELL_SHADOW_BOLT);
+                uiShadowBoltTimer = urand(8000,12000);
             } else uiShadowBoltTimer -= diff;
 
             //Steal Flesh timer
             if (uiStealFleshTimer <= diff)
             {
-                DoScriptText(RAND(SAY_STEAL_FLESH_1, SAY_STEAL_FLESH_2, SAY_STEAL_FLESH_3), me);
-                if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 50, true))
-                    DoCast(pTarget, SPELL_STEAL_FLESH);
-                uiStealFleshTimer = 15000;
+                DoScriptText(RAND(SAY_STEAL_FLESH_1,SAY_STEAL_FLESH_2,SAY_STEAL_FLESH_3), me);
+                if (Unit* random_pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0))
+                    DoCast(random_pTarget, SPELL_STEAL_FLESH);
+                uiStealFleshTimer = 10000;
             } else uiStealFleshTimer -= diff;
 
             //Summon ghouls timer
             if (uiSummonGhoulsTimer <= diff)
             {
-                DoScriptText(RAND(SAY_SUMMON_GHOULS_1, SAY_SUMMON_GHOULS_2), me);
-                if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 20, false))
-                    DoCast(pTarget, SPELL_SUMMON_GHOULS);
-                uiSummonGhoulsTimer = urand(18000, 22000);
-                uiExplodeGhoulTimer = urand(8000, 10000);
+                 DoScriptText(RAND(SAY_SUMMON_GHOULS_1,SAY_SUMMON_GHOULS_2), me);
+                if (Unit* random_pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0))
+	
+                     DoCast(random_pTarget, SPELL_SUMMON_GHOULS);
+                uiSummonGhoulsTimer = 10000;
+
             } else uiSummonGhoulsTimer -= diff;
 
             if (uiExplodeGhoulTimer <= diff)
@@ -185,7 +186,7 @@ public:
             summon->SetCorpseDelay(0);  //instant despawn corpse (needed?)
         }
 
-        void KilledUnit(Unit * victim)
+        void KilledUnit(Unit* victim)
         {
             if (victim == me)
                 return;

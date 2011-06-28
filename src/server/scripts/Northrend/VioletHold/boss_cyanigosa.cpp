@@ -75,7 +75,7 @@ public:
             uiArcaneVacuumTimer = 10000;
             uiBlizzardTimer = 15000;
             uiManaDestructionTimer = 30000;
-            uiTailSweepTimer = 5000;
+            uiTailSweepTimer = 20000;
             uiUncontrollableEnergyTimer = 25000;
             if (pInstance)
                 pInstance->SetData(DATA_CYANIGOSA_EVENT, NOT_STARTED);
@@ -87,15 +87,6 @@ public:
 
             if (pInstance)
                 pInstance->SetData(DATA_CYANIGOSA_EVENT, IN_PROGRESS);
-        }
-
-        void SpellHitTarget (Unit* target,const SpellEntry* spell)
-        {
-            if(spell->Id == SPELL_ARCANE_VACUUM)
-            {
-                if(target->ToPlayer())
-                    target->ToPlayer()->TeleportTo(me->GetMapId(),me->GetPositionX(),me->GetPositionY(),me->GetPositionZ(),0);
-            }
         }
 
         void MoveInLineOfSight(Unit* /*who*/) {}
@@ -114,30 +105,21 @@ public:
 
             if (uiArcaneVacuumTimer <= diff)
             {
-                if(!me->IsNonMeleeSpellCasted(false))
-                {
-                    DoCast(SPELL_ARCANE_VACUUM);
-                    uiArcaneVacuumTimer = 30000;
-                }
+                DoCast(SPELL_ARCANE_VACUUM);
+                uiArcaneVacuumTimer = 10000;
             } else uiArcaneVacuumTimer -= diff;
 
             if (uiBlizzardTimer <= diff)
             {
-                if(!me->IsNonMeleeSpellCasted(false))
-                {
-                    if (Unit *pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
-                        DoCast(pTarget, SPELL_BLIZZARD);
-                    uiBlizzardTimer = 15000;
-                }
+                if (Unit *pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                    DoCast(pTarget, SPELL_BLIZZARD);
+                uiBlizzardTimer = 15000;
             } else uiBlizzardTimer -= diff;
 
             if (uiTailSweepTimer <= diff)
             {
-                if(!me->IsNonMeleeSpellCasted(false))
-                {
-                    DoCast(DUNGEON_MODE(SPELL_TAIL_SWEEP,H_SPELL_TAIL_SWEEP));
-                    uiTailSweepTimer = 5000;
-                }
+                DoCast(SPELL_TAIL_SWEEP);
+                uiTailSweepTimer = 20000;
             } else uiTailSweepTimer -= diff;
 
             if (uiUncontrollableEnergyTimer <= diff)
@@ -150,12 +132,9 @@ public:
             {
                 if (uiManaDestructionTimer <= diff)
                 {
-                    if(!me->IsNonMeleeSpellCasted(false))
-                    {
-                        if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
-                            DoCast(pTarget, SPELL_MANA_DESTRUCTION);
-                        uiManaDestructionTimer = 30000;
-                    }
+                    if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                        DoCast(pTarget, SPELL_MANA_DESTRUCTION);
+                    uiManaDestructionTimer = 30000;
                 } else uiManaDestructionTimer -= diff;
             }
 
@@ -170,7 +149,7 @@ public:
                 pInstance->SetData(DATA_CYANIGOSA_EVENT, DONE);
         }
 
-        void KilledUnit(Unit * victim)
+        void KilledUnit(Unit* victim)
         {
             if (victim == me)
                 return;
@@ -180,7 +159,28 @@ public:
 
 };
 
+class achievement_defenseless : public AchievementCriteriaScript
+{
+    public:
+        achievement_defenseless() : AchievementCriteriaScript("achievement_defenseless")
+        {
+        }
+
+        bool OnCheck(Player* /*player*/, Unit* target)
+        {
+            InstanceScript* instance = target->GetInstanceScript();
+            if (!instance)
+                return false;
+
+            if (!instance->GetData(DATA_DEFENSELESS))
+                return false;
+
+            return true;
+        }
+};
+
 void AddSC_boss_cyanigosa()
 {
     new boss_cyanigosa();
+    new achievement_defenseless();
 }

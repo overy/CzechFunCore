@@ -88,7 +88,7 @@ public:
             return 100*(me->GetHealth()-damage)/me->GetMaxHealth();
         }
 
-        void DamageTaken(Unit * /*pAttacker*/, uint32 &damage)
+        void DamageTaken(Unit* /*pAttacker*/, uint32 &damage)
         {
             if (me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))
                 damage = 0;
@@ -171,15 +171,6 @@ public:
             // Cleanup
             Summons.DespawnAll();
             me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        }
-
-        void EnterEvadeMode()
-        {
-            me->RemoveAllAuras();
-            me->SetControlled(false, UNIT_STAT_STUNNED);
-            _EnterEvadeMode();
-            me->GetMotionMaster()->MoveTargetedHome();
-            Reset();
         }
 
         void EnterCombat(Unit* /*who*/)
@@ -316,12 +307,9 @@ public:
             ResetPlayersPhaseMask();
         }
 
-        void KilledUnit(Unit* pVictim)
+        void KilledUnit(Unit* /*victim*/)
         {
             DoScriptText(RAND(SAY_SLAY_1, SAY_SLAY_2, SAY_SLAY_3), me);
-
-            if (pVictim->GetTypeId() == TYPEID_PLAYER)
-                pVictim->RemoveAurasDueToSpell(GetSpellForPhaseMask(pVictim->GetPhaseMask()));
         }
     };
 

@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2008 - 2011 Trinity <http://www.trinitycore.org/>
+ * Copyright (C) 2008 - 2010 Trinity <http://www.trinitycore.org/>
  *
- * Copyright (C) 2011 Patch supported by ChaosUA & TCRU community http://trinity-core.ru/
+ * Patch supported by ChaosUA & TCRU community http://trinity-core.ru/
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,9 +35,6 @@ const uint32 WG_MARK_OF_HONOR = 43589;
 const uint32 VehNumWorldState[2] = {3680,3490};
 const uint32 MaxVehNumWorldState[2] = {3681,3491};
 const uint32 ClockWorldState[2] = {3781,4354};
-const uint8 CapturePointArtKit[3] = {2, 1, 21};
-char const *fmtstring(char const *format, ...);
-const Team TeamId2Team[3] = {ALLIANCE, HORDE, TEAM_OTHER};
 
 enum OutdoorPvPWGSpell
 {
@@ -227,6 +224,7 @@ class OutdoorPvPWG : public OutdoorPvP
         OutdoorPvPWG();
         bool SetupOutdoorPvP();
         int TeamIDsound;
+        bool MaingateDestroyed;
         uint32 GetCreatureEntry(uint32 guidlow, const CreatureData *data);
         void OnCreatureCreate(Creature *creature);
         void OnGameObjectCreate(GameObject *go);

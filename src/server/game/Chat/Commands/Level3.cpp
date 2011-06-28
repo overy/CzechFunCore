@@ -63,9 +63,11 @@
 #include "SmartAI.h"
 #include "Group.h"
 #include "ChannelMgr.h"
+
 #include "AuctionHouseBot.h"
 
-bool ChatHandler::HandleJailReloadCommand(const char* arg)
+//TrinityJail reload commands Edited by LordPsyan
+	bool ChatHandler::HandleJailReloadCommand(const char* arg)
 {
     sObjectMgr->LoadJailConf();
     SendSysMessage(LANG_JAIL_RELOAD);
@@ -599,7 +601,7 @@ bool ChatHandler::HandleSetSkillCommand(const char *args)
 
     int32 level = atol (level_p);
 
-    Player * target = getSelectedPlayer();
+    Player* target = getSelectedPlayer();
     if (!target)
     {
         SendSysMessage(LANG_NO_CHAR_SELECTED);
@@ -1110,7 +1112,7 @@ bool ChatHandler::HandleListObjectCommand(const char *args)
         return false;
     }
 
-    GameObjectTemplate const * gInfo = sObjectMgr->GetGameObjectTemplate(go_id);
+    GameObjectTemplate const* gInfo = sObjectMgr->GetGameObjectTemplate(go_id);
     if (!gInfo)
     {
         PSendSysMessage(LANG_COMMAND_LISTOBJINVALIDID, go_id);
@@ -1224,7 +1226,7 @@ bool ChatHandler::HandleListCreatureCommand(const char *args)
             float z = fields[3].GetFloat();
             int mapid = fields[4].GetUInt16();
 
-            if  (m_session)
+            if (m_session)
                 PSendSysMessage(LANG_CREATURE_LIST_CHAT, guid, guid, cInfo->Name.c_str(), x, y, z, mapid);
             else
                 PSendSysMessage(LANG_CREATURE_LIST_CONSOLE, guid, cInfo->Name.c_str(), x, y, z, mapid);
@@ -2172,7 +2174,7 @@ bool ChatHandler::HandleGuildCreateCommand(const char *args)
         return true;
     }
 
-    Guild *guild = new Guild;
+    Guild* guild = new Guild;
     if (!guild->Create (target, guildname))
     {
         delete guild;
@@ -2440,7 +2442,7 @@ bool ChatHandler::HandleReviveCommand(const char *args)
 
 bool ChatHandler::HandleAuraCommand(const char *args)
 {
-    Unit *target = getSelectedUnit();
+    Unit* target = getSelectedUnit();
     if (!target)
     {
         SendSysMessage(LANG_SELECT_CHAR_OR_CREATURE);
@@ -2452,14 +2454,14 @@ bool ChatHandler::HandleAuraCommand(const char *args)
     uint32 spellID = extractSpellIdFromLink((char*)args);
 
     if (SpellEntry const *spellInfo = sSpellStore.LookupEntry(spellID))
-        Aura::TryCreate(spellInfo, target, target);
+        Aura::TryRefreshStackOrCreate(spellInfo, MAX_EFFECT_MASK, target, target);
 
     return true;
 }
 
 bool ChatHandler::HandleUnAuraCommand(const char *args)
 {
-    Unit *target = getSelectedUnit();
+    Unit* target = getSelectedUnit();
     if (!target)
     {
         SendSysMessage(LANG_SELECT_CHAR_OR_CREATURE);
@@ -2863,7 +2865,7 @@ bool ChatHandler::HandleChangeWeather(const char *args)
     uint32 type = (uint32)atoi(px);                         //0 to 3, 0: fine, 1: rain, 2: snow, 3: sand
     float grade = (float)atof(py);                          //0 to 1, sending -1 is instand good weather
 
-    Player *player = m_session->GetPlayer();
+    Player* player = m_session->GetPlayer();
     uint32 zoneid = player->GetZoneId();
 
     Weather* wth = sWeatherMgr->FindWeather(zoneid);
@@ -2901,8 +2903,8 @@ bool ChatHandler::HandleListAurasCommand (const char * /*args*/)
     {
         bool talent = GetTalentSpellCost(itr->second->GetBase()->GetId()) > 0;
 
-        AuraApplication const * aurApp = itr->second;
-        Aura const * aura = aurApp->GetBase();
+        AuraApplication const* aurApp = itr->second;
+        Aura const* aura = aurApp->GetBase();
         char const* name = aura->GetSpellProto()->SpellName[GetSessionDbcLocale()];
 
         if (m_session)
@@ -3025,12 +3027,12 @@ bool ChatHandler::HandleResetLevelCommand(const char * args)
     if (!HandleResetStatsOrLevelHelper(target))
         return false;
 
+    uint8 oldLevel = target->getLevel();
+
     // set starting level
     uint32 start_level = target->getClass() != CLASS_DEATH_KNIGHT
         ? sWorld->getIntConfig(CONFIG_START_PLAYER_LEVEL)
         : sWorld->getIntConfig(CONFIG_START_HEROIC_PLAYER_LEVEL);
-
-    sScriptMgr->OnPlayerLevelChanged(target, start_level);
 
     target->_ApplyAllLevelScaleItemMods(false);
     target->SetLevel(start_level);
@@ -3046,6 +3048,8 @@ bool ChatHandler::HandleResetLevelCommand(const char * args)
     // reset level for pet
     if (Pet* pet = target->GetPet())
         pet->SynchronizeLevelWithOwner();
+
+    sScriptMgr->OnPlayerLevelChanged(target, oldLevel);
 
     return true;
 }
@@ -3104,15 +3108,15 @@ bool ChatHandler::HandleResetTalentsCommand(const char * args)
         Creature* creature = getSelectedCreature();
         if (!*args && creature && creature->isPet())
         {
-            Unit *owner = creature->GetOwner();
-            if (owner && owner->GetTypeId() == TYPEID_PLAYER && ((Pet *)creature)->IsPermanentPetFor(owner->ToPlayer()))
+            Unit* owner = creature->GetOwner();
+            if (owner && owner->GetTypeId() == TYPEID_PLAYER && creature->ToPet()->IsPermanentPetFor(owner->ToPlayer()))
             {
-                ((Pet *)creature)->resetTalents(true);
+                creature->ToPet()->resetTalents();
                 owner->ToPlayer()->SendTalentsInfoData(true);
 
                 ChatHandler(owner->ToPlayer()).SendSysMessage(LANG_RESET_PET_TALENTS);
                 if (!m_session || m_session->GetPlayer() != owner->ToPlayer())
-          PSendSysMessage(LANG_RESET_PET_TALENTS_ONLINE, GetNameLink(owner->ToPlayer()).c_str());
+                    PSendSysMessage(LANG_RESET_PET_TALENTS_ONLINE, GetNameLink(owner->ToPlayer()).c_str());
             }
             return true;
         }
@@ -3334,207 +3338,6 @@ bool ChatHandler::HandleServerIdleShutDownCommand(const char *args)
     }
     else
         sWorld->ShutdownServ(time, SHUTDOWN_MASK_IDLE, SHUTDOWN_EXIT_CODE);
-    return true;
-}
-
-bool ChatHandler::HandleQuestAdd(const char *args)
-{
-    Player* player = getSelectedPlayer();
-    if (!player)
-    {
-        SendSysMessage(LANG_NO_CHAR_SELECTED);
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    // .addquest #entry'
-    // number or [name] Shift-click form |color|Hquest:quest_id:quest_level|h[name]|h|r
-    char* cId = extractKeyFromLink((char*)args,"Hquest");
-    if (!cId)
-        return false;
-
-    uint32 entry = atol(cId);
-
-    Quest const* pQuest = sObjectMgr->GetQuestTemplate(entry);
-
-    if (!pQuest)
-    {
-        PSendSysMessage(LANG_COMMAND_QUEST_NOTFOUND,entry);
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    // check item starting quest (it can work incorrectly if added without item in inventory)
-	ItemTemplateContainer const* its = sObjectMgr->GetItemTemplateStore();
-    for (ItemTemplateContainer::const_iterator itr = its->begin(); itr != its->end(); ++itr)
-    {
-        if (itr->second.StartQuest == entry)
-        {
-            PSendSysMessage(LANG_COMMAND_QUEST_STARTFROMITEM, entry, itr->second.ItemId);
-            SetSentErrorMessage(true);
-            return false;
-        }
-    }
-
-    // ok, normal (creature/GO starting) quest
-    if (player->CanAddQuest(pQuest, true))
-    {
-        player->AddQuest(pQuest, NULL);
-
-        if (player->CanCompleteQuest(entry))
-            player->CompleteQuest(entry);
-    }
-
-    return true;
-}
-
-bool ChatHandler::HandleQuestRemove(const char *args)
-{
-    Player* player = getSelectedPlayer();
-    if (!player)
-    {
-        SendSysMessage(LANG_NO_CHAR_SELECTED);
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    // .removequest #entry'
-    // number or [name] Shift-click form |color|Hquest:quest_id:quest_level|h[name]|h|r
-    char* cId = extractKeyFromLink((char*)args,"Hquest");
-    if (!cId)
-        return false;
-
-    uint32 entry = atol(cId);
-
-    Quest const* pQuest = sObjectMgr->GetQuestTemplate(entry);
-
-    if (!pQuest)
-    {
-        PSendSysMessage(LANG_COMMAND_QUEST_NOTFOUND, entry);
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    // remove all quest entries for 'entry' from quest log
-    for (uint8 slot = 0; slot < MAX_QUEST_LOG_SIZE; ++slot)
-    {
-        uint32 quest = player->GetQuestSlotQuestId(slot);
-        if (quest == entry)
-        {
-            player->SetQuestSlot(slot,0);
-
-            // we ignore unequippable quest items in this case, its' still be equipped
-            player->TakeQuestSourceItem(quest, false);
-        }
-    }
-
-    // set quest status to not started (will updated in DB at next save)
-    player->SetQuestStatus(entry, QUEST_STATUS_NONE);
-
-    // reset rewarded for restart repeatable quest
-   // player->getQuestStatusMap()[entry].m_rewarded = false;
-
-    SendSysMessage(LANG_COMMAND_QUEST_REMOVED);
-    return true;
-}
-
-bool ChatHandler::HandleQuestComplete(const char *args)
-{
-    Player* player = getSelectedPlayer();
-    if (!player)
-    {
-        SendSysMessage(LANG_NO_CHAR_SELECTED);
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    // .quest complete #entry
-    // number or [name] Shift-click form |color|Hquest:quest_id:quest_level|h[name]|h|r
-    char* cId = extractKeyFromLink((char*)args,"Hquest");
-    if (!cId)
-        return false;
-
-    uint32 entry = atol(cId);
-
-    Quest const* pQuest = sObjectMgr->GetQuestTemplate(entry);
-
-    // If player doesn't have the quest
-    if (!pQuest || player->GetQuestStatus(entry) == QUEST_STATUS_NONE)
-    {
-        PSendSysMessage(LANG_COMMAND_QUEST_NOTFOUND, entry);
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    // Add quest items for quests that require items
-    for (uint8 x = 0; x < QUEST_ITEM_OBJECTIVES_COUNT; ++x)
-    {
-        uint32 id = pQuest->ReqItemId[x];
-        uint32 count = pQuest->ReqItemCount[x];
-        if (!id || !count)
-            continue;
-
-        uint32 curItemCount = player->GetItemCount(id,true);
-
-        ItemPosCountVec dest;
-        uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, id, count-curItemCount);
-        if (msg == EQUIP_ERR_OK)
-        {
-            Item* item = player->StoreNewItem(dest, id, true);
-            player->SendNewItem(item,count-curItemCount,true,false);
-        }
-    }
-
-    // All creature/GO slain/casted (not required, but otherwise it will display "Creature slain 0/10")
-    for (uint8 i = 0; i < QUEST_OBJECTIVES_COUNT; ++i)
-    {
-        uint32 creature = pQuest->ReqCreatureOrGOId[i];
-        uint32 creaturecount = pQuest->ReqCreatureOrGOCount[i];
-
-        if (uint32 spell_id = pQuest->ReqSpell[i])
-        {
-            for (uint16 z = 0; z < creaturecount; ++z)
-                player->CastedCreatureOrGO(creature,0,spell_id);
-        }
-        else if (creature > 0)
-        {
-            if (CreatureTemplate const* cInfo = sObjectMgr->GetCreatureTemplate(creature))
-                for (uint16 z = 0; z < creaturecount; ++z)
-                    player->KilledMonster(cInfo,0);
-        }
-        else if (creature < 0)
-        {
-            for (uint16 z = 0; z < creaturecount; ++z)
-                player->CastedCreatureOrGO(creature,0,0);
-        }
-    }
-
-    // If the quest requires reputation to complete
-    if (uint32 repFaction = pQuest->GetRepObjectiveFaction())
-    {
-        uint32 repValue = pQuest->GetRepObjectiveValue();
-        uint32 curRep = player->GetReputationMgr().GetReputation(repFaction);
-        if (curRep < repValue)
-            if (FactionEntry const *factionEntry = sFactionStore.LookupEntry(repFaction))
-                player->GetReputationMgr().SetReputation(factionEntry,repValue);
-    }
-
-    // If the quest requires a SECOND reputation to complete
-    if (uint32 repFaction = pQuest->GetRepObjectiveFaction2())
-    {
-        uint32 repValue2 = pQuest->GetRepObjectiveValue2();
-        uint32 curRep = player->GetReputationMgr().GetReputation(repFaction);
-        if (curRep < repValue2)
-            if (FactionEntry const *factionEntry = sFactionStore.LookupEntry(repFaction))
-                player->GetReputationMgr().SetReputation(factionEntry,repValue2);
-    }
-
-    // If the quest requires money
-    int32 ReqOrRewMoney = pQuest->GetRewOrReqMoney();
-    if (ReqOrRewMoney < 0)
-        player->ModifyMoney(-ReqOrRewMoney);
-
-    player->CompleteQuest(entry);
     return true;
 }
 
@@ -4781,7 +4584,7 @@ bool ChatHandler::HandleInstanceListBindsCommand(const char* /*args*/)
     }
     PSendSysMessage("player binds: %d", counter);
     counter = 0;
-    Group *group = player->GetGroup();
+    Group* group = player->GetGroup();
     if (group)
     {
         for (uint8 i = 0; i < MAX_DIFFICULTY; ++i)
@@ -4825,13 +4628,13 @@ bool ChatHandler::HandleInstanceUnbindCommand(const char *args)
             return false;
     }
 
-    for(uint8 i = 0; i < MAX_DIFFICULTY; ++i)
+    for (uint8 i = 0; i < MAX_DIFFICULTY; ++i)
     {
         Player::BoundInstancesMap &binds = player->GetBoundInstances(Difficulty(i));
-        for(Player::BoundInstancesMap::iterator itr = binds.begin(); itr != binds.end();)
+        for (Player::BoundInstancesMap::iterator itr = binds.begin(); itr != binds.end();)
         {
             InstanceSave *save = itr->second.save;
-            if(itr->first != player->GetMapId() && (!MapId || MapId == itr->first) && (diff == -1 || diff == save->GetDifficulty()))
+            if (itr->first != player->GetMapId() && (!MapId || MapId == itr->first) && (diff == -1 || diff == save->GetDifficulty()))
             {
                 std::string timeleft = GetTimeString(save->GetResetTime() - time(NULL));
                 PSendSysMessage("unbinding map: %d inst: %d perm: %s diff: %d canReset: %s TTR: %s", itr->first, save->GetInstanceId(), itr->second.perm ? "yes" : "no", save->GetDifficulty(), save->CanReset() ? "yes" : "no", timeleft.c_str());
@@ -5118,7 +4921,7 @@ bool ChatHandler::HandleChannelSetOwnership(const char *args)
     if (!channel || !argstr)
         return false;
 
-    Player *player = m_session->GetPlayer();
+    Player* player = m_session->GetPlayer();
     Channel *chn = NULL;
 
     if (ChannelMgr* cMgr = channelMgr(player->GetTeam()))
@@ -5126,7 +4929,7 @@ bool ChatHandler::HandleChannelSetOwnership(const char *args)
 
     if (strcmp(argstr, "on") == 0)
     {
-        if(chn)
+        if (chn)
             chn->SetOwnership(true);
         PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SET_CHANNEL_OWNERSHIP);
         stmt->setUInt8 (0, 1);
@@ -5136,7 +4939,7 @@ bool ChatHandler::HandleChannelSetOwnership(const char *args)
     }
     else if (strcmp(argstr, "off") == 0)
     {
-        if(chn)
+        if (chn)
             chn->SetOwnership(false);
         PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SET_CHANNEL_OWNERSHIP);
         stmt->setUInt8 (0, 0);
@@ -5179,7 +4982,7 @@ bool ChatHandler::HandlePlayAllCommand(const char *args)
 bool ChatHandler::HandleFreezeCommand(const char *args)
 {
     std::string name;
-    Player *player;
+    Player* player;
     char *TargetName = strtok((char*)args, " "); //get entered name
     if (!TargetName) //if no name entered use target
     {
@@ -5235,7 +5038,7 @@ bool ChatHandler::HandleFreezeCommand(const char *args)
 
         //m_session->GetPlayer()->CastSpell(player, spellID, false);
         if (SpellEntry const *spellInfo = sSpellStore.LookupEntry(9454))
-            Aura::TryCreate(spellInfo, player, player);
+            Aura::TryRefreshStackOrCreate(spellInfo, MAX_EFFECT_MASK, player, player);
 
         //save player
         player->SaveToDB();
@@ -5246,7 +5049,7 @@ bool ChatHandler::HandleFreezeCommand(const char *args)
 bool ChatHandler::HandleUnFreezeCommand(const char *args)
 {
     std::string name;
-    Player *player;
+    Player* player;
     char *TargetName = strtok((char*)args, " "); //get entered name
     if (!TargetName) //if no name entered use target
     {

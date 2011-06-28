@@ -103,7 +103,7 @@ public:
                 (*i)->DealDamage((*i),(*i)->GetHealth());
         }
 
-        void EnterCombat(Unit * /*who*/)
+        void EnterCombat(Unit* /*who*/)
         {
             _EnterCombat();
             DoPlaySoundToSet(me, SOUND_AGGRO);

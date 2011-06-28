@@ -133,7 +133,7 @@ public:
             Enraged = false;
         }
 
-        void EnterCombat(Unit * /*who*/)
+        void EnterCombat(Unit* /*who*/)
         {
             if(pInstance)
                 pInstance->SetData(DATA_MOTHERSHAHRAZEVENT, IN_PROGRESS);
@@ -144,7 +144,7 @@ public:
             DoCast(me,SPELL_SABER_LASH_TRIGGER,true);
         }
 
-        void KilledUnit(Unit * /*victim*/)
+        void KilledUnit(Unit* /*victim*/)
         {
             switch(rand()%2)
             {
@@ -153,7 +153,7 @@ public:
             }
         }
 
-        void JustDied(Unit * /*victim*/)
+        void JustDied(Unit* /*victim*/)
         {
             if(pInstance)
                 pInstance->SetData(DATA_MOTHERSHAHRAZEVENT, DONE);
