@@ -4,14 +4,15 @@
 #define mount_100     30                   //    100% mount
 #define mount_280     40                  //    280% mount
 #define mount_310     50                 //    310% mount
-#define mount_other     70                //    želva atp.
+#define mount_other     70                //    ï¿½elva atp.
 #define mount_legend  70               //    celestial atp.
 #define noncmbt_pet   30              //    non-combat pet
-#define cena_rename   5             //    cena rename
-#define cena_custom   10            //    cena char. customizeru
+#define cena_rename   1             //    cena rename
+#define cena_custom   5            //    cena char. customizeru
 #define cena_frost    15           //    cena EoF
 #define cena_triumph  10          //    cena EoT
 #define cena_conq     5         //    cena EoC
+#define cena_race_change 10     //    Cena race change-u
 
 
 
@@ -48,7 +49,7 @@ public:
                 player->AddItem(ID,1); 
                 player->DestroyItemCount(EM,EM_pocet,true, false); 
                 player->SaveToDB(); 
-                _creature->MonsterWhisper("Gratuluji k novému mountovi!", player->GetGUID());
+                _creature->MonsterWhisper("Gratuluji k novemu mountovi!", player->GetGUID());
                 return true;
             }  
             else
@@ -99,7 +100,7 @@ bool AddEmbl(Player *player, Creature *_creature, int EM_pocet, int ID)
                 player->AddItem(ID,1); 
                 player->DestroyItemCount(EM,EM_pocet,true, false); 
                 player->SaveToDB(); 
-                _creature->MonsterWhisper("Gratuluji k novému non-combat petovi!", player->GetGUID());
+                _creature->MonsterWhisper("Gratuluji k novemu non-combat petovi!", player->GetGUID());
                 return true;
             }  
             else
@@ -139,6 +140,27 @@ bool AddEmbl(Player *player, Creature *_creature, int EM_pocet, int ID)
     }
 
 
+// Zmena race
+		bool race_change(Player *player, Creature *_creature)
+        {
+            if (player->HasItemCount(EM, cena_race_change,false))
+            {
+                player->SetAtLoginFlag(AT_LOGIN_CHANGE_RACE); 
+                player->DestroyItemCount(EM,cena_race_change,true, false); 
+                player->SaveToDB(); 
+                player->CLOSE_GOSSIP_MENU();
+                _creature->MonsterWhisper("Pri dalsim prihlaseni na tvuj account budes mit k dispozici moznost zmenit si rasu.", player->GetGUID());
+                return true;
+            }  
+            else
+            {
+                _creature->MonsterWhisper("Nemas dostatek event marek!", player->GetGUID());
+                player->CLOSE_GOSSIP_MENU();
+                return false;
+            }                           
+        
+
+    }
 
        bool char_customizer(Player *player, Creature *_creature)
          {
@@ -173,7 +195,7 @@ bool AddEmbl(Player *player, Creature *_creature, int EM_pocet, int ID)
             player->PlayerTalkClass->ClearMenus();
             switch(uiAction)
             {
-            case 0: //Hlavní menu
+            case 0: //Hlavni menu
                  player->ADD_GOSSIP_ITEM( 7, "Account Manager",                GOSSIP_SENDER_MAIN, 1);
                  player->ADD_GOSSIP_ITEM( 7, "Mounti",                         GOSSIP_SENDER_MAIN, 2);
                  player->ADD_GOSSIP_ITEM( 7, "Non-combat peti",                GOSSIP_SENDER_MAIN, 3);
@@ -182,8 +204,9 @@ bool AddEmbl(Player *player, Creature *_creature, int EM_pocet, int ID)
                  break;
 
             case 1: // acc manager
-                 player->ADD_GOSSIP_ITEM(10, "Rename 20 EM", GOSSIP_SENDER_MAIN, 10);
-                 player->ADD_GOSSIP_ITEM(10, "Character 30 EM", GOSSIP_SENDER_MAIN, 11);
+                 player->ADD_GOSSIP_ITEM(10, "Rename 1 EM", GOSSIP_SENDER_MAIN, 10);
+		 player->ADD_GOSSIP_ITEM(10, "Zmena rasy 10 EM", GOSSIP_SENDER_MAIN, 654);
+                 player->ADD_GOSSIP_ITEM(10, "Character customizer 5 EM", GOSSIP_SENDER_MAIN, 11);
                  player->ADD_GOSSIP_ITEM(4, "<< Zpet", GOSSIP_SENDER_MAIN, 0);
                  player->SEND_GOSSIP_MENU(50001, _creature->GetGUID());
                  break; 
@@ -239,15 +262,22 @@ bool AddEmbl(Player *player, Creature *_creature, int EM_pocet, int ID)
 
 
             case 10: //Rename
-                player->ADD_GOSSIP_ITEM(10, "Ano, chci si koupit rename za 20 EM.", GOSSIP_SENDER_MAIN, 101);
-                player->ADD_GOSSIP_ITEM(4, "<< Zpet do hlavního menu", GOSSIP_SENDER_MAIN, 0);
+                player->ADD_GOSSIP_ITEM(10, "Ano, chci si koupit rename za 1 EM.", GOSSIP_SENDER_MAIN, 101);
+                player->ADD_GOSSIP_ITEM(4, "<< Zpet do hlavniho menu", GOSSIP_SENDER_MAIN, 0);
                 player->ADD_GOSSIP_ITEM(4, "<< Zpet do Account Manageru", GOSSIP_SENDER_MAIN, 1);
                 player->SEND_GOSSIP_MENU(50005, _creature->GetGUID());
                 break;
 
             case 11: //Char custom
-                player->ADD_GOSSIP_ITEM(10, "Ano, chci si koupit character customize za 30 EM.", GOSSIP_SENDER_MAIN, 102);
-                player->ADD_GOSSIP_ITEM(4, "<< Zpet do hlavního menu", GOSSIP_SENDER_MAIN, 0);
+                player->ADD_GOSSIP_ITEM(10, "Ano, chci si koupit character customize za 5 EM.", GOSSIP_SENDER_MAIN, 102);
+                player->ADD_GOSSIP_ITEM(4, "<< Zpet do hlavniho menu", GOSSIP_SENDER_MAIN, 0);
+                player->ADD_GOSSIP_ITEM(4, "<< Zpet do Account Manageru", GOSSIP_SENDER_MAIN, 1);
+                player->SEND_GOSSIP_MENU(50006, _creature->GetGUID());
+                break;
+
+            case 654: //Race change
+                player->ADD_GOSSIP_ITEM(10, "Ano, chci si koupit zmenu rasy za 10 EM.", GOSSIP_SENDER_MAIN, 655);
+                player->ADD_GOSSIP_ITEM(4, "<< Zpet do hlavniho menu", GOSSIP_SENDER_MAIN, 0);
                 player->ADD_GOSSIP_ITEM(4, "<< Zpet do Account Manageru", GOSSIP_SENDER_MAIN, 1);
                 player->SEND_GOSSIP_MENU(50006, _creature->GetGUID());
                 break;
@@ -259,6 +289,10 @@ bool AddEmbl(Player *player, Creature *_creature, int EM_pocet, int ID)
 
             case 102:
                 if(!char_customizer(player, _creature))
+                    return false;
+                break;
+            case 655:
+                if(!race_change(player, _creature))
                     return false;
                 break;
 
@@ -405,7 +439,7 @@ bool AddEmbl(Player *player, Creature *_creature, int EM_pocet, int ID)
                     return false;
                 break;
 
-až od 4.0.1 .. pro pøehlednost èisel v "case" nechavam!  */
+aï¿½ od 4.0.1 .. pro pï¿½ehlednost ï¿½isel v "case" nechavam!  */
 
             case 38: //Frosty's Collar
              if(!AddPet(player, _creature, noncmbt_pet,  39286))
