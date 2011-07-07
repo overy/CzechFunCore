@@ -405,9 +405,9 @@ public:
                             uiPhase = 12;
                             break;
 						case QUEST_CHAMPION_OF_ANGUISH:
-                            uiTimer = 5000;
-                            uiPhase = 15;
-                            break;
+							uiTimer = 5000;
+							uiPhase = 15;
+							break;
                    }
                         break;
                 }
@@ -584,12 +584,12 @@ public:
 
 enum eVladofTheButcher
 {
-    BLOOD_BOIL				= 55974,
+	BLOOD_BOIL				= 55974,
 	BLOOD_PLAGUE			= 55973,
 	BLOOD_PRESENCE			= 50689,
 	HYSTERIA				= 55975,
 	SPELL_DEFLECTION		= 55976,
-	WHIRLIND				= 55977;
+	WHIRLIND				= 55977,
 };
 
 class npc_vladof_the_butcher : public CreatureScript
@@ -603,8 +603,8 @@ public:
 
         bool bBloodPresence;
 
-        uint32 uiBloodBoilTimer;
-        uint32 uiBloodPlagueTimer;
+		uint32 uiBloodBoilTimer;
+		uint32 uiBloodPlagueTimer;
 		uint32 uiBloodPresenceTimer;
 		uint32 uiHysteriaTimer;
 		uint32 uiSpellDeflectionTimer;
@@ -612,10 +612,10 @@ public:
 
         void Reset()
         {
-            bBloodPresence            = false;
+			bBloodPresence            = false;
 			uiBloodBoilTimer          = 40000;
-		    uiBloodPlagueTimer        = 60000;
-            uiBloodPresenceTimer      = 2000;
+			uiBloodPlagueTimer        = 60000;
+			uiBloodPresenceTimer      = 2000;
 			uiHysteriaTimer           = 25000;
 			uiSpellDeflectionTimer    = 75000;
 			uiWhirlindTimer			  = 12000;
