@@ -251,8 +251,10 @@ enum eGurgthock
     QUEST_AMPHITHEATER_ANGUISH_YGGDRAS_1          = 12932,
     QUEST_AMPHITHEATER_ANGUISH_MAGNATAUR          = 12933,
     QUEST_AMPHITHEATER_ANGUISH_FROM_BEYOND        = 12934,
+	QUEST_CHAMPION_OF_ANGUISH					  = 12948,
 
     NPC_ORINOKO_TUSKBREAKER                       = 30020,
+	NPC_VLADOF_THE_BUTCHER                        = 30022,
     NPC_KORRAK_BLOODRAGER                         = 30023,
     NPC_YGGDRAS                                   = 30014,
     NPC_STINKBEARD                                = 30017,
@@ -402,6 +404,10 @@ public:
                             uiTimer = 2000;
                             uiPhase = 12;
                             break;
+						case QUEST_CHAMPION_OF_ANGUISH:
+                            uiTimer = 5000;
+                            uiPhase = 15;
+                            break;
                    }
                         break;
                 }
@@ -524,6 +530,12 @@ public:
                                 pCreature->AI()->SetData(1, uiBossRandom);
                             uiPhase = 0;
                             break;
+						case 15:
+                            if (Creature* pSummon = me->SummonCreature(NPC_VLADOF_THE_BUTCHER, SpawnPosition[0], TEMPSUMMON_CORPSE_DESPAWN, 1000))
+                                SummonGUID = pSummon->GetGUID();
+                            uiTimer = 5000;
+                            uiPhase = 0;
+                            break;
                     }
                 }else uiTimer -= uiDiff;
             }
@@ -550,6 +562,9 @@ public:
             case QUEST_AMPHITHEATER_ANGUISH_FROM_BEYOND:
                 pCreature->AI()->SetData(1, pQuest->GetQuestId());
                 break;
+			case QUEST_CHAMPION_OF_ANGUISH:
+                pCreature->AI()->SetData(1, pQuest->GetQuestId());
+                break;
         }
 
         pCreature->AI()->SetGUID(pPlayer->GetGUID());
@@ -560,6 +575,108 @@ public:
     CreatureAI *GetAI(Creature *creature) const
     {
         return new npc_gurgthockAI(creature);
+    }
+};
+
+/*####
+## npc_vladof_the_butcher
+####*/
+
+enum eVladofTheButcher
+{
+    BLOOD_BOIL				= 55974,
+	BLOOD_PLAGUE			= 55973,
+	BLOOD_PRESENCE			= 50689,
+	HYSTERIA				= 55975,
+	SPELL_DEFLECTION		= 55976,
+	WHIRLIND				= 55977;
+};
+
+class npc_vladof_the_butcher : public CreatureScript
+{
+public:
+    npc_vladof_the_butcher() : CreatureScript("npc_vladof_the_butcher") { }
+
+    struct npc_vladof_the_butcherAI : public ScriptedAI
+    {
+        npc_vladof_the_butcherAI(Creature* pCreature) : ScriptedAI(pCreature){}
+
+        bool bBloodPresence;
+
+        uint32 uiBloodBoilTimer;
+        uint32 uiBloodPlagueTimer;
+		uint32 uiBloodPresenceTimer;
+		uint32 uiHysteriaTimer;
+		uint32 uiSpellDeflectionTimer;
+		uint32 uiWhirlindTimer;
+
+        void Reset()
+        {
+            bBloodPresence            = false;
+			uiBloodBoilTimer          = 40000;
+		    uiBloodPlagueTimer        = 60000;
+            uiBloodPresenceTimer      = 2000;
+			uiHysteriaTimer           = 25000;
+			uiSpellDeflectionTimer    = 75000;
+			uiWhirlindTimer			  = 12000;
+        }
+
+        void UpdateAI(const uint32 uiDiff)
+        {
+            if (!UpdateVictim())
+                return;
+
+            if (!bBloodPresence && uiBloodPresenceTimer <= uiDiff)
+            {
+                DoCast(me, BLOOD_PRESENCE);
+                bBloodPresence = true;
+				uiBloodPresenceTimer = 2000;
+            } else uiBloodPresenceTimer -= uiDiff;
+
+            if (uiBloodBoilTimer <= uiDiff)
+            {
+				DoCast(me->getVictim(), BLOOD_BOIL);
+                uiBloodBoilTimer = 40000;
+            } else uiBloodBoilTimer -= uiDiff;
+
+            if (uiBloodPlagueTimer <= uiDiff)
+            {
+                DoCast(me->getVictim(), BLOOD_PLAGUE);
+                uiBloodPlagueTimer = 60000;
+            } else uiBloodPlagueTimer -= uiDiff;
+
+			if (uiHysteriaTimer <= uiDiff)
+            {
+                DoCast(me->getVictim(), HYSTERIA);
+                uiHysteriaTimer = 25000;
+            } else uiHysteriaTimer -= uiDiff;
+
+			if (uiSpellDeflectionTimer <= uiDiff)
+            {
+                DoCast(me->getVictim(), BLOOD_PLAGUE);
+                uiSpellDeflectionTimer = 75000;
+            } else uiSpellDeflectionTimer -= uiDiff;
+
+			if (uiWhirlindTimer <= uiDiff)
+            {
+                DoCast(me->getVictim(), BLOOD_PLAGUE);
+                uiWhirlindTimer = 12000;
+            } else uiWhirlindTimer -= uiDiff;
+
+            DoMeleeAttackIfReady();
+        }
+
+        void JustDied(Unit* pKiller)
+        {
+            if (pKiller->GetTypeId() == TYPEID_PLAYER)
+                pKiller->GetCharmerOrOwnerPlayerOrPlayerItself()->GroupEventHappens(QUEST_CHAMPION_OF_ANGUISH, pKiller);
+
+        }
+    };
+
+    CreatureAI *GetAI(Creature *creature) const
+    {
+        return new npc_vladof_the_butcherAI(creature);
     }
 };
 
