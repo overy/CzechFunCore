@@ -534,7 +534,13 @@ public:
                             if (Creature* pSummon = me->SummonCreature(NPC_VLADOF_THE_BUTCHER, SpawnPosition[0], TEMPSUMMON_CORPSE_DESPAWN, 1000))
                                 SummonGUID = pSummon->GetGUID();
                             uiTimer = 5000;
+                            uiPhase = 16;
+                            break;
+						case 16:
+                            if (Creature* pSummon = Unit::GetCreature(*me, SummonGUID))
+                                pSummon->GetMotionMaster()->MoveJump(5776.319824f, -2981.005371f, 273.100037f, 10.0f, 20.0f);
                             uiPhase = 0;
+                            SummonGUID = 0;
                             break;
                     }
                 }else uiTimer -= uiDiff;
