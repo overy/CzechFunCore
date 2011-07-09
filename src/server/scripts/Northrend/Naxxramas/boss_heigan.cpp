@@ -45,12 +45,6 @@ enum Phases
 #define ACTION_SAFETY_DANCE_FAIL 1
 #define DATA_SAFETY_DANCE        19962139
 
-enum Achievment
-{
-        ACHIEVMENT_THE_SAFETY_DANCE_10 = 1996,
-        ACHIEVMENT_THE_SAFETY_DANCE_25 = 2139
-};
-
 class boss_heigan : public CreatureScript
 {
 public:
@@ -67,66 +61,43 @@ public:
 
         uint32 eruptSection;
         bool eruptDirection;
+        bool safetyDance;
         Phases phase;
 
-        void Reset()
-        {
-            _Reset();
-            SetImmuneToDeathGrip();
-        }
-
-        void KilledUnit(Unit* /*Victim*/)
+        void KilledUnit(Unit* who)
         {
             if (!(rand()%5))
                 DoScriptText(SAY_SLAY, me);
+            if (who->GetTypeId() == TYPEID_PLAYER)
+                safetyDance = false;
+        }
+
+        void SetData(uint32 id, uint32 data)
+        {
+            if (id == DATA_SAFETY_DANCE)
+                safetyDance = data ? true : false;
+        }
+
+        uint32 GetData(uint32 type)
+        {
+            if (type == DATA_SAFETY_DANCE)
+                return safetyDance ? 1 : 0;
+
+            return 0;
         }
 
         void JustDied(Unit* /*Killer*/)
         {
             _JustDied();
             DoScriptText(SAY_DEATH, me);
-
-            if(instance && instance->GetData(DATA_HEIGAN_PLAYER_DEATHS) == 0)
-                instance->DoCompleteAchievement(RAID_MODE(ACHIEVMENT_THE_SAFETY_DANCE_10,ACHIEVMENT_THE_SAFETY_DANCE_25));
-        }
-
-        void TeleportHeiganCheaters()
-        {
-            float x, y, z;
-            me->GetPosition(x, y, z);
-
-            uint64 tempDoorGuid_1 = instance->GetData64(DATA_GO_ROOM_HEIGAN);
-            uint64 tempDoorGuid_2 = instance->GetData64(DATA_GO_PASSAGE_HEIGAN);
-
-            std::list<HostileReference*> &m_threatlist = me->getThreatManager().getThreatList();
-            for (std::list<HostileReference*>::iterator itr = m_threatlist.begin(); itr != m_threatlist.end(); ++itr)
-            if ((*itr)->getTarget()->GetTypeId() == TYPEID_PLAYER)
-                if(Player* player = (*itr)->getTarget()->ToPlayer())
-                {
-                    if(GameObject* door_1 = GameObject::GetGameObject(*me,tempDoorGuid_1))
-                    {
-                        if(player->GetPositionX() > door_1->GetPositionX())
-                            player->NearTeleportTo(x, y, z, 0);
-
-                        continue;
-                    }
-
-                    if(GameObject* door_2 = GameObject::GetGameObject(*me,tempDoorGuid_1))
-                    {
-                        if(player->GetPositionY() < door_2->GetPositionY())
-                            player->NearTeleportTo(x, y, z, 0);
-
-                        continue;
-                    }
-                }
         }
 
         void EnterCombat(Unit* /*who*/)
         {
             _EnterCombat();
-            TeleportHeiganCheaters();
             DoScriptText(SAY_AGGRO, me);
             EnterPhase(PHASE_FIGHT);
+            safetyDance = true;
         }
 
         void EnterPhase(Phases newPhase)
@@ -136,7 +107,6 @@ public:
             eruptSection = 3;
             if (phase == PHASE_FIGHT)
             {
-                me->GetMotionMaster()->MoveChase(me->getVictim());
                 events.ScheduleEvent(EVENT_DISRUPT, urand(10000, 25000));
                 events.ScheduleEvent(EVENT_FEVER, urand(15000, 20000));
                 events.ScheduleEvent(EVENT_PHASE, 90000);
@@ -147,7 +117,6 @@ public:
                 float x, y, z, o;
                 me->GetHomePosition(x, y, z, o);
                 me->NearTeleportTo(x, y, z, o);
-                me->GetMotionMaster()->MoveIdle();
                 DoCastAOE(SPELL_PLAGUE_CLOUD);
                 events.ScheduleEvent(EVENT_PHASE, 45000);
                 events.ScheduleEvent(EVENT_ERUPT, 8000);
@@ -179,7 +148,7 @@ public:
                         break;
                     case EVENT_ERUPT:
                         instance->SetData(DATA_HEIGAN_ERUPT, eruptSection);
-                        TeleportHeiganCheaters();
+                        TeleportCheaters();
 
                         if (eruptSection == 0)
                             eruptDirection = true;
@@ -188,7 +157,7 @@ public:
 
                         eruptDirection ? ++eruptSection : --eruptSection;
 
-                        events.ScheduleEvent(EVENT_ERUPT, phase == PHASE_FIGHT ? 10000 : 4000);
+                        events.ScheduleEvent(EVENT_ERUPT, phase == PHASE_FIGHT ? 10000 : 3000);
                         break;
                 }
             }
@@ -196,6 +165,7 @@ public:
             DoMeleeAttackIfReady();
         }
     };
+
 };
 
 class spell_heigan_eruption : public SpellScriptLoader
@@ -210,13 +180,13 @@ class spell_heigan_eruption : public SpellScriptLoader
             void HandleScript(SpellEffIndex /*eff*/)
             {
                 Unit* caster = GetCaster();
-                if (!caster)
+                if (!caster || !GetHitPlayer())
                     return;
 
-                if (GetHitDamage() >= int32(GetHitUnit()->GetHealth()))
+                if (GetHitDamage() >= int32(GetHitPlayer()->GetHealth()))
                     if (InstanceScript* instance = caster->GetInstanceScript())
-                        if (Creature* Heigan = ObjectAccessor::GetCreature(*caster, instance->GetData64(BOSS_HEIGAN)))
-                            Heigan->AI()->DoAction(ACTION_SAFETY_DANCE_FAIL);
+                        if (Creature* Heigan = ObjectAccessor::GetCreature(*caster, instance->GetData64(DATA_HEIGAN)))
+                            Heigan->AI()->SetData(DATA_SAFETY_DANCE, 0);
             }
 
             void Register()
