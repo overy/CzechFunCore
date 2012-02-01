@@ -1,0 +1,1 @@
+update creature_template set dmg_multiplier=44 where entry in (37958,37505,38549,38585,38266,38296,38582,38435,38784,38769,38771);
