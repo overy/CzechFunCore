@@ -571,7 +571,7 @@ struct boss_jormungarAI : public ScriptedAI
                 DoCast(me, SPELL_EMERGE_0);
                 me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
                 me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
-                SetCombatMovement(true);
+                SetCombatMovement(false);
                 me->GetMotionMaster()->MoveChase(me->getVictim());
                 stage = 0;
                 break;
