@@ -1397,8 +1397,8 @@ class npc_captain_arnath : public CreatureScript
             Creature* FindFriendlyCreature() const
             {
                 Creature* target = NULL;
-                Trinity::MostHPMissingInRange u_check(me, 60.0f, 0);
-                Trinity::CreatureLastSearcher<Trinity::MostHPMissingInRange> searcher(me, target, u_check);
+                Trinity::MostHPMissingInRangeFriendly u_check(me, 60.0f, 0);
+                Trinity::CreatureLastSearcher<Trinity::MostHPMissingInRangeFriendly> searcher(me, target, u_check);
                 me->VisitNearbyGridObject(60.0f, searcher);
                 return target;
             }

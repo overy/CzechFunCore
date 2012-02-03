@@ -720,13 +720,32 @@ namespace Trinity
 
     // Unit checks
 
-    class MostHPMissingInRange
+    class MostHPMissingInRangeFriendly
     {
         public:
-            MostHPMissingInRange(Unit const* obj, float range, uint32 hp) : i_obj(obj), i_range(range), i_hp(hp) {}
+            MostHPMissingInRangeFriendly(Unit const* obj, float range, uint32 hp) : i_obj(obj), i_range(range), i_hp(hp) {}
             bool operator()(Unit* u)
             {
                 if (u->isAlive() && u->isInCombat() && !i_obj->IsHostileTo(u) && i_obj->IsWithinDistInMap(u, i_range) && u->GetMaxHealth() - u->GetHealth() > i_hp)
+                {
+                    i_hp = u->GetMaxHealth() - u->GetHealth();
+                    return true;
+                }
+                return false;
+            }
+        private:
+            Unit const* i_obj;
+            float i_range;
+            uint32 i_hp;
+    };
+
+	class MostHPMissingInRangeUnfriendly
+    {
+        public:
+            MostHPMissingInRangeUnfriendly(Unit const* obj, float range, uint32 hp) : i_obj(obj), i_range(range), i_hp(hp) {}
+            bool operator()(Unit* u)
+            {
+                if (u->isAlive() && u->isInCombat() && i_obj->IsHostileTo(u) && i_obj->IsWithinDistInMap(u, i_range) && u->GetMaxHealth() - u->GetHealth() > i_hp)
                 {
                     i_hp = u->GetMaxHealth() - u->GetHealth();
                     return true;

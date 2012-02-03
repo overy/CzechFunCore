@@ -335,8 +335,18 @@ void ScriptedAI::DoTeleportAll(float x, float y, float z, float o)
 Unit* ScriptedAI::DoSelectLowestHpFriendly(float range, uint32 minHPDiff)
 {
     Unit* unit = NULL;
-    Trinity::MostHPMissingInRange u_check(me, range, minHPDiff);
-    Trinity::UnitLastSearcher<Trinity::MostHPMissingInRange> searcher(me, unit, u_check);
+    Trinity::MostHPMissingInRangeFriendly u_check(me, range, minHPDiff);
+    Trinity::UnitLastSearcher<Trinity::MostHPMissingInRangeFriendly> searcher(me, unit, u_check);
+    me->VisitNearbyObject(range, searcher);
+
+    return unit;
+}
+
+Unit* ScriptedAI::DoSelectLowestHpUnfriendly(float range, uint32 minHPDiff)
+{
+    Unit* unit = NULL;
+    Trinity::MostHPMissingInRangeUnfriendly u_check(me, range, minHPDiff);
+    Trinity::UnitLastSearcher<Trinity::MostHPMissingInRangeUnfriendly> searcher(me, unit, u_check);
     me->VisitNearbyObject(range, searcher);
 
     return unit;
