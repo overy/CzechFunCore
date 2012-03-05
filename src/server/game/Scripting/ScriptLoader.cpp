@@ -25,7 +25,7 @@ void AddSC_example_misc();
 void AddSC_example_commandscript();
 
 //custom
-//void AddSC_npc_teleport();
+void AddSC_npc_teleport();
 void AddSC_boss_continental();
 void AddSC_bazilisek();
 void AddSC_lava_boost();
@@ -1253,7 +1253,7 @@ void AddCustomScripts()
 {
 #ifdef SCRIPTS
     /* This is where custom scripts should be added. */
-	//AddSC_npc_teleport();
+	AddSC_npc_teleport();
 	AddSC_boss_continental();
 	AddSC_bazilisek();
 	AddSC_lava_boost();

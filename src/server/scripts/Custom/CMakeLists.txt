@@ -23,6 +23,7 @@ set(scripts_STAT_SRCS
   Custom/quel_nagas.cpp
   Custom/vendor.cpp
   Custom/quel.cpp
+  Custom/npc_teleport.cpp
 )
 
 message("  -> Prepared: Custom")
